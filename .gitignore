@@ -1,0 +1,9 @@
+*~
+*.save
+_book
+*_draft*
+*.glob
+*.aux
+.emacs*
+*.vo
+
