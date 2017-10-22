@@ -24,7 +24,7 @@ of the recursive function is structurally smaller in the recursive
 calls. _Structurally smaller_ means that it is the result of a pattern match
 of the original argument.
 
-The optional `{struct n} allows you to pick one of the arguments which is
+The optional `{struct n}` allows you to pick one of the arguments which is
 structurally smaller in all recursive calls. If you don't provide the hint
 then the compiler tries to guess it and complains if it cannot find a
 structurally decreasing argument.
