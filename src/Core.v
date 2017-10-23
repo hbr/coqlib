@@ -135,5 +135,34 @@ Module Nat.
   
   
   Section nat_order.
+    Theorem successor_not_below_zero:
+      forall n:nat, ~ S n <= 0  (* S n <= 0 -> False *).
+    Proof
+      fun n (p: S n <= 0) =>
+        let make_false: 0 = 0 -> False :=
+            (match
+                p in (_ <= x)         (* p: S n <= 0, therefore x is bound to 0  *)
+                return x = 0 -> False (* 0 = 0 -> False, because x is bound to 0 *)
+              with
+              | le_n _ =>
+                (* le_n (S n): S n <= S n *)
+                @successor_not_zero n: S n = 0 -> False
+              | le_S _ m _ =>
+                (* le_S (S n) m pm: S n <= S m *)
+                @successor_not_zero m: S m = 0 -> False
+              end) in
+        make_false eq_refl (* eq_refl proves 0 = 0 *).
+
+    Theorem below_zero_is_zero:
+      forall n:nat, n <= 0 -> n = 0.
+    Proof
+      let P k := k <= 0 -> k = 0 in
+      let p0: P 0 :=
+          fun _ => eq_refl in
+      let p_step k (p:P k): P (S k) :=
+          fun q: S k <= 0 =>
+            match (@successor_not_below_zero k q:False) with end
+      in
+      nat_rect P p0 p_step.
   End nat_order.
 End Nat.

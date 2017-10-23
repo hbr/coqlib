@@ -1,5 +1,5 @@
 {
     "plugins": ["toggle-chapters", "toggle-headers"],
-    "title": "Albatross Language Description",
+    "title": "Programming and Proving in Coq",
     "autor": "Helmut Brandl"
 }

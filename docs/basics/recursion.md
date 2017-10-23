@@ -55,7 +55,7 @@ But in such simple cases the compiler can infer the missing information and
 the explicit annotations are not helpful to understand the code.
 
 
-## Recursive Proofs
+## Proofs by Recursion
 
 Let's try to prove that every natural number is different from its successor
 i.e. `forall n:nat,S n <> n`. The proof must be a function taking a natural
@@ -170,7 +170,30 @@ recursive call we have to make a case distinction whether the values `n` and
 `k` are equal or not equal and inject the equality or use the fact that the
 successor constructor is injective to prove the corresponding part.
 
+We can extract the function `is_equal` to Ocaml by the command `Recursive
+Extraction is_equal`.
 
+    type nat =
+    | O
+    | S of nat
+    type sumbool =
+    | Left
+    | Right
+
+    (** val is_equal : nat -> nat -> sumbool **)
+    let rec is_equal a b =
+      match a with
+      | O ->
+        (match b with
+         | O -> Left
+         | S _ -> Right)
+      | S n ->
+        (match b with
+         | O -> Right
+         | S k -> is_equal n k)
+
+You see that all proof information is stripped off and the algorithm is
+exactly the same.
 
 
 ## Where is Induction?
