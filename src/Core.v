@@ -115,6 +115,22 @@ Module Nat.
             end
       in
       Equal.flip_not_equal (f n).
+
+    Definition is_equal: forall a b:nat, {a = b} + {a <> b} :=
+      fix f a b: {a = b} + {a <> b} :=
+        match a, b return {a = b} + {a <> b} with
+        | O, O => left eq_refl
+        | S n, O => right (@successor_not_zero n)
+        | O, S n => right (Equal.flip_not_equal (@successor_not_zero n))
+        | S n, S k =>
+          match f n k: {n = k} + {n <> k} with
+          | left p =>
+            left (Equal.inject p S)
+          | right p => (* p: n = k -> False *)
+            right (fun q:S n = S k =>
+                     p (successor_injective q:n = k))
+          end
+        end.
   End nat_recursive.
   
   

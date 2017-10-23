@@ -131,6 +131,88 @@ try to solve the excercises. If you are not accustomed to dependent types then
 the excercises might take you some hours.
 
 
+## Decision Procedure for Equality of `nat`
+
+It is easy to write a boolean valued recursive function which test for
+equality of two natural numbers. Just recursively strip off `S` constructors
+of both until at least one of them is `O`. If both are `O` then the numbers
+are equal, in all other cases both are not equal.
+
+But as explained in the chapter [Decision Procedures](decision.md) a boolean
+valued function is not usedfull unless accompanied by theorems which prove
+what the result `true` and the result `false` mean in the domain of
+propositions. Therefore we write a decision procedure for equality of
+naturals.
+
+    Definition is_equal: forall a b:nat, {a = b} + {a <> b} :=
+      fix f a b: {a = b} + {a <> b} :=
+        match a, b return {a = b} + {a <> b} with
+        | O, O => left eq_refl
+        | S n, O => right (@successor_not_zero n)
+        | O, S n => right (Equal.flip_not_equal (@successor_not_zero n))
+        | S n, S k =>
+          match f n k: {n = k} + {n <> k} with
+          | left p =>
+            left (Equal.inject p S)
+          | right p => (* p: n = k -> False *)
+            right (fun q:S n = S k =>
+                     p (successor_injective q:n = k))
+          end
+        end.
+
+The function `is_equal` has the same structure as the boolean function we
+would write in a programming language like OCaml. We just have to enrich the
+different cases with a proof which states whether `a = b` or `a <> b`.
+
+For the case `O,O` we can bild the proof by `eq_refl`. For the two cases `S
+n,O` and `O, S n` we can build a proof based on `S n <> O` and for the
+recursive call we have to make a case distinction whether the values `n` and
+`k` are equal or not equal and inject the equality or use the fact that the
+successor constructor is injective to prove the corresponding part.
+
+
+
+
+## Where is Induction?
+
+You might wonder why we have not used any induction. The key point is:
+Induction is _not_ anything basic in Coq. The basic things are inductive types
+and recursion. With these two concepts it is possible to prove an induction
+principle.
+
+For natural numbers we expect an induction principle with the type
+
+    forall P:nat->Prop,
+        P 0 -> (forall k, P k -> P (S k)) -> forall n:nat, P n
+
+In words: If we can prove that `0` satisfies a property and we can prove that
+any number transfers the property to its successor then we can conclude that
+the property is satisfied by all natural numbers.
+
+We can prove this principle in Coq by using recursion.
+
+    Definition nat_induction:
+      forall (P:nat->Prop),
+        P O -> (forall k, P k -> P (S k)) -> forall n, P n :=
+      fun P p0 pstep =>
+        (fix f n :=
+           match n as x return P x with
+           | O => p0
+           | S k => pstep k (f k)
+           end).
+
+The Coq compiler generates for all inductive types an induction principle (for
+naturals it is called `nat_ind`) so there is no need to prove it. All the
+above proofs done by recursion can be done by using the induction principle as
+well. Just define the property `P`, a proof that `0` satisfies the property
+and a proof that every natural transfers the property to its successor and
+then use `nat_induction P p0 pstep` to complete the proof.
+
+It is a matter of taste which way you prefer, they are equivalent. However in
+case of more than one argument like in the decision procedure for equality I
+find the use of recursion more natural.
+
+
 <!---
 Local Variables:
 mode: outline
