@@ -4,9 +4,13 @@ todo.*
 _book
 *_draft*
 *.glob
+*.v.d
 *.aux
+*.bak
 .emacs*
 *.vo
 node_modules
 src/*.css
 src/*.html
+src/CoqMakefile
+src/CoqMakefile.conf
