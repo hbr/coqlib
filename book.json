@@ -1,0 +1,5 @@
+{
+    "plugins": ["toggle-chapters", "toggle-headers"],
+    "title": "Albatross Language Description",
+    "autor": "Helmut Brandl"
+}
