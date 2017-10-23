@@ -1,4 +1,4 @@
-Require Import Core.
+Require Import Basics.
 
 Set Implicit Arguments.
 
@@ -174,15 +174,6 @@ End decider.
 
 
 
-Check Equal.Decider.
-Print le.
-Check le.
-
-Check le_n 0.
-Check le.
-Check le 0.
-Print range.
-Check range le 0.
 Section example.
   Theorem th1: forall n:nat, domain le n.
   Proof. refine (
@@ -193,7 +184,6 @@ Section example.
          - apply le_n.
          - exists n. assumption.
   Qed.
-  Print th1.
   (* fun n : nat => let H := le_n n : n <= n in ex_intro (fun b : nat => n <= b) n H
      : forall n : nat, domain le n  
    *)
@@ -213,15 +203,4 @@ Section example.
   Theorem le_is_reflexive: is_reflexive le.
   Proof
     fun n _ => le_n n.
-
-
-  
-  Theorem le_is_covering: is_covering le.
-  Proof
-    let le_is_right_total: forall n, range le n :=
-        let rtot_zero: exists b, le 0 b := ex_intro (le 0) 0 (le_n 0) in
-        fun n => ex_intro (fun b => b <= n) n (le_n n) : range le n
-    in
-    _
-    : forall n, carrier le n.
 End example.
