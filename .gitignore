@@ -8,3 +8,5 @@ _book
 .emacs*
 *.vo
 node_modules
+src/*.css
+src/*.html
