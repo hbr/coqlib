@@ -1,8 +1,10 @@
 Set Implicit Arguments.
 
 
+(** * Equality *)
+(*    ======== *)
 Module Equal.
-  Section sec1.
+  Section equal.
     Variables A B: Type.
 
     Theorem
@@ -19,7 +21,7 @@ Module Equal.
       | eq_refl => eq_refl
       end.
 
-    
+
     Theorem
       flip (a b:A) (p:a=b): b=a.
     Proof
@@ -39,7 +41,7 @@ Module Equal.
       fun q:b=a => p (flip q).
 
     Definition Decider: Type := forall a b:A, {a = b} + {a <> b}.
-  End sec1.
+  End equal.
 End Equal.
 
 
@@ -58,7 +60,15 @@ Section examples.
          pcd).
 End examples.
 
+
+
+
+(** * Natural Numbers *)
+(*    ================ *)
+
 Module Nat.
+  (** ** Basic Facts about Natural Numbers *)
+  (*     ================================= *)
   Section nat_basics.
     Definition Successor (n:nat): Prop :=
       match n with
@@ -73,7 +83,7 @@ Module Nat.
       | S m => fun _ => exist (fun x => S x = S m) m eq_refl
       end.
 
-    
+
     Theorem successor_not_zero:
       forall n:nat, S n <> 0.
     Proof
@@ -99,10 +109,11 @@ Module Nat.
                      O => n
                    | S y => y end in
         Equal.inject p f.
-  End nat_basics.
 
-  Section nat_recursive.
-    Theorem successor_different (n:nat): n <> S n.
+
+
+    Theorem
+      successor_different (n:nat): n <> S n.
     Proof
       let f :=
           fix f n: S n <> n:=
@@ -131,10 +142,25 @@ Module Nat.
                      p (successor_injective q:n = k))
           end
         end.
-  End nat_recursive.
-  
-  
+  End nat_basics.
+
+
+
+
+
+  (** ** Order Structure of Natural Numbers *)
+  (*     ================================== *)
   Section nat_order.
+    Theorem zero_is_least:
+      forall n, 0 <= n.
+    Proof
+      fun n =>
+        let P k := 0 <= k in
+        let p0: 0 <= 0 := le_n 0 in
+        let pstep k (pk: 0 <= k): 0 <= S k :=
+            (le_S 0) k pk in
+        nat_rect P p0 pstep n.
+
     Theorem successor_not_below_zero:
       forall n:nat, ~ S n <= 0  (* S n <= 0 -> False *).
     Proof
@@ -153,6 +179,7 @@ Module Nat.
               end) in
         make_false eq_refl (* eq_refl proves 0 = 0 *).
 
+
     Theorem below_zero_is_zero:
       forall n:nat, n <= 0 -> n = 0.
     Proof
@@ -161,8 +188,81 @@ Module Nat.
           fun _ => eq_refl in
       let p_step k (p:P k): P (S k) :=
           fun q: S k <= 0 =>
-            match (@successor_not_below_zero k q:False) with end
+            match (successor_not_below_zero q:False) with end
       in
       nat_rect P p0 p_step.
+
+
+    Theorem successor_monotonic_le:
+      forall (n m:nat), n <= m -> S n <= S m.
+    Proof
+      fix f n m (p:n<=m): S n <= S m :=
+      match p in (_ <= x)
+            return S n <= S x
+      with
+      | le_n _ => le_n (S n)
+      | le_S _ k pk => (* goal: S n <= S (S k) *)
+        let hypo: S n <= S k := f n k pk in
+        le_S (S n) (S k) hypo
+      end.
+
+
+    Theorem predecessor_monotonic_le:
+      forall a b:nat, a <= b -> pred a <= pred b.
+    Proof
+      fix f a b p: pred a <= pred b :=
+      match p in (_ <= x)
+            return pred a <= pred x
+      with
+      | le_n _ =>
+        (* goal: pred a <= pred a *)
+        le_n (pred a)
+      | le_S _ m pm =>
+        (* goal: pred a <= pred (S m),
+           proof: Construct a function with type a <= m -> pred a <= pred (S m)
+                  and apply it to pm which has type a <= m. The function does a
+                  pattern match on m. For m=0, a has to be zero as well. For
+                  m = S k use f to generate an induction hypothesis.
+         *)
+        (match m return a <= m -> pred a <= pred (S m) with
+         | O =>
+           fun q0:a<=0 =>
+             Equal.rewrite
+               (Equal.flip (below_zero_is_zero q0: a = 0))
+               (fun x => pred x <= pred (S 0))
+               (le_n (pred 0))
+         | S k =>
+           fun qk: a <= S k =>
+             let hypo := f a (S k) qk: pred a <= pred (S k) (* ind hypo *)
+             in
+             le_S (pred a) (pred (S k)) hypo
+         end) pm
+      end.
+
+
+    Theorem cancel_successor_le:
+      forall a b:nat, S a <= S b -> a <= b.
+    Proof
+      fun a b p =>
+        predecessor_monotonic_le p.
+
+
+    Definition is_less_equal: forall a b:nat, {a <= b} + {~ a <= b} :=
+      fix r a b: {a <= b} + {~ a <= b} :=
+        match a as n return {n <= b} + {~ n <= b} with
+        | O => left (zero_is_least b)
+        | S k =>
+          match b return {S k <= b} + {~ S k <= b} with
+          | O => right(@successor_not_below_zero k)
+          | S n => (* goal: {S k <= S n} + {~ S k <= S n} *)
+            match r k n: {k <= n} + {~ k <= n} with
+            | left  p => left(@successor_monotonic_le k n p)
+            | right p => (* p:~ k <= n *)
+              right( fun q: S k <= S n =>
+                       p (cancel_successor_le q: k <= n)
+                   )
+            end
+          end
+        end.
   End nat_order.
 End Nat.
