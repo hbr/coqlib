@@ -1,5 +1,30 @@
 Set Implicit Arguments.
 
+(** * Axioms *)
+(*    ====== *)
+Section axioms.
+  Section axiom_definitions.
+    Axiom excluded_middle:
+      forall A:Prop, A \/ ~ A.
+
+    Axiom proof_irrelevance:
+      forall (A:Prop) (p q:A), p = q.
+
+    Axiom dependent_function_equality:
+      forall (A:Type) (B:A->Type) (f g: forall x, B x),
+        (forall x, f x = g x) -> f = g.
+  End axiom_definitions.
+
+  Section axiom_consequences.
+    Theorem function_equality:
+      forall (A B:Type) (f g:A->B),
+        (forall x, f x = g x) -> f = g.
+    Proof
+      fun A B f g p =>
+        dependent_function_equality (fun _ => B) f g p.
+  End axiom_consequences.
+End axioms.
+
 
 (** * Equality *)
 (*    ======== *)
@@ -266,3 +291,67 @@ Module Nat.
         end.
   End nat_order.
 End Nat.
+
+
+(** * Predicate *)
+(*    ========= *)
+
+(** A predicate represents an arbitrary set of elements of a certain type.*)
+
+Module Predicate.
+  Section predicate_basic.
+    Variable A: Type.
+
+    Definition Empty     (P:A->Prop): Prop := False.
+    Definition Universal (P:A->Prop): Prop := True.
+
+    Definition Add (a:A) (P:A->Prop): A->Prop :=
+      fun x => x = a \/ P x.
+
+    Definition Remove (a:A) (P:A->Prop): A->Prop :=
+      fun x => x <> a /\ P x.
+
+    Definition Union (P Q:A->Prop): A->Prop :=
+      fun x => P x \/ Q x.
+
+    Definition Intersection (P Q:A->Prop): A->Prop :=
+      fun x => P x /\ Q x.
+
+    Definition Subset (P Q:A->Prop): Prop :=
+      forall x, P x -> Q x.
+
+    Definition Equivalent (P Q:A->Prop): Prop :=
+      Subset P Q /\ Subset Q P.
+  End predicate_basic.
+End Predicate.
+
+
+(** * Finite Set *)
+(*    ========== *)
+Module Type FINITE_SET.
+  Import Predicate.
+  Parameter A: Set.
+  Parameter T: Set->Set.
+
+  Parameter Domain: T A -> A -> Prop.
+
+  Parameter is_in:
+    forall (a:A) (s:T A), {Domain s a} + {~ Domain s a}.
+
+  Parameter empty:
+    {s:T A | forall a, ~ Domain s a}.
+
+  Parameter add:
+    forall (a:A) (s:T A), {t:T A|Equivalent (Domain t) (Add a (Domain s))}.
+
+  Parameter remove:
+    forall (a:A) (s:T A), {t:T A|Equivalent (Domain t) (Remove a (Domain s))}.
+End FINITE_SET.
+
+
+
+
+(** * Finite Map *)
+(*    ========== *)
+Module Type FINITE_MAP.
+End FINITE_MAP.
