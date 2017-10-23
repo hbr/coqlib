@@ -1,4 +1,4 @@
-Require Import Equality_.
+Require Import Core.
 
 Set Implicit Arguments.
 
