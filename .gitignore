@@ -6,4 +6,4 @@ _book
 *.aux
 .emacs*
 *.vo
-
+node_modules
