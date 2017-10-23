@@ -1,4 +1,4 @@
-Require Import Basics.
+Require Import Core.
 
 Set Implicit Arguments.
 
