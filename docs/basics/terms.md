@@ -3,7 +3,7 @@
 The terms in Coq can encode sorts, types and objects.
 
 All terms in Coq have a type. We can always ask the question "What is the type
-of a term?" by issueing the command `Check t.`.
+of a term?" by issuing the command `Check t.`.
 
 Therefore sorts have types, types have types and objects have types. This
 statements seems to contain some circularity. But Coq ensures some typing
@@ -47,11 +47,11 @@ types are objects. The following judgements
     x:X
 
 ensure that `a`, `i` and `x` are objects. There is some convention that
-variables representing types are written in uppercase and variables
-representing objects are written in lowercase. However this convention is not
-universally used (e.g. see the type `nat` above) and not enforced by the Coq
-compiler. The syntax of Coq is defined in a way that you can mix uppercase and
-lowercase letters arbitrarily in identifiers.
+variables representing types are written start with an uppercase letter and
+variables representing objects start with a lowercase letter. However this
+convention is not universally used (e.g. see the type `nat` above) and not
+enforced by the Coq compiler. The syntax of Coq is defined in a way that you
+can mix uppercase and lowercase letters arbitrarily in identifiers.
 
 
 ## Propositions
