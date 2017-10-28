@@ -7,7 +7,7 @@ Universal quantification is built into the language. The term
     forall x:A,B
 
 has no definition. It is the type of functions mapping objects `x` of type `A` to
-objects of type `B x`. If `B does not depend of `x` then we can write `A -> B`
+objects of type `B x`. If `B` does not depend on `x` then we can write `A -> B`
 as a shorthand.
 
 In case that `A` and `B` are propositions an object of type `A -> B` is a

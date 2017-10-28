@@ -89,7 +89,7 @@ object of the domain `A` then `f(x)` is an object of domain `B`.
 In Coq it is the same. If `A` and `B` are types then `A -> B` is a type as
 well and in particular it is the type of functions mapping objects of type `A`
 to objects of type `B`. Like in most functional languages Coq uses
-juxtaposition to indicate function application i.e. insteat of the usual
+juxtaposition to indicate function application i.e. instead of the usual
 mathematical function application `f(x)` we write just `f x` in Coq.
 
 But in Coq things are a little more complicated in order to make it powerful

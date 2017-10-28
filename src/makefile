@@ -5,8 +5,8 @@ compile:
 
 html:
 	make -f CoqMakefile  \
-	COQDOCFLAGS?='-g -interpolate -utf8' \
-	COQDOC_LIBS?=''  \
+	COQDOCFLAGS?='-g -interpolate -utf8 --no-index' \
+	COQDOCLIBS?=''  \
 	html
 
 CoqMakefile: _CoqProject

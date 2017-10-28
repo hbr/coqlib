@@ -29,7 +29,7 @@ End axioms.
 (** * Equality *)
 (*    ======== *)
 Module Equal.
-  Section equal.
+  Section equal_basics.
     Variables A B: Type.
 
     Theorem
@@ -65,26 +65,222 @@ Module Equal.
        *)
       fun q:b=a => p (flip q).
 
+    
     Definition Decider: Type := forall a b:A, {a = b} + {a <> b}.
-  End equal.
+  End equal_basics.
+  
+  Section application.
+    Variables A B: Type.
+    Theorem application:
+      forall (f g: A -> B) (a b:A), f = g -> a = b -> f a = g b.
+    Proof
+      fun f g a b eqfg eqab =>
+        join
+          ((join
+             (eq_refl: f a = f a)
+             (inject eqab _: f a = f b)): f a = f b)
+          (rewrite eqfg (fun g => f b = g b) eq_refl: f b = g b).    
+  End application.
+
+  Module Notations.
+    Notation "( 'equality_chain:' x , y , .. , z )" :=
+      (Equal.join .. (Equal.join x y) .. z) (at level 0): equality_scope.
+    
+    Notation "( 'equal_arguments:' eq1 , .. , eqn )" :=
+      (Equal.application .. (Equal.application eq_refl eq1) .. eqn)
+        (at level 0): equality_scope.
+    Open Scope equality_scope.
+  End Notations.
 End Equal.
 
 
-Notation "( 'eq_chain:' x , y , .. , z )" :=
-  (Equal.join .. (Equal.join x y) .. z) (at level 0): equality_scope.
 
-Section examples.
-  Open Scope equality_scope.
-  Theorem transfer_equal_notation:
-    forall (A:Type) (a b c d:A), a=b -> b=c -> c=d -> a=d.
-  Proof
-    fun A a b c d pab pbc pcd =>
-      (eq_chain:
-         pab,
-         pbc,
-         pcd).
-End examples.
 
+
+(** * Predicate *)
+(*    ========= *)
+
+(** A predicate represents an arbitrary set of elements of a certain type.*)
+
+Module Predicate.
+  Section predicate_basic.
+    Variable A: Type.
+
+    Definition Decider (P:A->Prop): Type :=
+      forall a:A, {P a} + {~ P a}.
+
+    Definition Empty     (P:A->Prop): Prop := False.
+    Definition Universal (P:A->Prop): Prop := True.
+
+    Definition Add (a:A) (P:A->Prop): A->Prop :=
+      fun x => x = a \/ P x.
+
+    Definition Remove (a:A) (P:A->Prop): A->Prop :=
+      fun x => x <> a /\ P x.
+
+    Definition Union (P Q:A->Prop): A->Prop :=
+      fun x => P x \/ Q x.
+
+    Definition Intersection (P Q:A->Prop): A->Prop :=
+      fun x => P x /\ Q x.
+
+    Definition Subset (P Q:A->Prop): Prop :=
+      forall x, P x -> Q x.
+  End predicate_basic.
+End Predicate.
+
+
+
+
+(** * Relations *)
+(*    ========= *)
+
+Module Relation.
+  Section binary_relation.
+    Variable A B: Type.
+    Variable R: A -> B -> Prop.
+
+    Definition Decider: Type := forall (a:A) (b:B), {R a b} + {~ R a b}.
+
+    Definition Domain (a:A): Prop :=
+      exists b:B, R a b.
+
+    Definition Range (b:B): Prop :=
+      exists a:A, R a b.
+
+    Definition Left_total: Prop :=
+      forall a, Domain a.
+
+    Definition Right_total: Prop :=
+      forall b, Range b.
+
+    Definition Total: Prop :=
+      Left_total /\ Right_total.
+
+    Theorem total_all_in_domain:
+      Total -> forall a, Domain a.
+    Proof
+      fun total a =>
+        match total with
+        | conj left_total _ =>
+          left_total a
+        end.
+
+    Theorem total_all_in_range:
+      Total -> forall a, Range a.
+    Proof
+      fun total a =>
+        match total with
+        | conj _ right_total =>
+          right_total a
+        end.
+  End binary_relation.
+
+  Section endorelation.
+    Variable A:Type.
+    Variable R: A -> A -> Prop.
+
+    Definition Reflexive: Prop :=
+      forall a:A, R a a.
+
+    Definition Transitive: Prop :=
+      forall a b c:A, R a b -> R b c -> R a c.
+
+    Definition Symmetric: Prop :=
+      forall a b:A, R a b -> R b a.
+
+    Definition Antisymmetric: Prop :=
+      forall a b:A, R a b -> R b a -> a = b.
+
+    Definition Dichotomic: Prop :=
+      forall a b:A, R a b \/ R b a.
+
+    Theorem dichotomic_is_reflexive:
+      Dichotomic -> Reflexive.
+    Proof
+      fun d a =>
+        match d a a with
+          or_introl p => p
+        | or_intror p => p
+        end.
+
+  End endorelation.
+
+  Section order_relation.
+    Variable A:Type.
+    Variable R: A -> A -> Prop.
+
+    Definition Preorder: Prop :=
+      Reflexive R /\ Transitive R.
+
+    Definition Linear_preorder: Prop :=
+      Dichotomic R /\ Transitive R.
+
+    Definition Partial_preorder: Prop :=
+      Reflexive R /\ Transitive R /\ Antisymmetric R.
+
+    Definition Linear_order: Prop :=
+      Dichotomic R /\ Transitive R /\ Antisymmetric R.
+
+    Definition Equivalence: Prop :=
+      Reflexive R /\ Transitive R /\ Symmetric R.
+  End order_relation.
+End Relation.
+
+
+(** * Either: Two Possible Results *)
+(*    ============================ *)
+Module Either.
+  Inductive T (A B:Type): Type :=
+  | left:  forall a:A, T A B
+  | right: forall b:B, T A B.
+End Either.
+
+
+(** * Sortable Type *)
+(*    ============= *)
+Module Type SORTABLE.
+  Import Relation.
+
+  Parameter T: Set.
+
+  Parameter Less_equal: T -> T -> Prop.
+
+  Axiom is_linear_preorder: Linear_preorder Less_equal.
+
+  Parameter is_less_equal: Decider Less_equal.
+End SORTABLE.
+
+
+(** * Finite Set *)
+(*    ========== *)
+Module Type FINITE_SET.
+  Import Predicate.
+  Parameter A: Set.
+  Parameter T: Set->Set.
+
+  Parameter Domain: T A -> A -> Prop.
+
+  Parameter is_in:
+    forall (a:A) (s:T A), {Domain s a} + {~ Domain s a}.
+
+  Parameter empty:
+    {s:T A | forall a, ~ Domain s a}.
+
+  Parameter add:
+    forall (a:A) (s:T A), {t:T A| Domain t = Add a (Domain s)}.
+
+  Parameter remove:
+    forall (a:A) (s:T A), {t:T A| Domain t = Remove a (Domain s)}.
+End FINITE_SET.
+
+
+
+
+(** * Finite Map *)
+(*    ========== *)
+Module Type FINITE_MAP.
+End FINITE_MAP.
 
 
 
@@ -291,67 +487,3 @@ Module Nat.
         end.
   End nat_order.
 End Nat.
-
-
-(** * Predicate *)
-(*    ========= *)
-
-(** A predicate represents an arbitrary set of elements of a certain type.*)
-
-Module Predicate.
-  Section predicate_basic.
-    Variable A: Type.
-
-    Definition Empty     (P:A->Prop): Prop := False.
-    Definition Universal (P:A->Prop): Prop := True.
-
-    Definition Add (a:A) (P:A->Prop): A->Prop :=
-      fun x => x = a \/ P x.
-
-    Definition Remove (a:A) (P:A->Prop): A->Prop :=
-      fun x => x <> a /\ P x.
-
-    Definition Union (P Q:A->Prop): A->Prop :=
-      fun x => P x \/ Q x.
-
-    Definition Intersection (P Q:A->Prop): A->Prop :=
-      fun x => P x /\ Q x.
-
-    Definition Subset (P Q:A->Prop): Prop :=
-      forall x, P x -> Q x.
-
-    Definition Equivalent (P Q:A->Prop): Prop :=
-      Subset P Q /\ Subset Q P.
-  End predicate_basic.
-End Predicate.
-
-
-(** * Finite Set *)
-(*    ========== *)
-Module Type FINITE_SET.
-  Import Predicate.
-  Parameter A: Set.
-  Parameter T: Set->Set.
-
-  Parameter Domain: T A -> A -> Prop.
-
-  Parameter is_in:
-    forall (a:A) (s:T A), {Domain s a} + {~ Domain s a}.
-
-  Parameter empty:
-    {s:T A | forall a, ~ Domain s a}.
-
-  Parameter add:
-    forall (a:A) (s:T A), {t:T A|Equivalent (Domain t) (Add a (Domain s))}.
-
-  Parameter remove:
-    forall (a:A) (s:T A), {t:T A|Equivalent (Domain t) (Remove a (Domain s))}.
-End FINITE_SET.
-
-
-
-
-(** * Finite Map *)
-(*    ========== *)
-Module Type FINITE_MAP.
-End FINITE_MAP.
