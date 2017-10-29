@@ -2,7 +2,7 @@ Require Import Core.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Import Equal.Notations.
-       
+
 Set Implicit Arguments.
 
 Module Make (S:SORTABLE).
@@ -31,7 +31,7 @@ Module Make (S:SORTABLE).
   Notation "a <=? b" := (S.is_less_equal a b) (at level 70).
   Notation "( 'transitivity_chain:' x , y , .. , z )" :=
     (transitive .. (transitive x y) .. z) (at level 0).
-    
+
 
   Definition Equivalent (a b:A): Prop := a <= b /\ b <= a.
 
@@ -158,8 +158,6 @@ Module Make (S:SORTABLE).
     Import Equal.Notations.
     Record N := make { balance:Balance; element:A; left:T; right:T}.
 
-    Print balance.
-    Print N.
     Definition Tree_node (n:N) (t:T): Prop :=
       t = node n.(balance) n.(element) n.(left) n.(right).
 
@@ -281,7 +279,6 @@ Module Make (S:SORTABLE).
       - simpl. rewrite <- pht1. rewrite <- pht2.
         rewrite max_l. assumption. apply le_n.
       - simpl. rewrite <- pht1. rewrite <- pht2.
-        Search (max _ _).
         rewrite max_l. rewrite ph_new. rewrite ph1. reflexivity.
         rewrite ph1. apply le_S. apply le_n.
     Qed.
@@ -380,7 +377,7 @@ Module Make (S:SORTABLE).
           a <= lo2 ->
           Sorted lo1 hi2 (node b a t1 t2).
 
-    Theorem guards_consistent:
+    Theorem bounds_sorted:
       forall (lo hi:A) (t:T),
         Sorted lo hi t -> lo <= hi.
     Proof
@@ -392,7 +389,36 @@ Module Make (S:SORTABLE).
         let p2: lo2 <= hi2 := f lo2 hi2 t2 s2 in
         (transitivity_chain: p1, le1, le2, p2)
       end.
-    
+
+    Theorem bounds_extendible:
+      forall (lo lo0 hi0 hi:A) (t:T),
+        Sorted lo0 hi0 t ->
+        lo <= lo0 ->
+        hi0 <= hi ->
+        Sorted lo hi t.
+    Proof
+      fix f lo lo0 hi0 hi t s :=
+      match s in Sorted lo0 hi0 t
+            return lo <= lo0 -> hi0 <= hi -> Sorted lo hi t with
+      | @empty_sorted lo0 hi0 p =>
+        fun (le1:lo<=lo0) (le2:hi0<=hi) =>
+          @empty_sorted
+            lo hi
+            (transitivity_chain: le1, p, le2)
+      | @node_sorted lo1 hi1 t1 lo2 hi2 t2 b a
+                     s1 s2 le_hi1_a le_a_lo2 =>
+        fun (le1:lo<=lo1) (le2:hi2<=hi) =>
+          let p1: Sorted lo hi1 t1 :=
+              f lo lo1 hi1 hi1 t1 s1 le1 (reflexive hi1)
+          in
+          let p2: Sorted lo2 hi t2 :=
+              f lo2 lo2 hi2 hi t2 s2 (reflexive lo2) le2
+          in
+          @node_sorted lo hi1 t1 lo2 hi t2 b a p1 p2 le_hi1_a le_a_lo2
+      end.
+
+
+
     Definition Sorted_tree (t:T): Prop :=
       match is_node t with
       | left  p => (* p: Node t *)
@@ -403,16 +429,16 @@ Module Make (S:SORTABLE).
 
     Definition Sorted_tree2 (t:T): Prop :=
       exists lo hi, Sorted lo hi t.
-    
-    Theorem least_consistent:
+
+    Theorem least_is_infimum:
       forall (lo hi:A) (t:T),
         Sorted lo hi t -> forall nd:Node t, lo <= least t nd.
     Proof
-      let Cond lo t := forall nd:Node t, lo <= least t nd
+      let Cond lo t nd := lo <= least t nd
       in
       fix f lo hi t sorted :=
       match sorted in Sorted lo hi t
-            return Cond lo t
+            return forall nd, Cond lo t nd
       with
       | empty_sorted _ =>
         fun nd =>
@@ -424,28 +450,85 @@ Module Make (S:SORTABLE).
         fun nd =>
           (match
               t1
-              return (Cond lo1 t1) -> lo1 <= least (node b a t1 t2) nd
+              return (forall nd, Cond lo1 t1 nd) ->
+                     Cond lo1 (node b a t1 t2) nd
            with
            | empty =>
              fun _ =>
                Equal.rewrite
                  (eq_refl : a = least (node b a empty t2) nd)
                  (fun x => lo1 <= x)
-                 (* lo1 <= hi1 <= a *)
-                 (transitivity_chain: guards_consistent s1, le_l_a)
+                 ((transitivity_chain: bounds_sorted s1, le_l_a): lo1 <= a)
            | node b1 a1 t11 t12 =>
-             let t := node b1 a1 t11 t12 in
-             fun p1: forall nd1,
-                 lo1 <= least t nd1 =>
-               Equal.rewrite
-                 (eq_refl (least t I))
-                 (fun x => lo1 <= least t I)
-                 (p1 I)
+             let t_ := node b1 a1 t11 t12 in
+             fun p1: forall nd1, Cond lo1 t_ nd1 =>
+               p1 I
            end) (f lo1 hi1 t1 s1)
       end.
 
+    Theorem least_is_least:
+      forall (lo hi:A) (t:T),
+        Sorted lo hi t ->
+        forall nd:Node t,
+          lo <= least t nd /\ Sorted (least t nd) hi t.
+    Proof
+      let Cond lo hi t nd :=
+          lo <= least t nd /\ Sorted (least t nd) hi t
+      in
+      fix f lo hi t sorted :=
+      match sorted in Sorted lo hi t
+            return forall nd, Cond lo hi t nd
+      with
+      | empty_sorted _ =>
+        fun nd =>
+          match nd with end
+      | @node_sorted lo1 hi1 t1
+                     lo2 hi2 t2
+                     b a
+                     s1 s2 le_hi1_a le_a_lo2 =>
+        fun nd =>
+          (match
+              t1
+              return (forall nd, Cond lo1 hi1 t1 nd) ->
+                     Cond lo1 hi2 (node b a t1 t2) nd
+           with
+           | empty =>
+             fun p1 =>
+               let t_ := node b a empty t2 in
+               Equal.rewrite
+                 (eq_refl : a = least t_ nd)
+                 (fun x => lo1 <= x /\ Sorted x hi2 t_)
+                 (conj
+                    ((transitivity_chain: bounds_sorted s1, le_hi1_a):lo1 <= a)
+                    (@node_sorted
+                       a a empty lo2 hi2 t2 b a
+                       (empty_sorted (reflexive a))
+                       s2
+                       (reflexive a)
+                       le_a_lo2
+                     : Sorted (least t_ nd) hi2 t_)
+                 )
+           | node b1 a1 t11 t12 =>
+             let t_ := node b1 a1 t11 t12 in
+             fun p1: forall nd1, Cond lo1 hi1 t_ nd1 =>
+               let p11: lo1 <= least t_ I  :=
+                   proj1 (p1 I) in
+               let p12: Sorted (least t_ I) hi1 t_
+                   := proj2 (p1 I) in
+               conj
+                 p11
+                 (@node_sorted
+                    (least t_ I) hi1 t_ lo2 hi2 t2 b a
+                    p12
+                    s2
+                    le_hi1_a
+                    le_a_lo2
+                 )
+            end) (f lo1 hi1 t1 s1)
+      end.
 
-    Theorem greatest_consistent:
+
+    Theorem greatest_is_supremum:
       forall (lo hi:A) (t:T),
         Sorted lo hi t -> forall nd:Node t, greatest t nd <= hi.
     Proof
@@ -473,17 +556,15 @@ Module Make (S:SORTABLE).
                  (eq_refl : a = greatest (node b a t1 empty) nd)
                  (fun x => x <= hi2)
                  (* a <= lo2 <= hi2 *)
-                 (transitivity_chain: le_a_r, guards_consistent s2)
+                 (transitivity_chain: le_a_r, bounds_sorted s2)
            | node b2 a2 t21 t22 =>
              let t := node b2 a2 t21 t22 in
              fun p1: forall nd2,
                  greatest t nd2 <= hi2 =>
-               Equal.rewrite
-                 (eq_refl (greatest t I))
-                 (fun x => greatest t I <= hi2)
-                 (p1 I)
+               p1 I
            end) (f lo2 hi2 t2 s2)
       end.
+
 
     Theorem root_element_sorted:
       forall (t:T) (lo hi:A),
@@ -493,11 +574,11 @@ Module Make (S:SORTABLE).
     Proof
       (* match sorted:
          a) empty: by contradiction
-         b) node:  lo1 <= hi1  (guards_consistent)
+         b) node:  lo1 <= hi1  (bounds_sorted)
                    hi1 <= a    (Sorted ...)
                    a = element t nd
                    a <= lo2    (Sorted ...)
-                   lo2 <= hi2  (guards_consistent)
+                   lo2 <= hi2  (bounds_sorted)
        *)
       let Cond lo hi t nd :=
           lo <= element t nd /\ element t nd <= hi
@@ -521,36 +602,14 @@ Module Make (S:SORTABLE).
               (Equal.rewrite
                  eq_a
                  (fun x => lo1 <= x)
-                 (transitivity_chain: guards_consistent s1,le_hi1_a))
+                 (transitivity_chain: bounds_sorted s1,le_hi1_a))
               (Equal.rewrite
                  eq_a
                  (fun x => x <= hi2)
-                 (transitivity_chain: le_a_lo2, guards_consistent s2))
+                 (transitivity_chain: le_a_lo2, bounds_sorted s2))
         end.
 
-
-    Theorem least_greatest_consistent:
-      forall (lo hi:A) (t:T),
-        Sorted lo hi t ->
-        forall nd:Node t, Sorted (least t nd) (greatest t nd) t.
-    Proof
-      let Cond t nd: Prop := Sorted (least t nd) (greatest t nd) t
-      in
-      fun lo hi t sorted =>
-        match sorted in Sorted lo hi t
-              return forall nd, Cond t nd
-        with
-        | empty_sorted _ =>
-          fun nd =>
-            match nd with end
-        | @node_sorted lo1 hi1 t1
-                       lo2 hi2 t2
-                       b a
-                       s1 s2 le_hi1_a le_a_lo2 =>
-          _
-        end.
-    Print ex.
-
+(*
     Theorem sorted_is_sorted:
       forall (t:T),
         Sorted_tree2 t ->
@@ -578,12 +637,12 @@ Module Make (S:SORTABLE).
                 (* goal: Sorted (least t_ nd) (greatest t_ nd) t_
                  *)
                 _
-            end           
+            end
           end
         end.
+*)
   End sorted.
 
-    
   Section blabla.
     Inductive Permutation: T -> T -> Prop :=
     | perm_empty:
@@ -640,7 +699,7 @@ Module Make (S:SORTABLE).
       end.
 
   End blabla.
-
+(*
   Theorem avl_subtree:
     forall (a:A) (b:Balance) (t1 t2:T),
       Avl (node b a t1 t2) -> Avl t1 /\ Avl t2.
@@ -656,7 +715,7 @@ Module Make (S:SORTABLE).
                     right
 
       _.
-
+*)
   Definition add_root (a:A) (t:T): T :=
     node left_leaning a t empty.
 
@@ -666,22 +725,10 @@ Module Make (S:SORTABLE).
 
   Definition Avl_inserted (x:A) (t u:T): Prop :=
     Avl u /\ Inserted x t u.
-  Check Inserted.
 
-
-  Theorem insert_empty:
-    forall x:A,
-      Avl_inserted x empty (node balanced x empty empty).
-  Proof.
-    intro x. split.
-    - unfold Avl. unfold is_node. split.
-      -- simpl. eapply balanced_perfect; apply balanced_empty.
-      -- simpl. apply node_sorted with (hi1:=x) (lo2:=x);
-                  repeat (apply empty_sorted); repeat (apply reflexive).
-    - unfold Inserted. simpl. apply List.perm_prefix. apply List.perm_empty.
-  Qed.
 
   Section insertion.
+    (*
     Definition insert:
       forall (a:A) (t:T),
         Avl t ->
@@ -718,70 +765,9 @@ Module Make (S:SORTABLE).
               (* insert into right subtree *)
               _
             end
-        end.
+        end.*)
   End insertion.
 
 
 
-  Section draft.
-    Inductive Avl2: A -> A -> nat -> Balance -> T -> Prop :=
-      avl_empty:
-        forall lo hi, lo <= hi -> Avl2 lo hi 0 balanced empty
-    | avl_balanced:
-        forall lo1 hi1 b1 t1 lo2 hi2 b2 t2 h a,
-          Avl2 lo1 hi1 h b1 t1 ->
-          Avl2 lo2 hi2 h b2 t2 ->
-          hi1 <= a ->
-          a <= lo2 ->
-          Avl2 lo1 hi2 (1+h) balanced (node balanced a t1 t2)
-    | avl_left_leaning:
-        forall lo1 hi1 b1 t1 lo2 hi2 b2 t2 h a,
-          Avl2 lo1 hi1 (1+h) b1 t1 ->
-          Avl2 lo2 hi2 h b2 t2 ->
-          hi1 <= a ->
-          a <= lo2 ->
-          Avl2 lo1 hi2 (2+h) left_leaning (node left_leaning a t1 t2).
-
-    Theorem extend_guards:
-      forall (lo_new lo hi hi_new:A) (h:nat) (b:Balance) (t:T),
-        Avl2 lo hi h b t ->
-        lo_new <= lo ->
-        hi <= hi_new ->
-        Avl2 lo_new hi_new h b t.
-    Proof
-      fix f lo_new lo hi hi_new h b t p_avl:=
-      match
-          p_avl in Avl2 lo hi h b t
-          return lo_new <= lo -> hi <= hi_new -> Avl2 lo_new hi_new h b t
-      with
-        @avl_empty lo hi p => (* p: lo <= hi *)
-        fun (p1:lo_new<=lo) (p2:hi<=hi_new) =>
-          let pguard: lo_new <= hi_new :=
-              transitive (transitive p1 p) p2
-          in
-          @avl_empty lo_new hi_new pguard
-      | @avl_balanced
-          lo1 hi1 b1 t1
-          lo2 hi2 b2 t2 h a
-          p_avl_t1 p_avl_t2 pleft pright =>
-        fun (p1:lo_new<=lo1) (p2:hi2<=hi_new) =>
-          let p_avl_t1_new :=
-              f lo_new lo1 hi1 hi1 h b1 t1 p_avl_t1 p1 (reflexive hi1) in
-          let p_avl_t2_new :=
-              f lo2 lo2 hi2 hi_new h b2 t2 p_avl_t2 (reflexive lo2) p2 in
-          avl_balanced p_avl_t1_new p_avl_t2_new pleft pright
-      | @avl_left_leaning
-          lo1 hi1 b1 t1
-          lo2 hi2 b2 t2
-          h a
-          p_avl_t1 p_avl_t2 pleft pright =>
-        fun (p1:lo_new<=lo1) (p2:hi2<=hi_new) =>
-          let p_avl_t1_new :=
-              f lo_new lo1 hi1 hi1 (1+h) b1 t1 p_avl_t1 p1 (reflexive hi1) in
-          let p_avl_t2_new :=
-              f lo2 lo2 hi2 hi_new h b2 t2 p_avl_t2 (reflexive lo2) p2 in
-          avl_left_leaning p_avl_t1_new p_avl_t2_new pleft pright
-      end
-    .
-  End draft.
 End Make.
