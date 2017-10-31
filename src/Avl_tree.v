@@ -1,3 +1,4 @@
+Require Binary_search_tree.
 Require Import Core.
 Require Import Coq.Lists.List.
 Import ListNotations.
@@ -5,26 +6,351 @@ Import Equal.Notations.
 
 Set Implicit Arguments.
 
-Module Make (S:SORTABLE).
+
+Module Make (S0:SORTABLE).
+
+(*====================================*)
+(** * Balance Indicator *)
+(*====================================*)
+  Module Balance_indicator.
+    Inductive T0: Set := left: T0 | balanced: T0 | right : T0.
+    Definition T:Set := T0.
+
+    Definition Left (b:T): Prop :=
+      match b with
+      | left => True
+      | _ => False
+      end.
+
+    Definition Right (b:T): Prop :=
+      match b with
+      | right => True
+      | _ => False
+      end.
+
+    Definition Balanced (b:T): Prop :=
+      match b with
+      | balanced => True
+      | _ => False
+      end.
+
+    Theorem left_not_balanced: left <> balanced.
+    Proof
+      fun eq => Equal.rewrite eq Left I.
+
+    Theorem balanced_not_right: balanced <> right.
+    Proof
+      fun eq => Equal.rewrite eq Balanced I.
+
+    Theorem right_not_left: right <> left.
+    Proof
+      fun eq => Equal.rewrite eq Right I.
+  End Balance_indicator.
+  Module B := Balance_indicator.
+
+
+
+(*====================================*)
+(** * Use Module 'Binary_search_tree' *)
+(*====================================*)
+
+  Include (Binary_search_tree.Make S0 B).
+
+
+(*====================================*)
+(** * Basic Definitions *)
+(*====================================*)
+
+
+  Definition Left_leaning  (t:T): Prop := Extra t B.left.
+  Definition Right_leaning (t:T): Prop := Extra t B.right.
+  Definition Balanced (t:T): Prop := Extra t B.balanced.
+
+
+  Theorem left_leaning_is_node:
+    forall (t:T), Left_leaning t -> Node t.
+  Proof
+    fun t ll => extra_is_node ll.
+
+  Theorem balanced_is_node:
+    forall (t:T), Balanced t -> Node t.
+  Proof
+    fun t bal => extra_is_node bal.
+
+  Theorem right_leaning_is_node:
+    forall (t:T), Balanced t -> Node t.
+  Proof
+    fun t bal => extra_is_node bal.
+
+  Inductive Avl_height: T -> nat -> Prop :=
+  | empty_avl: Avl_height empty 0
+  | balanced_avl:
+      forall h a t1 t2,
+        Avl_height t1 h ->
+        Avl_height t2 h ->
+        Avl_height (node a B.balanced t1 t2) (1+h)
+  | left_avl:
+      forall h a t1 t2,
+        Avl_height t1 (1+h) ->
+        Avl_height t2 h ->
+        Avl_height (node a B.left t1 t2) (2+h)
+  | right_avl:
+      forall h a t1 t2,
+        Avl_height t1 h ->
+        Avl_height t2 (1+h) ->
+        Avl_height (node a B.right t1 t2) (2+h).
+
+  Definition Avl_tree (t:T): Prop :=
+    exists h, Avl_height t h.
+
+
+  (*====================================*)
+  (** * Rebalancing *)
+  (*====================================*)
+
+  (** An avl tree is nearly balanced if its left and right subtree differ in
+      height by not more than 2. *)
+
+  Inductive Nearly_avl_left: A -> B.T -> T -> T -> nat -> Prop :=
+  | ok_nearly_left:
+      forall a bal t1 t2 h,
+        Avl_height (node a bal t1 t2) h ->
+        Nearly_avl_left a bal t1 t2 h
+  | left_nearly_left:
+      forall h t1 t2 a,
+        Avl_height t1 (2+h) ->
+        Avl_height t2 h ->
+        Nearly_avl_left  a B.left t1 t2 (3+h).
+
+  Inductive Nearly_avl_right: T -> nat -> Prop :=
+  | avl_nearly_right:
+      forall t h,
+        Avl_height t h ->
+        Nearly_avl_right t h
+  | right_nearly_right:
+      forall h t1 t2 a,
+        Avl_height t1 h ->
+        Avl_height t2 (2+h) ->
+        Nearly_avl_right (node a B.right t1 t2) (3+h).
+
+
+  Inductive Rebalanced_left: A -> B.T -> T -> T -> T -> nat -> Prop :=
+  | l_rebalanced:
+      (* No rebalancing
+       *)
+      forall a bal t1 t2 h,
+        Avl_height (node a bal t1 t2) h ->
+        Rebalanced_left a bal t1 t2 (node a bal t1 t2) h
+  | ll_rebalanced:
+      (*
+                    b                            a
+              a          t3              t1             b
+          t1     t2                      x          t2      t3
+          x
+       *)
+      forall h t1 t2 t3 a b bal,
+        Avl_height t1 (1+h) ->
+        Avl_height t2 h ->
+        Avl_height t3 h ->
+        Rebalanced_left
+          b bal (node a B.left t1 t2) t3
+          (node a B.balanced t1 (node b B.balanced t2 t3))
+          (2+h)
+  | lrl_rebalanced:
+      (*
+                      c                               b
+              a            t4                   a            c
+          t1     b         x                 t1   t2      t3   t4
+          x   t2  t3                         x    x            x
+              x
+       *)
+      forall h t1 t2 t3 t4 a b c bal,
+        Avl_height t1 (1+h) ->
+        Avl_height t2 (1+h) ->
+        Avl_height t3 h ->
+        Avl_height t4 (1+h) ->
+        Rebalanced_left
+          c
+          bal
+          (node a B.right
+                t1
+                (node b B.left t2 t3))
+          t4
+          (node b B.balanced
+                (node a B.balanced t1 t2)
+                (node c B.right t3 t4))
+          (3+h)
+  | lrr_rebalanced:
+      (*
+                      c                               b
+              a            t4                   a            c
+          t1     b         x                 t1   t2      t3   t4
+          x   t2  t3                         x            x    x
+                  x
+       *)
+      forall h t1 t2 t3 t4 a b c bal,
+        Avl_height t1 (1+h) ->
+        Avl_height t2 h ->
+        Avl_height t3 (1+h) ->
+        Avl_height t4 (1+h) ->
+        Rebalanced_left
+          c
+          bal
+          (node a B.right
+                t1
+                (node b B.right t2 t3))
+          t4
+          (node b B.balanced
+                (node a B.left t1 t2)
+                (node c B.balanced t3 t4))
+          (3+h).
+
+  Theorem rebalanced_left_correct:
+    forall (a:A) (bal:B.T) (t1 t2 t3:T) (h:nat),
+      Rebalanced_left a bal t1 t2 t3 h ->
+      Avl_height t3 h.
+  Proof
+    fun a bal t1 t2 t3 h rebal =>
+      match rebal in Rebalanced_left a bal t1 t2 t3 h
+            return Avl_height t3 h
+      with
+      | @l_rebalanced a bal t1 t2 h pheight =>
+        pheight
+      | @ll_rebalanced h t1 t2 t3 a b bal pt1 pt2 pt3 =>
+        @balanced_avl
+          (1+h) a t1 (node b B.balanced t2 t3)
+          pt1
+          (@balanced_avl h b t2 t3 pt2 pt3)
+      | @lrl_rebalanced h t1 t2 t3 t4 a b c bal pt1 pt2 pt3 pt4 =>
+        @balanced_avl
+          (2+h) b _ _
+          (@balanced_avl (1+h) a t1 t2 pt1 pt2)
+          (@right_avl h c t3 t4 pt3 pt4)
+      | @lrr_rebalanced h t1 t2 t3 t4 a b c bal pt1 pt2 pt3 pt4 =>
+        @balanced_avl
+          (2+h) b _ _
+          (@left_avl h a t1 t2 pt1 pt2)
+          (@balanced_avl (1+h) c t3 t4 pt3 pt4)
+      end.
+
+
+  Definition rebalance_left (x:A) (xbal:B.T) (u v:T): T :=
+    match u with
+    | node a B.left t1 t2 =>
+      (* ll *)
+      node a B.balanced t1 (node x B.balanced t2 v)
+    | node a B.right t1 (node b B.left t2 t3) =>
+      (* lrl *)
+      node b B.balanced
+           (node a B.balanced t1 t2)
+           (node x B.right t3 v)
+
+    | node a B.right t1 (node b B.right t2 t3) =>
+      (* lrr *)
+      node b B.balanced
+           (node a B.left t1 t2)
+           (node x B.balanced t3 v)
+
+    | _ =>
+      node x xbal u v
+    end.
+
+(*
+  Theorem rebalance_left_correct:
+    forall (a:A) (bal:B.T) (t1 t2 t3:T) (h:nat),
+      Rebalanced_left a bal t1 t2 t3 h ->
+      t3 = rebalance_left a bal t1 t2.
+  Proof
+    _
+  .
+*)
+
+
+
+
+
+  Inductive Rebalanced_right: T -> T -> Prop :=
+  | r_rebalanced:
+      forall t h,
+        Avl_height t h ->
+        Rebalanced_right t t
+  (*
+              a                                     b
+        t1          b                         a          t3
+                 t2   t3                   t1   t2       x
+                      x
+   *)
+  | rr_rebalanced:
+      forall h t1 t2 t3 a b bal,
+        Avl_height t1 h ->
+        Avl_height t2 h ->
+        Avl_height t3 (1+h) ->
+        Rebalanced_right
+          (node a bal t1 (node b B.right t2 t3))
+          (node b B.balanced (node a B.balanced t1 t2) t3)
+  (*
+              a                                     b
+        t1            c                       a            c
+        x        b       t4                t1   t2      t3   t4
+              t2   t3    x                 x    x            x
+              x
+   *)
+  | rll_rebalanced:
+      forall h t1 t2 t3 t4 a b c bal,
+        Avl_height t1 (1+h) ->
+        Avl_height t2 (1+h) ->
+        Avl_height t3 h ->
+        Avl_height t4 (1+h) ->
+        Rebalanced_right
+          (node a bal
+                t1
+                (node c B.left
+                      (node b B.left t2 t3)
+                      t4))
+          (node b B.balanced
+             (node a B.balanced t1 t2)
+             (node c B.right t3 t4))
+  (*
+              a                                     b
+        t1            c                       a            c
+        x        b       t4                t1   t2      t3   t4
+              t2   t3    x                 x            x    x
+                   x
+   *)
+  | rlr_rebalanced:
+      forall h t1 t2 t3 t4 a b c bal,
+        Avl_height t1 (1+h) ->
+        Avl_height t2 h ->
+        Avl_height t3 (1+h) ->
+        Avl_height t4 (1+h) ->
+        Rebalanced_right
+          (node a bal
+                t1
+                (node c B.left
+                      (node b B.right t2 t3)
+                      t4))
+          (node b B.balanced
+             (node a B.left t1 t2)
+             (node c B.balanced t3 t4)).
+
+End Make.
+
+
+
+
+Module Make2 (S:SORTABLE).
   Import Relation.
 
 (** * Sortable *)
 (*    ======== *)
+  Module S1 := Sortable_plus S.
   Section sortable.
-    Definition A:Set :=  S.T.
 
-    Theorem transitive: Transitive S.Less_equal.
-    Proof
-      match S.is_linear_preorder with
-        conj _ tr => tr
-      end.
+    Definition A:Set :=  S1.T.
 
-    Theorem reflexive: Reflexive S.Less_equal.
-    Proof
-      match S.is_linear_preorder with
-        conj d _ =>
-        dichotomic_is_reflexive d
-      end.
+    Definition dichotomic := S1.dichotomic.
+    Definition transitive := S1.transitive.
+    Definition reflexive  := S1.reflexive.
 
   End sortable.
   Notation "a <= b"  := (S.Less_equal a b) (at level 70).
@@ -609,62 +935,9 @@ Module Make (S:SORTABLE).
                  (transitivity_chain: le_a_lo2, bounds_sorted s2))
         end.
 
-(*
-    Theorem sorted_is_sorted:
-      forall (t:T),
-        Sorted_tree2 t ->
-        forall  (nd:Node t),
-          Sorted (least t nd) (greatest t nd) t.
-    Proof
-      let Cond t nd := Sorted (least t nd) (greatest t nd) t
-      in
-      fun t exist_lo_hi =>
-        match exist_lo_hi with
-        | ex_intro _ lo exist_hi =>
-          match exist_hi with
-            ex_intro _ hi sorted =>
-            match sorted in Sorted lo hi t
-                  return forall nd, Cond t nd
-            with
-            | empty_sorted _ =>
-              fun nd => match nd with end
-            | @node_sorted lo1 hi1 t1
-                           lo2 hi2 t2
-                           b a
-                           s1 s2 le_hi1_a le_a_lo2 =>
-              fun nd =>
-                let t_ := node b a t1 t2 in
-                (* goal: Sorted (least t_ nd) (greatest t_ nd) t_
-                 *)
-                _
-            end
-          end
-        end.
-*)
   End sorted.
 
-  Section blabla.
-    Inductive Permutation: T -> T -> Prop :=
-    | perm_empty:
-        Permutation empty empty
-    | perm_left:
-        forall b1 b2 a1 a2 t1 t2 t3,
-          Permutation
-            (node b1 a1 (node b2 a2 t1 t2) t3)
-            (node b1 a2 (node b2 a1 t1 t2) t3)
-    | perm_right:
-        forall b1 b2 a1 a2 t1 t2 t3,
-          Permutation
-            (node b1 a1 t1 (node b2 a2 t2 t3))
-            (node b1 a2 t1 (node b2 a1 t2 t3))
-    | perm_root:
-        forall t u v w a b,
-          Permutation t u ->
-          Permutation v w ->
-          Permutation (node b a t v) (node b a u w)
-    | perm_transitive:
-        forall t1 t2 t3,
-          Permutation t1 t2 -> Permutation t2 t3 -> Permutation t1 t3.
+  Section draft.
 
 
     (* Replace a t1 t2: An element of 't1' equivalent to 'a' has been replaced
@@ -681,8 +954,7 @@ Module Make (S:SORTABLE).
     | replaced_right:
         forall x t1 t2 b a t,
           Replaced x t1 t2 ->
-          Replaced x (node b a t t1) (node b a t t2)
-    .
+          Replaced x (node b a t t1) (node b a t t2).
 
     Definition Avl (t:T): Prop :=
       match is_node t with
@@ -698,76 +970,5 @@ Module Make (S:SORTABLE).
       | node b a t1 t2 => inorder t1 ++ a :: inorder t2
       end.
 
-  End blabla.
-(*
-  Theorem avl_subtree:
-    forall (a:A) (b:Balance) (t1 t2:T),
-      Avl (node b a t1 t2) -> Avl t1 /\ Avl t2.
-  Proof.
-    intros a b t1 t2 pavl. unfold Avl in pavl. unfold is_node in pavl.
-    destruct pavl as [pbal psorted].
-    split.
-    - unfold Avl.
-    -
-    fun a b t1 t2 pavl =>
-      match pavl with
-        left p => _
-                    right
-
-      _.
-*)
-  Definition add_root (a:A) (t:T): T :=
-    node left_leaning a t empty.
-
-
-  Definition Inserted (x:A) (t u:T): Prop :=
-    List.Permutation (x :: inorder t) (inorder u).
-
-  Definition Avl_inserted (x:A) (t u:T): Prop :=
-    Avl u /\ Inserted x t u.
-
-
-  Section insertion.
-    (*
-    Definition insert:
-      forall (a:A) (t:T),
-        Avl t ->
-        Either.T {u:T | Avl_inserted a t u} {u:T | Replaced a t u}
-      :=
-      fix f x t :=
-        match t
-              return Avl t -> Either.T {u| Avl_inserted x t u} {u| Replaced x t u}
-        with
-        | empty =>
-          fun _ =>
-            let u := node balanced x empty empty in
-            Either.left _ (exist _ u (insert_empty x))
-        | node bal a t1 t2 =>
-          fun pavl_t =>
-            match x <=? a, a <=? x with
-            | left p1, left p2  =>
-              (* x and a are equivalent, replace *)
-              let u := node bal x t1 t2 in
-              let p_replace: Replaced x (node bal a t1 t2) u :=
-                  @replaced_root x a bal t1 t2 (conj p1 p2)
-              in
-              Either.right _ (exist _ u p_replace)
-            | left p1, _  =>
-              (* insert into left subtree *)
-              let pavl_t1: Avl t1 := _ in
-              match f x t1 pavl_t1 with
-              | Either.left _ sig_ins_t1 =>
-                _
-              | Either.right _ sig_repl_t1 =>
-                _
-              end
-            | right p1, _  =>
-              (* insert into right subtree *)
-              _
-            end
-        end.*)
-  End insertion.
-
-
-
-End Make.
+  End draft.
+End Make2.

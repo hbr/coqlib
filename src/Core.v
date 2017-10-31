@@ -65,10 +65,10 @@ Module Equal.
        *)
       fun q:b=a => p (flip q).
 
-    
+
     Definition Decider: Type := forall a b:A, {a = b} + {a <> b}.
   End equal_basics.
-  
+
   Section application.
     Variables A B: Type.
     Theorem application:
@@ -79,13 +79,13 @@ Module Equal.
           ((join
              (eq_refl: f a = f a)
              (inject eqab _: f a = f b)): f a = f b)
-          (rewrite eqfg (fun g => f b = g b) eq_refl: f b = g b).    
+          (rewrite eqfg (fun g => f b = g b) eq_refl: f b = g b).
   End application.
 
   Module Notations.
     Notation "( 'equality_chain:' x , y , .. , z )" :=
       (Equal.join .. (Equal.join x y) .. z) (at level 0): equality_scope.
-    
+
     Notation "( 'equal_arguments:' eq1 , .. , eqn )" :=
       (Equal.application .. (Equal.application eq_refl eq1) .. eqn)
         (at level 0): equality_scope.
@@ -237,19 +237,43 @@ Module Either.
 End Either.
 
 
-(** * Sortable Type *)
-(*    ============= *)
-Module Type SORTABLE.
+
+
+(** * Any Type *)
+(*    ======== *)
+Module Type ANY.
+  Parameter T: Set.
+End ANY.
+
+
+(** * Sortable Types *)
+(*    ============== *)
+Module Type SORTABLE <: ANY.
   Import Relation.
 
   Parameter T: Set.
-
   Parameter Less_equal: T -> T -> Prop.
 
-  Axiom is_linear_preorder: Linear_preorder Less_equal.
+  Axiom dichotomic: Dichotomic  Less_equal.
+  Axiom transitive: Transitive  Less_equal.
 
   Parameter is_less_equal: Decider Less_equal.
 End SORTABLE.
+
+Module Sortable_plus (S:SORTABLE).
+  Import Relation.
+  Include S.
+  Definition Equivalent (a b:T): Prop := Less_equal a  b /\ Less_equal b a.
+  Theorem reflexive: Reflexive Less_equal.
+  Proof
+    dichotomic_is_reflexive dichotomic.
+  Module Notations.
+    Notation "a <= b"  := (Less_equal a b) (at level 70).
+    Notation "a <=? b" := (is_less_equal a b) (at level 70).
+    Notation "( 'transitivity_chain:' x , y , .. , z )" :=
+      (transitive .. (transitive x y) .. z) (at level 0).
+  End Notations.
+End Sortable_plus.
 
 
 (** * Finite Set *)
