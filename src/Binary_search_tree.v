@@ -10,6 +10,9 @@ Module Make (S0:SORTABLE) (Extra:ANY).
   Include BT.
   Export  BT.
 
+  (*====================================*)
+  (** * Basic Definitions               *)
+  (*====================================*)
   Inductive Bounded: A -> A -> T -> Prop :=
   | singleton_bounded:
       forall a e,
@@ -46,4 +49,60 @@ Module Make (S0:SORTABLE) (Extra:ANY).
       @lm_left lo1 a e t1 t2 p
     end.
 
+
+  (*====================================*)
+  (** * Insertion                       *)
+  (*====================================*)
+  Section insertion.
+    Inductive Inserted: A -> T -> T -> Prop :=
+    | empty_inserted:
+        forall a e, Inserted a empty (node a e empty empty)
+    | left_inserted:
+        forall x t11 t12 t2 a e,
+          x <= a ->
+          Inserted x t11 t12 ->
+          Inserted x (node a e t11 t2) (node a e t12 t2)
+    | right_inserted:
+        forall x t1 t21 t22 a e,
+          a <= x ->
+          Inserted x t21 t22 ->
+          Inserted x (node a e t1 t21) (node a e t1 t22).
+
+    Theorem inserted_is_node:
+      forall (x:A) (t1 t2:T),
+        Inserted x t1 t2 ->
+        Node t2.
+    Proof
+      fix f x t1 t2 ins:=
+      match ins in Inserted x t1 t2
+            return Node t2
+      with
+      | empty_inserted _ _ => I
+      | left_inserted _ _ _ _ => I
+      | right_inserted _ _ _ _ => I
+      end.
+(*
+    Theorem inserted_is_sorted:
+      forall (x:A) (t1 t2:T),
+        Sorted t1 ->
+        Inserted x t1 t2 ->
+        Sorted t2.
+    Proof
+      fix f x t1 t2 sorted inserted:=
+      let P t2 := forall x t2, Inserted x t1 t2 -> Sorted t2 in
+      (match sorted in Sorted t1
+            return P t2
+      with
+      | empty_sorted =>
+        let _ := P t2 in
+        _
+      | node_sorted _ => _
+       end
+      ) x t2 inserted
+    .
+*)
+
+
+
+  End insertion.
 End Make.
