@@ -1,0 +1,2 @@
+Extract Inductive list => "list" [ "[]" "(::)" ].
+
