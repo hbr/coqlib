@@ -26,6 +26,17 @@ Section axioms.
 End axioms.
 
 
+
+
+(** * Standard Types *)
+(*    ============== *)
+
+Extract Inductive bool => "bool" [ "true" "false" ].
+Extract Inductive list => "list" [ "[]" "(::)" ].
+Extract Inductive sumbool => "bool" [ "true" "false" ].
+
+
+
 (** * Equality *)
 (*    ======== *)
 Module Equal.

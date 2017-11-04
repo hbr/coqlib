@@ -93,7 +93,27 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
         1 + max (height t1) (height t2)
       end.
 
-    Theorem height_correct:
+    Theorem height_is_only_height:
+      forall (t:T) (h:nat),
+        Height t h ->
+        h = height t.
+    Proof
+      fix f t h ph :=
+      match ph in Height t h
+            return h = height t
+      with
+      | empty_height => eq_refl
+      | node_height a i ph1 ph2 =>
+        let p1 := f _ _ ph1 in
+        let p2 := f _ _ ph2 in
+        (equality_chain:
+           (eq_refl: 1 + max _ _ = _ ),
+           (Equal.inject p1 (fun x => 1 + max x _ )),
+           (Equal.inject p2 (fun x => 1 + max _ x ))
+        )
+      end.
+
+    Theorem height_is_height:
       forall t:T, Height t (height t).
     Proof
       fix f t :=
@@ -101,8 +121,19 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
       | empty =>
         empty_height
       | node a i t1 t2 =>
-        @node_height t1 (height t1) t2 (height t2) a i (f t1) (f t2)
+        node_height a i (f t1) (f t2)
       end.
+
+    Theorem height_is_unique:
+      forall (t:T) (h1 h2:nat),
+        Height t h1 ->
+        Height t h2 ->
+        h1 = h2.
+    Proof
+      fix f t h1 h2 p1 p2 :=
+      (equality_chain:
+         height_is_only_height p1,
+         (Equal.flip (height_is_only_height p2))).
   End height.
 
 
