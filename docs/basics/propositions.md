@@ -97,7 +97,7 @@ proposition. Since `I` is a constructor for `True` it is easy to prove `True`.
 
 We cannot prove `False` but we can convert a proof of `False` (which cannot
 exist in the global environment, but it could exist by making some
-inconsistent assumptions) into a prove of anything.
+inconsistent assumptions) into a proof of anything.
 
     Goal
         forall A:Prop, False -> A.
@@ -163,7 +163,7 @@ replaced by the function which they denote.
 Lets analyze what these definitions say.
 
 `A /\ B` has type `Prop` i.e. is a proposition. The only way to prove it is by
-applying the constructor `conj` to a prove of `A` and a proof of `B`.
+applying the constructor `conj` to a proof of `A` and a proof of `B`.
 
 `A \/ B` has type `Prop`. There are two ways to prove it. Either apply the
 constructor `or_introl` to a proof of `A` or apply the constructor `or_intror`
@@ -175,7 +175,7 @@ In order to prove `~ A` we have to map every proof of `A` into a proof of
 In order to prove `A <-> B` we have to prove `A -> B` and `B -> A` and apply
 the constructor `conj` to them.
 
-Since `A /\ B` and `A \/ B` are defined inductively we can pattern match
+Since `A /\ B` and `A \/ B` are defined inductively we can pattern match on
 proofs of them. If we have a proof of `A /\ B` i.e. a term `p` with type `A /\
 B` we can extract the proofs of `A` and `B` by pattern match.
 
@@ -249,9 +249,6 @@ exists a natural number which is greater than zero.
 The inductive type `ex` has only one constructor `ex_intro` which needs an
 object and a proof that the object satisfies the required property.
 
-Note that type of the object whose existence in stated must be of the sort
-`Set` i.e. it is some datatype of an object in a program.
-
 The Coq library provides a notation shorthand for existential quantification
 so that the following two terms are equivalent.
 
@@ -263,11 +260,6 @@ The second form is very intuitive because it has the same form as the
 dependent product `forall x:T,e` with `forall` substituted by `exists`. But
 you have to realize that the dependent product is built into the language and
 the existential quantification is just an inductive definition.
-
-We want to prove propositions by providing proof terms. Therefore we prefer
-the term `ex P` to state the fact that there exists some object which
-satisfies the property `P` instead of writing `exists x,P`. However this is a
-matter of taste. Both notations are equivalent.
 
 Now we can start to prove propositions with existential quantification. If
 there exists an element which satisfies a certain property then it cannot be
