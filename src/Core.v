@@ -36,7 +36,6 @@ Extract Inductive list => "list" [ "[]" "(::)" ].
 Extract Inductive sumbool => "bool" [ "true" "false" ].
 
 
-
 (** * Equality *)
 (*    ======== *)
 Module Equal.
@@ -187,6 +186,8 @@ Module Relation.
         end.
   End binary_relation.
 
+
+
   Section endorelation.
     Variable A:Type.
     Variable R: A -> A -> Prop.
@@ -215,6 +216,22 @@ Module Relation.
         | or_intror p => p
         end.
 
+    Inductive Comparison (a b:A): Set :=
+    | less_than: R a b -> ~ R b a -> Comparison a b
+    | equivalent: R a b -> R b a  -> Comparison a b
+    | greater_than: ~ R a b -> R b a -> Comparison a b.
+
+    Definition Comparer: Type := forall a b:A, Comparison a b.
+
+    Theorem comparable_is_dichotomic:
+      forall (c:Comparer), Dichotomic.
+    Proof
+      fun c a b =>
+        match c a b with
+        | less_than p1 p2 => or_introl p1
+        | equivalent p1 p2 => or_introl p1
+        | greater_than p1 p2 => or_intror p2
+      end.
   End endorelation.
 
   Section order_relation.
@@ -265,22 +282,28 @@ Module Type SORTABLE <: ANY.
   Parameter T: Set.
   Parameter Less_equal: T -> T -> Prop.
 
-  Axiom dichotomic: Dichotomic  Less_equal.
+  (*Axiom dichotomic: Dichotomic  Less_equal.*)
   Axiom transitive: Transitive  Less_equal.
 
-  Parameter is_less_equal: Decider Less_equal.
+  Parameter compare: Comparer Less_equal.
 End SORTABLE.
 
 Module Sortable_plus (S:SORTABLE).
   Import Relation.
   Include S.
+
   Definition Equivalent (a b:T): Prop := Less_equal a  b /\ Less_equal b a.
+
+  Theorem dichotomic: Dichotomic Less_equal.
+  Proof
+    comparable_is_dichotomic compare.
+
   Theorem reflexive: Reflexive Less_equal.
   Proof
     dichotomic_is_reflexive dichotomic.
+
   Module Notations.
     Notation "a <= b"  := (Less_equal a b) (at level 70).
-    Notation "a <=? b" := (is_less_equal a b) (at level 70).
     Notation "( 'transitivity_chain:' x , y , .. , z )" :=
       (transitive .. (transitive x y) .. z) (at level 0).
   End Notations.
