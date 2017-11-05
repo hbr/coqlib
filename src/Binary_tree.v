@@ -69,6 +69,118 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
         match extra in Extra t _ return Node t with
         | extra_node a e t1 t2 => I
         end.
+
+    Definition left_son (t:T): Node t -> T :=
+      match t with
+      | empty => fun nd => match nd with end
+      | node a e t1 t2 => fun _ => t1
+      end.
+
+    Definition right_son (t:T): Node t -> T :=
+      match t with
+      | empty => fun nd => match nd with end
+      | node a e t1 t2 => fun _ => t2
+      end.
+
+    Definition element (t:T): Node t -> A :=
+      match t with
+      | empty => fun nd => match nd with end
+      | node a e t1 t2 => fun _ => a
+      end.
+
+    Definition extra (t:T): Node t -> E :=
+      match t with
+      | empty => fun nd => match nd with end
+      | node a e t1 t2 => fun _ => e
+      end.
+
+    Theorem left_son_correct:
+      forall (a:A) (e:E) (t1 t2:T),
+        t1 = left_son (node a e t1 t2) I.
+    Proof
+      fun a e t1 t2 => eq_refl.
+
+    Theorem right_son_correct:
+      forall (a:A) (e:E) (t1 t2:T),
+        t2 = right_son (node a e t1 t2) I.
+    Proof
+      fun a e t1 t2 => eq_refl.
+
+    Theorem element_correct:
+      forall (a:A) (e:E) (t1 t2:T),
+        a = element (node a e t1 t2) I.
+    Proof
+      fun a e t1 t2 => eq_refl.
+
+    Theorem extra_correct:
+      forall (a:A) (e:E) (t1 t2:T),
+        e = extra (node a e t1 t2) I.
+    Proof
+      fun a e t1 t2 => eq_refl.
+
+    Theorem node_injective_extra:
+      forall (a1 a2:A) (e1 e2:E) (t11 t12 t21 t22:T),
+        node a1 e1 t11 t12 = node a2 e2 t21 t22 ->
+        e1 = e2.
+    Proof
+      let f e0 t :=
+          match t with
+          | empty => e0
+          | node a e t1 t2 => e
+          end
+      in
+      fun a1 a2 e1 e2 t11 t12 t21 t22 eq =>
+        Equal.inject
+          eq
+          (f e1).
+
+    Theorem node_injective_element:
+      forall (a1 a2:A) (e1 e2:E) (t11 t12 t21 t22:T),
+        node a1 e1 t11 t12 = node a2 e2 t21 t22 ->
+        a1 = a2.
+    Proof
+      let f a0 t :=
+          match t with
+          | empty => a0
+          | node a e t1 t2 => a
+          end
+      in
+      fun a1 a2 e1 e2 t11 t12 t21 t22 eq =>
+        Equal.inject
+          eq
+          (f a1).
+
+    Theorem node_injective_left_son:
+      forall (a1 a2:A) (e1 e2:E) (t11 t12 t21 t22:T),
+        node a1 e1 t11 t12 = node a2 e2 t21 t22 ->
+        t11 = t21.
+    Proof
+      let f t0 t :=
+          match t with
+          | empty => t0
+          | node a e t1 t2 => t1
+          end
+      in
+      fun a1 a2 e1 e2 t11 t12 t21 t22 eq =>
+        Equal.inject
+          eq
+          (f t11).
+
+    Theorem node_injective_right_son:
+      forall (a1 a2:A) (e1 e2:E) (t11 t12 t21 t22:T),
+        node a1 e1 t11 t12 = node a2 e2 t21 t22 ->
+        t12 = t22.
+    Proof
+      let f t0 t :=
+          match t with
+          | empty => t0
+          | node a e t1 t2 => t2
+          end
+      in
+      fun a1 a2 e1 e2 t11 t12 t21 t22 eq =>
+        Equal.inject
+          eq
+          (f t21).
   End basic_definitions.
 
 
