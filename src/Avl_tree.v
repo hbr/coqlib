@@ -64,10 +64,9 @@ Module Make (S0:SORTABLE).
 
 
 (*====================================*)
-(** * Basic Definitions *)
+(** * Balance Indicator Basics        *)
 (*====================================*)
-  Section basic_definitions.
-
+  Section balance_indicator_basics.
     Definition Left_leaning  (t:T): Prop := Extra t B.left.
     Definition Right_leaning (t:T): Prop := Extra t B.right.
     Definition Balanced (t:T): Prop := Extra t B.balanced.
@@ -97,6 +96,49 @@ Module Make (S0:SORTABLE).
         | or_introl p => left_leaning_is_node p
         | or_intror p => right_leaning_is_node p
         end.
+
+    Theorem not_leaning_balanced:
+      forall (a:A) (t1 t2:T),
+        ~ Leaning (node a B.balanced t1 t2).
+    Proof
+      fun a t1 t2 leaning =>
+        match leaning with
+        | or_introl p =>
+          (match p in Extra t bal
+                 return t = node a B.balanced t1 t2 ->
+                        bal = B.left ->
+                        False
+           with
+           | extra_node a bal t1 t2 =>
+             fun eqt eqbal =>
+               B.left_not_balanced
+                 (Equal.join
+                    (Equal.flip eqbal)
+                    (node_injective_extra eqt))
+           end) eq_refl eq_refl
+        | or_intror p =>
+          (match p in Extra t bal
+                 return t = node a B.balanced t1 t2 ->
+                        bal = B.right ->
+                        False
+           with
+           | extra_node a bal t1 t2 =>
+             fun eqt eqbal =>
+               B.balanced_not_right
+                 (Equal.join
+                    (Equal.flip (node_injective_extra eqt))
+                    eqbal
+                 )
+           end) eq_refl eq_refl
+        end.
+  End balance_indicator_basics.
+
+
+
+(*====================================*)
+(** * Basic Definitions *)
+(*====================================*)
+  Section basic_definitions.
 
     Inductive Avl_height: T -> nat -> Prop :=
     | empty_avl: Avl_height empty 0
@@ -170,6 +212,216 @@ Module Make (S0:SORTABLE).
            end)
       in
       fun t h avl => f t (S h) avl h eq_refl .
+
+    Theorem left_leaning_sons_height:
+      forall (h:nat) (a:A) (t1 t2:T),
+        Avl_height (node a B.left t1 t2) (2+h) ->
+        Avl_height t1 (1+h) /\ Avl_height t2 h.
+    Proof
+      fun h a t1 t2 avl =>
+        (match avl in Avl_height t0 h0
+               return t0 = node a B.left t1 t2 ->
+                      h0 = 2 + h ->
+                      Avl_height t1 (1 + h) /\ Avl_height t2 h
+         with
+         | empty_avl =>
+           fun eq =>
+             match
+               node_not_empty (Equal.flip eq)
+             with
+             end
+         | balanced_avl _ _ _ =>
+           fun eq =>
+             match
+               B.left_not_balanced
+                 (node_injective_extra (Equal.flip eq))
+             with
+             end
+         | left_avl a0 avl01 avl02 =>
+           fun eqt eqh_plus2 =>
+             let eqt1 := node_injective_left_son eqt in
+             let eqt2 := node_injective_right_son eqt in
+             let eqh_plus1: 1 + _ = 1 + _ := Nat.successor_injective eqh_plus2 in
+             let eqh: _ = _ := Nat.successor_injective eqh_plus1 in
+             let p1 :=
+                 Equal.rewrite
+                   eqh_plus1
+                   (fun x => Avl_height _ x)
+                   (Equal.rewrite eqt1 (fun t => Avl_height t _) avl01) in
+             let p2 :=
+                 Equal.rewrite
+                   eqh
+                   (fun x => Avl_height _ x)
+                   (Equal.rewrite eqt2 (fun t => Avl_height t _) avl02) in
+             conj p1 p2
+         | right_avl _ _ _ =>
+           fun eq =>
+             match
+               B.right_not_left (node_injective_extra eq)
+             with
+             end
+         end) eq_refl eq_refl.
+
+    Theorem right_leaning_sons_height:
+      forall (h:nat) (a:A) (t1 t2:T),
+        Avl_height (node a B.right t1 t2) (2+h) ->
+        Avl_height t1 h /\ Avl_height t2 (1+h).
+    Proof
+      fun h a t1 t2 avl =>
+        (match avl in Avl_height t0 h0
+               return t0 = node a B.right t1 t2 ->
+                      h0 = 2 + h ->
+                      Avl_height t1 h /\ Avl_height t2 (1 + h)
+         with
+         | empty_avl =>
+           fun eq =>
+             match
+               node_not_empty (Equal.flip eq)
+             with
+             end
+         | balanced_avl _ _ _ =>
+           fun eq =>
+             match
+               B.balanced_not_right
+                 (node_injective_extra eq)
+             with
+             end
+         | left_avl _ _ _ =>
+           fun eq =>
+             match
+               B.right_not_left
+                 (node_injective_extra (Equal.flip eq))
+             with
+             end
+         | right_avl a0 avl01 avl02 =>
+           fun eqt eqh_plus2 =>
+             let eqt1 := node_injective_left_son eqt in
+             let eqt2 := node_injective_right_son eqt in
+             let eqh_plus1: 1 + _ = 1 + _ := Nat.successor_injective eqh_plus2 in
+             let eqh: _ = _ := Nat.successor_injective eqh_plus1 in
+             let p1 :=
+                 Equal.rewrite
+                   eqh
+                   (fun x => Avl_height _ x)
+                   (Equal.rewrite eqt1 (fun t => Avl_height t _) avl01) in
+             let p2 :=
+                 Equal.rewrite
+                   eqh_plus1
+                   (fun x => Avl_height _ x)
+                   (Equal.rewrite eqt2 (fun t => Avl_height t _) avl02) in
+             conj p1 p2
+         end) eq_refl eq_refl.
+
+    Theorem balanced_sons_height:
+      forall (h:nat) (a:A) (t1 t2:T),
+        Avl_height (node a B.balanced t1 t2) (1+h) ->
+        Avl_height t1 h /\ Avl_height t2 h.
+    Proof
+      fun h a t1 t2 avl =>
+        (match avl in Avl_height t0 h0
+               return t0 = node a B.balanced t1 t2 ->
+                      h0 = 1 + h ->
+                      Avl_height t1 h /\ Avl_height t2 h
+         with
+         | empty_avl =>
+           fun eq =>
+             match
+               node_not_empty (Equal.flip eq)
+             with
+             end
+         | left_avl _ _ _ =>
+           fun eq =>
+             match
+               B.left_not_balanced
+                 (node_injective_extra eq)
+             with
+             end
+         | balanced_avl a0 avl01 avl02 =>
+           fun eqt eqh_plus1 =>
+             let eqt1 := node_injective_left_son eqt in
+             let eqt2 := node_injective_right_son eqt in
+             let eqh: _ = _ := Nat.successor_injective eqh_plus1 in
+             let p1 :=
+                 Equal.rewrite
+                   eqh
+                   (fun x => Avl_height _ x)
+                   (Equal.rewrite eqt1 (fun t => Avl_height t _) avl01) in
+             let p2 :=
+                 Equal.rewrite
+                   eqh
+                   (fun x => Avl_height _ x)
+                   (Equal.rewrite eqt2 (fun t => Avl_height t _) avl02) in
+             conj p1 p2
+         | right_avl _ _ _ =>
+           fun eq =>
+             match
+               B.balanced_not_right
+                 (node_injective_extra (Equal.flip eq))
+             with
+             end
+         end) eq_refl eq_refl.
+
+    Theorem left_leaning_height:
+      forall (h:nat) (a:A) (t1 t2:T),
+        Avl_height (node a B.left t1 t2) (1 + h) ->
+        Nat.Successor h.
+    Proof
+      fun h a t1 t2 avl =>
+        (match avl in Avl_height t_ h_
+               return t_ = node a B.left t1 t2 ->
+                      h_ = 1 + h ->
+                      Nat.Successor h
+         with
+         | empty_avl =>
+           fun eqt => match node_not_empty (Equal.flip eqt) with end
+         | balanced_avl _ _ _ =>
+           fun eqt =>
+             match
+               B.left_not_balanced (node_injective_extra (Equal.flip eqt))
+             with end
+         | left_avl a0 avl01 avl02 =>
+           fun eqt eqh =>
+             Equal.rewrite
+               (Nat.successor_injective eqh: S _ = h)
+               Nat.Successor
+               I
+         | right_avl _ _ _ =>
+           fun eqt =>
+             match
+               B.right_not_left (node_injective_extra eqt)
+             with end
+         end) eq_refl eq_refl.
+
+    Theorem right_leaning_height:
+      forall (h:nat) (a:A) (t1 t2:T),
+        Avl_height (node a B.right t1 t2) (1 + h) ->
+        Nat.Successor h.
+    Proof
+      fun h a t1 t2 avl =>
+        (match avl in Avl_height t_ h_
+               return t_ = node a B.right t1 t2 ->
+                      h_ = 1 + h ->
+                      Nat.Successor h
+         with
+         | empty_avl =>
+           fun eqt => match node_not_empty (Equal.flip eqt) with end
+         | balanced_avl _ _ _ =>
+           fun eqt =>
+             match
+               B.balanced_not_right (node_injective_extra eqt)
+             with end
+         | left_avl _ _ _ =>
+           fun eqt =>
+             match
+               B.right_not_left (node_injective_extra (Equal.flip eqt))
+             with end
+         | right_avl a0 avl01 avl02 =>
+           fun eqt eqh =>
+             Equal.rewrite
+               (Nat.successor_injective eqh: S _ = h)
+               Nat.Successor
+               I
+         end) eq_refl eq_refl.
   End basic_definitions.
 
 
@@ -179,250 +431,154 @@ Module Make (S0:SORTABLE).
   (** * Rebalancing *)
   (*====================================*)
   Section rebalancing.
-    Inductive Nearly_avl_left: A -> T -> T -> Prop :=
-    | lrl_nearly_avl_left:
-        (* lrl:
-                      c
-              a            t2
-          t11     b        x
-          x   t121 t122
-              x
-         *)
-        forall h t11 t121 t122 t2 a b c,
-          Avl_height t11 (1+h) ->
-          Avl_height t121 (1+h) ->
-          Avl_height t122 h ->
-          Avl_height t2 (1+h) ->
-          Nearly_avl_left
-            c
-            (node a B.right t11 (node b B.left t121 t122))
-            t2
-    | lrr_nearly_avl_left:
-        (* lrl:
-                      c
-              a            t2
-          t11     b        x
-          x   t121 t122
-                   x
-         *)
-        forall h t11 t121 t122 t2 a b c,
-          Avl_height t11 (1+h) ->
-          Avl_height t121 h ->
-          Avl_height t122 (1+h) ->
-          Avl_height t2 (1+h) ->
-          Nearly_avl_left
-            c
-            (node a B.right t11 (node b B.right t121 t122))
-            t2
-    | ll_nearly_avl_left:
-        (* ll:
-                    c
-              a          t2
-          t11    t12
-          x
-         *)
-        forall h t11 t12 t2 a c,
-          Avl_height t11 (1+h) ->
-          Avl_height t12 h ->
-          Avl_height t2  h ->
-          Nearly_avl_left
-            c
-            (node a B.left t11 t12)
-            t2.
+    Definition Rebalance_left_result (t1 t2:T) :=
+      forall h,
+      Avl_height t1 (2 + h) ->
+      Avl_height t2 h ->
+      Either.T {t:T| Avl_height t (2 + h)} {t:T| Avl_height t (3 + h)}.
 
 
-
-
-    Definition rebalance_left (c:A) (t1 t2:T): T :=
-      match t1  with
+    Definition rebal_left (c:A) (t1 t2:T): Rebalance_left_result t1 t2 :=
+      match t1 with
       | empty =>
-        node c B.right empty t2
-      | node a B.right t11 (node b B.left t121 t122) =>
-        (* lrl:
-                      c                               b
-              a            t2                   a            c
-          t11     b        x                 t11  t121   t122  t2
-          x   t121 t122                      x    x            x
-              x
-         *)
-        node
-          b B.balanced
-          (node a B.balanced t11 t121)
-          (node c B.right t122 t2)
-      | node a B.right t11 (node b B.right t121 t122) =>
-        (* lrr:
-                      c                               b
-              a            t2                   a            c
-          t11     b        x                 t11  t121   t122  t2
-          x   t121 t122                      x           x     x
-                   x
-         *)
-        node
-          b B.balanced
-          (node a B.left t11 t121)
-          (node c B.balanced t122 t2)
-      | node a bal t11 t12 =>
-        (* ll:
+        fun h ph1  => match avl_height_positive_is_node ph1 with end
+      | node a B.left t11 t12 =>
+        (* left-left unbalance:
                     c                            a
               a          t2              t11            c
-          t11    t12                     x          t12   t2
+          t11   t12                      x          t12   t2
           x
          *)
-        node a B.balanced t11 (node c B.balanced t12 t2)
+        fun h ph1 ph2  =>
+          let t := node a B.balanced t11 (node c B.balanced t12 t2) in
+          match left_leaning_sons_height ph1 with
+          | conj ph11 ph12 =>
+            let avl := balanced_avl a ph11 (balanced_avl c ph12 ph2) in
+            Either.left _ (exist _ t avl)
+          end
+      | node a B.balanced t11 t12 =>
+        (* left unbalance:
+                    c                            a
+              a          t2              t11            c
+          t11   t12                      x          t12   t2
+          x     x                                   x
+         *)
+        fun h ph1 ph2 =>
+          match balanced_sons_height ph1 with
+          | conj ph11 ph12 =>
+            let t := node a B.right t11 (node c B.left t12 t2) in
+            let ph: Avl_height t (3+h) :=
+                right_avl a ph11 (left_avl c ph12 ph2) in
+            Either.right _ (exist _ t ph)
+          end
+      | node a B.right t11 t12 =>
+        (* left-right unbalance:
+                      c                               b
+              a            t2                   a            c
+          t11     b                          t11 t121    t122 t2
+              t121 t122
+         *)
+        fun h ph1 ph2 =>
+          let ph_11_12 := right_leaning_sons_height ph1 in
+          let ph11 := proj1 ph_11_12 in
+          let ph12 := proj2 ph_11_12 in
+          let f0 t h := Avl_height t h in
+          let f1 t h := Avl_height t (1 + h) in
+          let f2 t h := Avl_height t (1+(1+h)) in
+          Either.left
+            _
+            ((match
+                 t12
+                 return
+                 forall (ph12:Avl_height t12 (1+h)),
+                   {t|Avl_height t (2+h)}
+               with
+               | empty =>
+                 fun ph12 =>
+                   match (avl_height_positive_is_node ph12) with end
+               | node b B.left t121 t122 =>
+                 fun ph12 =>
+                   let predh := Nat.predecessor h (left_leaning_height ph12) in
+                   let h0 := proj1_sig predh in
+                   let eqh0: h = 1 + h0 := Equal.flip (proj2_sig predh) in
+                   let rewrite0 t ph := Equal.rewrite eqh0 (f0 t) ph in
+                   let rewrite1 t ph := Equal.rewrite eqh0 (f1 t) ph in
+                   let rewrite2 t ph :=
+                       Equal.rewrite (Equal.flip eqh0) (f2 t) ph in
+                   let ph_121_122 := left_leaning_sons_height (rewrite1 _ ph12) in
+                   match left_leaning_sons_height (rewrite1 _ ph12) with
+                   | conj ph121 ph122 =>
+                     exist
+                       _
+                       (node b B.balanced
+                             (node a B.balanced t11 t121)
+                             (node c B.right t122 t2))
+                       (rewrite2
+                          _
+                          (balanced_avl
+                             b
+                             (balanced_avl
+                                a (rewrite0 _ ph11) ph121)
+                             (right_avl
+                                c ph122 (rewrite0 _ ph2)))
+                       )
+                   end
+               | node b B.balanced t121 t122 =>
+                 fun ph12 =>
+                   let ph_121_122 := balanced_sons_height ph12 in
+                   exist _
+                         (node
+                            b B.balanced
+                            (node a B.balanced t11 t121)
+                            (node c B.balanced t122 t2))
+                         (balanced_avl
+                            b
+                            (balanced_avl a ph11 (proj1 ph_121_122))
+                            (balanced_avl c (proj2 ph_121_122) ph2))
+               | node b B.right t121 t122 =>
+                 fun ph12 =>
+                   let predh := Nat.predecessor h (right_leaning_height ph12) in
+                   let h0 := proj1_sig predh in
+                   let eqh0: h = 1 + h0 := Equal.flip (proj2_sig predh) in
+                   let rewrite0 t ph := Equal.rewrite eqh0 (f0 t) ph in
+                   let rewrite1 t ph := Equal.rewrite eqh0 (f1 t) ph in
+                   let rewrite2 t ph :=
+                       Equal.rewrite (Equal.flip eqh0) (f2 t) ph in
+                   match right_leaning_sons_height (rewrite1 _ ph12) with
+                   | conj ph121 ph122 =>
+                     exist
+                       _
+                       (node b B.balanced
+                             (node a B.left t11 t121)
+                             (node c B.balanced t122 t2))
+                       (rewrite2
+                          _
+                          (balanced_avl
+                             b
+                             (left_avl a (rewrite0 _ ph11) ph121)
+                             (balanced_avl c ph122 (rewrite0 _ ph2))))
+                   end
+               end) ph12)
       end.
-
-
-    Theorem rebalance_left_rebalances:
-      forall (a:A) (t1 t2:T) (nearly:Nearly_avl_left a t1 t2),
-        Avl_height (rebalance_left a t1 t2) (2 + height t2).
-    Proof
-      let rewrite h t1 t2 (ph1:Avl_height t1 h) (ph2:Avl_height t2 (2+h)) :=
-          Equal.rewrite
-            (height_is_only_height (avl_height_is_height ph1))
-            (fun x => Avl_height t2 (2 + x))
-            ph2
-      in
-      fun a t1 t2 nearly =>
-        match nearly in Nearly_avl_left a t1 t2
-              return Avl_height (rebalance_left a t1 t2) (2 + height t2)
-        with
-        | lrl_nearly_avl_left a b c ph11 ph121 ph122 ph2 =>
-          let pa := balanced_avl a ph11 ph121 in
-          let pc := right_avl c ph122 ph2 in
-          let pb := balanced_avl b pa pc in
-          rewrite _ _ _ ph2 pb
-        | lrr_nearly_avl_left a b c ph11 ph121 ph122 ph2 =>
-          let pa := left_avl a ph11 ph121 in
-          let pc := balanced_avl c ph122 ph2 in
-          let pb := balanced_avl b pa pc in
-          rewrite _ _ _ ph2 pb
-        | ll_nearly_avl_left a c ph11 ph12 ph2 =>
-          let pc := balanced_avl c ph12 ph2 in
-          let pa := balanced_avl a ph11 pc in
-          rewrite _ _ _ ph2 pa
-        end.
-
-
-    Inductive Nearly_avl_right: A -> T -> T -> Prop :=
-    | rll_nearly_avl_right:
-        (* rll:
-                   a
-           t1               c
-           x           b        t22
-                   t211 t212    x
-                   x
-         *)
-        forall h t1 t211 t212 t22 a b c,
-          Avl_height t1 (1+h) ->
-          Avl_height t211 (1+h) ->
-          Avl_height t212 h ->
-          Avl_height t22 (1+h) ->
-          Nearly_avl_right
-            a
-            t1
-            (node c B.left (node b B.left t211 t212) t22)
-    | rlr_nearly_avl_right:
-        (* rlr:
-                   a
-           t1               c
-           x           b        t22
-                   t211 t212    x
-                         x
-         *)
-        forall h t1 t211 t212 t22 a b c,
-          Avl_height t1 (1+h) ->
-          Avl_height t211 h ->
-          Avl_height t212 (1+h) ->
-          Avl_height t22 (1+h) ->
-          Nearly_avl_right
-            a
-            t1
-            (node c B.left (node b B.right t211 t212) t22)
-    | rr_nearly_avl_right:
-        (* rr:
-                   a
-           t1               c
-                       t21      t22
-                                x
-         *)
-        forall h t1 t21 t22 a c,
-          Avl_height t1 h ->
-          Avl_height t21 h ->
-          Avl_height t22 (1+h) ->
-          Nearly_avl_right
-            a
-            t1
-            (node c B.right t21 t22).
-
-
-
-    Definition rebalance_right (a:A) (t1 t2:T): T :=
-      match t2  with
-      | empty =>
-        node a B.left t1 empty
-      | node c B.left (node b B.left t211 t212) t21 =>
-        (* rll:
-                   a                                  b
-           t1               c                   a            c
-           x           b        t21          t1  t211    t212 t21
-                   t211 t212    x            x   x            x
-                   x
-         *)
-        node
-          b B.balanced
-          (node a B.balanced t1 t211)
-          (node c B.right t212 t21)
-      | node c B.left (node b B.right t211 t212) t22 =>
-        (* rlr:
-                   a                                  b
-           t1               c                   a            c
-           x           b        t22          t1  t211    t212 t22
-                   t211 t212    x            x           x    x
-                        x
-         *)
-        node
-          b B.balanced
-          (node a B.left t1 t211)
-          (node c B.balanced t212 t22)
-      | node c bal t21 t22 =>
-        (* rr:
-                   a                                  c
-           t1               c                   a          t22
-                       t21      t22          t1  t21       x
-                                x
-         *)
-        node c B.balanced (node a B.balanced t1 t21) t22
-      end.
-
-
-    Theorem rebalance_right_rebalances:
-      forall (a:A) (t1 t2:T) (nearly:Nearly_avl_right a t1 t2),
-        Avl_height (rebalance_right a t1 t2) (2 + height t1).
-    Proof
-      let rewrite h t1 t2 (ph1:Avl_height t1 h) (ph2:Avl_height t2 (2+h)) :=
-          Equal.rewrite
-            (height_is_only_height (avl_height_is_height ph1))
-            (fun x => Avl_height t2 (2 + x))
-            ph2
-      in
-      fun a t1 t2 nearly =>
-        match nearly in Nearly_avl_right a t1 t2
-              return Avl_height (rebalance_right a t1 t2) (2 + height t1)
-        with
-        | rll_nearly_avl_right a b c ph1 ph211 ph212 ph21 =>
-          let pa := balanced_avl a ph1 ph211 in
-          let pc := right_avl c ph212 ph21 in
-          let pb := balanced_avl b pa pc in
-          rewrite _ _ _ ph1 pb
-        | rlr_nearly_avl_right a b c ph1 ph211 ph212 ph22 =>
-          let pa := left_avl a ph1 ph211 in
-          let pc := balanced_avl c ph212 ph22 in
-          let pb := balanced_avl b pa pc in
-          rewrite _ _ _ ph1 pb
-        | rr_nearly_avl_right a c ph1 ph21 ph22 =>
-          let pa := balanced_avl a ph1 ph21 in
-          let pc := balanced_avl c pa ph22 in
-          rewrite _ _ _ ph1 pc
-        end.
   End rebalancing.
+
+
+  (*====================================*)
+  (** * Insertion *)
+  (*====================================*)
+  Section insertion.
+    Fixpoint put_generic (x:A) (t:T) (replace:bool): T :=
+      match t with
+      | empty =>
+        node x B.balanced empty empty
+      | node a bal t1 t2 =>
+        empty
+      end.
+  End insertion.
+
+  (*====================================*)
+  (** * Deletion *)
+  (*====================================*)
+  Section deletion.
+  End deletion.
 End Make.
