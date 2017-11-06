@@ -431,7 +431,7 @@ Module Make (S0:SORTABLE).
   (** * Rebalancing *)
   (*====================================*)
   Section rebalancing.
-    Definition Rebalance_left_result (t1 t2:T) :=
+    Definition Rebalance_left_result (t1 t2:T):Type :=
       forall h,
       Avl_height t1 (2 + h) ->
       Avl_height t2 h ->
@@ -567,13 +567,31 @@ Module Make (S0:SORTABLE).
   (** * Insertion *)
   (*====================================*)
   Section insertion.
-    Fixpoint put_generic (x:A) (t:T) (replace:bool): T :=
+    Definition Put_result (x:A) (t:T): Type :=
+      forall h,
+        Avl_height t h ->
+        Either.T {u:T | Avl_height u h} {u:T | Avl_height u (1+h)}.
+
+    (*Fixpoint put_generic (x:A) (t:T): Put_result x t :=
       match t with
       | empty =>
-        node x B.balanced empty empty
+        fun h ph =>
+          Either.right
+            _
+            (exist
+               _
+               (node x B.balanced empty empty)
+               (balanced_avl x ph ph))
       | node a bal t1 t2 =>
-        empty
-      end.
+        fun h ph =>
+          match S.compare x a with
+          | Relation.less_than  p1 notp2 =>
+            _
+          | Relation.equivalent _ p2
+          | Relation.greater_than _ p2 =>
+            _
+          end
+      end.*)
   End insertion.
 
   (*====================================*)

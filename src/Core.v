@@ -234,6 +234,10 @@ Module Relation.
       end.
   End endorelation.
 
+  Arguments less_than    [_] [_] [_] [_] _ _.
+  Arguments equivalent   [_] [_] [_] [_] _ _.
+  Arguments greater_than [_] [_] [_] [_] _ _.
+
   Section order_relation.
     Variable A:Type.
     Variable R: A -> A -> Prop.
