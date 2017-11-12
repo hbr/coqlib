@@ -263,9 +263,9 @@ End Relation.
 (** * Either: Two Possible Results *)
 (*    ============================ *)
 Module Either.
-  Inductive T (A B:Type): Type :=
-  | left:  forall a:A, T A B
-  | right: forall b:B, T A B.
+  Inductive t (A B:Type): Type :=
+  | left:  forall a:A, t A B
+  | right: forall b:B, t A B.
 End Either.
 
 
@@ -274,7 +274,7 @@ End Either.
 (** * Any Type *)
 (*    ======== *)
 Module Type ANY.
-  Parameter T: Set.
+  Parameter t: Set.
 End ANY.
 
 
@@ -283,8 +283,8 @@ End ANY.
 Module Type SORTABLE <: ANY.
   Import Relation.
 
-  Parameter T: Set.
-  Parameter Less_equal: T -> T -> Prop.
+  Parameter t: Set.
+  Parameter Less_equal: t -> t -> Prop.
 
   (*Axiom dichotomic: Dichotomic  Less_equal.*)
   Axiom transitive: Transitive  Less_equal.
@@ -296,7 +296,7 @@ Module Sortable_plus (S:SORTABLE).
   Import Relation.
   Include S.
 
-  Definition Equivalent (a b:T): Prop := Less_equal a  b /\ Less_equal b a.
+  Definition Equivalent (a b:t): Prop := Less_equal a  b /\ Less_equal b a.
 
   Theorem dichotomic: Dichotomic Less_equal.
   Proof
@@ -353,15 +353,15 @@ Module Nat.
   (** ** Basic Facts about Natural Numbers *)
   (*     ================================= *)
   Section nat_basics.
-    Definition Successor (n:nat): Prop :=
+    Definition is_Successor (n:nat): Prop :=
       match n with
       | 0 => False
       | S _ => True
       end.
 
-    Definition predecessor (n:nat): Successor n -> {x:nat|S x = n} :=
-      match n return Successor n -> {x:nat|S x = n} with
-      | 0 => fun p:Successor 0 =>
+    Definition predecessor (n:nat): is_Successor n -> {x:nat|S x = n} :=
+      match n return is_Successor n -> {x:nat|S x = n} with
+      | 0 => fun p:is_Successor 0 =>
                match p with end
       | S m => fun _ => exist (fun x => S x = S m) m eq_refl
       end.
@@ -371,11 +371,11 @@ Module Nat.
       forall n:nat, S n <> 0.
     Proof
       fun n (p: S n = 0) =>
-        (* Use the propositon 'Successor' which is trivially provable for 'S n'
+        (* Use the propositon 'is_Successor' which is trivially provable for 'S n'
          and rewrite 'S n' into '0' by using 'p' and generate a proof for
          'False'. With that we get 'S n = 0 -> False' which is the required
          result. *)
-        Equal.rewrite p Successor I.
+        Equal.rewrite p is_Successor I.
 
 
     Definition is_zero (n:nat): {n = 0} + {n <> 0} :=

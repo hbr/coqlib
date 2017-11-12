@@ -12,45 +12,45 @@ Module Make (S0:SORTABLE).
 (** * Balance Indicator *)
 (*====================================*)
   Module Balance_indicator.
-    Inductive T0: Set := left: T0 | balanced: T0 | right : T0.
-    Definition T:Set := T0.
+    Inductive t0: Set := Left: t0 | Balanced: t0 | Right : t0.
+    Definition t:Set := t0.
 
-    Definition Left (b:T): Prop :=
+    Definition is_Left (b:t): Prop :=
       match b with
-      | left => True
+      | Left => True
       | _ => False
       end.
 
-    Definition Right (b:T): Prop :=
+    Definition is_Right (b:t): Prop :=
       match b with
-      | right => True
+      | Right => True
       | _ => False
       end.
 
-    Definition Balanced (b:T): Prop :=
+    Definition is_Balanced (b:t): Prop :=
       match b with
-      | balanced => True
+      | Balanced => True
       | _ => False
       end.
 
 
-    Definition Leaning (b:T): Prop :=
+    Definition Leaning (b:t): Prop :=
       match b with
-      | left | right => True
-      | balanced => False
+      | Left | Right => True
+      | Balanced => False
       end.
 
-    Theorem left_not_balanced: left <> balanced.
+    Theorem left_not_balanced: Left <> Balanced.
     Proof
-      fun eq => Equal.rewrite eq Left I.
+      fun eq => Equal.rewrite eq is_Left I.
 
-    Theorem balanced_not_right: balanced <> right.
+    Theorem balanced_not_right: Balanced <> Right.
     Proof
-      fun eq => Equal.rewrite eq Balanced I.
+      fun eq => Equal.rewrite eq is_Balanced I.
 
-    Theorem right_not_left: right <> left.
+    Theorem right_not_left: Right <> Left.
     Proof
-      fun eq => Equal.rewrite eq Right I.
+      fun eq => Equal.rewrite eq is_Right I.
   End Balance_indicator.
   Module B := Balance_indicator.
 
@@ -67,29 +67,29 @@ Module Make (S0:SORTABLE).
 (** * Balance Indicator Basics        *)
 (*====================================*)
   Section balance_indicator_basics.
-    Definition Left_leaning  (t:T): Prop := Extra t B.left.
-    Definition Right_leaning (t:T): Prop := Extra t B.right.
-    Definition Balanced (t:T): Prop := Extra t B.balanced.
-    Definition Leaning (t:T): Prop := Left_leaning t \/ Right_leaning t.
+    Definition is_Left_leaning  (t_:t): Prop := Extra t_ B.Left.
+    Definition is_Right_leaning (t_:t): Prop := Extra t_ B.Right.
+    Definition Balanced (t_:t): Prop := Extra t_ B.Balanced.
+    Definition Leaning (t_:t): Prop := is_Left_leaning t_ \/ is_Right_leaning t_.
 
 
     Theorem left_leaning_is_node:
-      forall (t:T), Left_leaning t -> Node t.
+      forall (t_:t), is_Left_leaning t_ -> is_Node t_.
     Proof
       fun t ll => extra_is_node ll.
 
     Theorem balanced_is_node:
-      forall (t:T), Balanced t -> Node t.
+      forall (t_:t), Balanced t_ -> is_Node t_.
     Proof
       fun t bal => extra_is_node bal.
 
     Theorem right_leaning_is_node:
-      forall (t:T), Right_leaning t -> Node t.
+      forall (t_:t), is_Right_leaning t_ -> is_Node t_.
     Proof
       fun t bal => extra_is_node bal.
 
     Theorem leaning_is_node:
-      forall t:T, Leaning t -> Node t.
+      forall t_:t, Leaning t_ -> is_Node t_.
     Proof
       fun t leaning =>
         match leaning with
@@ -98,15 +98,15 @@ Module Make (S0:SORTABLE).
         end.
 
     Theorem not_leaning_balanced:
-      forall (a:A) (t1 t2:T),
-        ~ Leaning (node a B.balanced t1 t2).
+      forall (a:A.t) (t1 t2:t),
+        ~ Leaning (Node a B.Balanced t1 t2).
     Proof
       fun a t1 t2 leaning =>
         match leaning with
         | or_introl p =>
           (match p in Extra t bal
-                 return t = node a B.balanced t1 t2 ->
-                        bal = B.left ->
+                 return t = Node a B.Balanced t1 t2 ->
+                        bal = B.Left ->
                         False
            with
            | extra_node a bal t1 t2 =>
@@ -118,8 +118,8 @@ Module Make (S0:SORTABLE).
            end) eq_refl eq_refl
         | or_intror p =>
           (match p in Extra t bal
-                 return t = node a B.balanced t1 t2 ->
-                        bal = B.right ->
+                 return t = Node a B.Balanced t1 t2 ->
+                        bal = B.Right ->
                         False
            with
            | extra_node a bal t1 t2 =>
@@ -140,28 +140,28 @@ Module Make (S0:SORTABLE).
 (*====================================*)
   Section basic_definitions.
 
-    Inductive Avl_height: T -> nat -> Prop :=
-    | empty_avl: Avl_height empty 0
+    Inductive Avl_height: t -> nat -> Prop :=
+    | empty_avl: Avl_height Empty 0
     | balanced_avl:
         forall h a t1 t2,
           Avl_height t1 h ->
           Avl_height t2 h ->
-          Avl_height (node a B.balanced t1 t2) (1+h)
+          Avl_height (Node a B.Balanced t1 t2) (1+h)
     | left_avl:
         forall h a t1 t2,
           Avl_height t1 (1+h) ->
           Avl_height t2 h ->
-          Avl_height (node a B.left t1 t2) (2+h)
+          Avl_height (Node a B.Left t1 t2) (2+h)
     | right_avl:
         forall h a t1 t2,
           Avl_height t1 h ->
           Avl_height t2 (1+h) ->
-          Avl_height (node a B.right t1 t2) (2+h).
+          Avl_height (Node a B.Right t1 t2) (2+h).
 
     Theorem avl_height_is_height:
-      forall (t:T) (h:nat),
-        Avl_height t h ->
-        Height t h.
+      forall (t_:t) (h:nat),
+        Avl_height t_ h ->
+        Height t_ h.
     Proof
       let maxhh  (h:nat): max h h = h := max_l h h (le_n h) in
       let maxhh1 (h:nat): max h (1+h) = 1+h := max_r _ _ (le_S _ _ (le_n _)) in
@@ -175,32 +175,32 @@ Module Make (S0:SORTABLE).
         Equal.rewrite
           (maxhh _)
           (fun x => Height  _ (1 + x))
-          (node_height a B.balanced (f _ _ ph1) (f _ _ ph2))
+          (node_height a B.Balanced (f _ _ ph1) (f _ _ ph2))
       | left_avl a ph1 ph2 =>
         Equal.rewrite
           (maxh1h _)
           (fun x => Height _ (1 + x))
-          (node_height a B.left (f _ _ ph1) (f _ _ ph2))
+          (node_height a B.Left (f _ _ ph1) (f _ _ ph2))
       | right_avl a ph1 ph2 =>
         Equal.rewrite
           (maxhh1 _)
           (fun x => Height _ (1 + x))
-          (node_height a B.right (f _ _ ph1) (f _ _ ph2))
+          (node_height a B.Right (f _ _ ph1) (f _ _ ph2))
       end.
 
 
 
-    Definition Avl_tree (t:T): Prop :=
-      Avl_height t (height t).
+    Definition Avl_tree (t_:t): Prop :=
+      Avl_height t_ (height t_).
 
     Theorem avl_height_positive_is_node:
-      forall (t:T) (h:nat),
-        Avl_height t (S h) ->
-        Node t.
+      forall (t_:t) (h:nat),
+        Avl_height t_ (S h) ->
+        is_Node t_.
     Proof
-      let f t h_ (avl:Avl_height t h_): forall h, S h = h_  -> Node t :=
+      let f t h_ (avl:Avl_height t h_): forall h, S h = h_  -> is_Node t :=
           (match avl in Avl_height t h_
-                 return forall h, S h = h_ -> Node t with
+                 return forall h, S h = h_ -> is_Node t with
            | empty_avl =>
              fun h eq => match Nat.successor_not_zero eq with end
            | @balanced_avl h a t1 t2 ph1 ph2 =>
@@ -214,13 +214,13 @@ Module Make (S0:SORTABLE).
       fun t h avl => f t (S h) avl h eq_refl .
 
     Theorem left_leaning_sons_height:
-      forall (h:nat) (a:A) (t1 t2:T),
-        Avl_height (node a B.left t1 t2) (2+h) ->
+      forall (h:nat) (a:A.t) (t1 t2:t),
+        Avl_height (Node a B.Left t1 t2) (2+h) ->
         Avl_height t1 (1+h) /\ Avl_height t2 h.
     Proof
       fun h a t1 t2 avl =>
         (match avl in Avl_height t0 h0
-               return t0 = node a B.left t1 t2 ->
+               return t0 = Node a B.Left t1 t2 ->
                       h0 = 2 + h ->
                       Avl_height t1 (1 + h) /\ Avl_height t2 h
          with
@@ -263,13 +263,13 @@ Module Make (S0:SORTABLE).
          end) eq_refl eq_refl.
 
     Theorem right_leaning_sons_height:
-      forall (h:nat) (a:A) (t1 t2:T),
-        Avl_height (node a B.right t1 t2) (2+h) ->
+      forall (h:nat) (a:A.t) (t1 t2:t),
+        Avl_height (Node a B.Right t1 t2) (2+h) ->
         Avl_height t1 h /\ Avl_height t2 (1+h).
     Proof
       fun h a t1 t2 avl =>
         (match avl in Avl_height t0 h0
-               return t0 = node a B.right t1 t2 ->
+               return t0 = Node a B.Right t1 t2 ->
                       h0 = 2 + h ->
                       Avl_height t1 h /\ Avl_height t2 (1 + h)
          with
@@ -313,13 +313,13 @@ Module Make (S0:SORTABLE).
          end) eq_refl eq_refl.
 
     Theorem balanced_sons_height:
-      forall (h:nat) (a:A) (t1 t2:T),
-        Avl_height (node a B.balanced t1 t2) (1+h) ->
+      forall (h:nat) (a:A.t) (t1 t2:t),
+        Avl_height (Node a B.Balanced t1 t2) (1+h) ->
         Avl_height t1 h /\ Avl_height t2 h.
     Proof
       fun h a t1 t2 avl =>
         (match avl in Avl_height t0 h0
-               return t0 = node a B.balanced t1 t2 ->
+               return t0 = Node a B.Balanced t1 t2 ->
                       h0 = 1 + h ->
                       Avl_height t1 h /\ Avl_height t2 h
          with
@@ -362,15 +362,15 @@ Module Make (S0:SORTABLE).
          end) eq_refl eq_refl.
 
     Theorem left_leaning_height:
-      forall (h:nat) (a:A) (t1 t2:T),
-        Avl_height (node a B.left t1 t2) (1 + h) ->
-        Nat.Successor h.
+      forall (h:nat) (a:A.t) (t1 t2:t),
+        Avl_height (Node a B.Left t1 t2) (1 + h) ->
+        Nat.is_Successor h.
     Proof
       fun h a t1 t2 avl =>
         (match avl in Avl_height t_ h_
-               return t_ = node a B.left t1 t2 ->
+               return t_ = Node a B.Left t1 t2 ->
                       h_ = 1 + h ->
-                      Nat.Successor h
+                      Nat.is_Successor h
          with
          | empty_avl =>
            fun eqt => match node_not_empty (Equal.flip eqt) with end
@@ -383,7 +383,7 @@ Module Make (S0:SORTABLE).
            fun eqt eqh =>
              Equal.rewrite
                (Nat.successor_injective eqh: S _ = h)
-               Nat.Successor
+               Nat.is_Successor
                I
          | right_avl _ _ _ =>
            fun eqt =>
@@ -393,15 +393,15 @@ Module Make (S0:SORTABLE).
          end) eq_refl eq_refl.
 
     Theorem right_leaning_height:
-      forall (h:nat) (a:A) (t1 t2:T),
-        Avl_height (node a B.right t1 t2) (1 + h) ->
-        Nat.Successor h.
+      forall (h:nat) (a:A.t) (t1 t2:t),
+        Avl_height (Node a B.Right t1 t2) (1 + h) ->
+        Nat.is_Successor h.
     Proof
       fun h a t1 t2 avl =>
         (match avl in Avl_height t_ h_
-               return t_ = node a B.right t1 t2 ->
+               return t_ = Node a B.Right t1 t2 ->
                       h_ = 1 + h ->
-                      Nat.Successor h
+                      Nat.is_Successor h
          with
          | empty_avl =>
            fun eqt => match node_not_empty (Equal.flip eqt) with end
@@ -419,7 +419,7 @@ Module Make (S0:SORTABLE).
            fun eqt eqh =>
              Equal.rewrite
                (Nat.successor_injective eqh: S _ = h)
-               Nat.Successor
+               Nat.is_Successor
                I
          end) eq_refl eq_refl.
   End basic_definitions.
@@ -431,18 +431,18 @@ Module Make (S0:SORTABLE).
   (** * Rebalancing *)
   (*====================================*)
   Section rebalancing.
-    Definition Rebalance_left_result (t1 t2:T):Type :=
+    Definition Rebalance_left_result (t1 t2:t):Type :=
       forall h,
       Avl_height t1 (2 + h) ->
       Avl_height t2 h ->
-      Either.T {t:T| Avl_height t (2 + h)} {t:T| Avl_height t (3 + h)}.
+      Either.t {u:t| Avl_height u (2 + h)} {u:t| Avl_height u (3 + h)}.
 
 
-    Definition rebal_left (c:A) (t1 t2:T): Rebalance_left_result t1 t2 :=
+    Definition rebal_left (c:A.t) (t1 t2:t): Rebalance_left_result t1 t2 :=
       match t1 with
-      | empty =>
+      | Empty =>
         fun h ph1  => match avl_height_positive_is_node ph1 with end
-      | node a B.left t11 t12 =>
+      | Node a B.Left t11 t12 =>
         (* left-left unbalance:
                     c                            a
               a          t2              t11            c
@@ -450,13 +450,13 @@ Module Make (S0:SORTABLE).
           x
          *)
         fun h ph1 ph2  =>
-          let t := node a B.balanced t11 (node c B.balanced t12 t2) in
+          let t := Node a B.Balanced t11 (Node c B.Balanced t12 t2) in
           match left_leaning_sons_height ph1 with
           | conj ph11 ph12 =>
             let avl := balanced_avl a ph11 (balanced_avl c ph12 ph2) in
             Either.left _ (exist _ t avl)
           end
-      | node a B.balanced t11 t12 =>
+      | Node a B.Balanced t11 t12 =>
         (* left unbalance:
                     c                            a
               a          t2              t11            c
@@ -466,12 +466,12 @@ Module Make (S0:SORTABLE).
         fun h ph1 ph2 =>
           match balanced_sons_height ph1 with
           | conj ph11 ph12 =>
-            let t := node a B.right t11 (node c B.left t12 t2) in
+            let t := Node a B.Right t11 (Node c B.Left t12 t2) in
             let ph: Avl_height t (3+h) :=
                 right_avl a ph11 (left_avl c ph12 ph2) in
             Either.right _ (exist _ t ph)
           end
-      | node a B.right t11 t12 =>
+      | Node a B.Right t11 t12 =>
         (* left-right unbalance:
                       c                               b
               a            t2                   a            c
@@ -493,10 +493,10 @@ Module Make (S0:SORTABLE).
                  forall (ph12:Avl_height t12 (1+h)),
                    {t|Avl_height t (2+h)}
                with
-               | empty =>
+               | Empty =>
                  fun ph12 =>
                    match (avl_height_positive_is_node ph12) with end
-               | node b B.left t121 t122 =>
+               | Node b B.Left t121 t122 =>
                  fun ph12 =>
                    let predh := Nat.predecessor h (left_leaning_height ph12) in
                    let h0 := proj1_sig predh in
@@ -510,9 +510,9 @@ Module Make (S0:SORTABLE).
                    | conj ph121 ph122 =>
                      exist
                        _
-                       (node b B.balanced
-                             (node a B.balanced t11 t121)
-                             (node c B.right t122 t2))
+                       (Node b B.Balanced
+                             (Node a B.Balanced t11 t121)
+                             (Node c B.Right t122 t2))
                        (rewrite2
                           _
                           (balanced_avl
@@ -523,19 +523,19 @@ Module Make (S0:SORTABLE).
                                 c ph122 (rewrite0 _ ph2)))
                        )
                    end
-               | node b B.balanced t121 t122 =>
+               | Node b B.Balanced t121 t122 =>
                  fun ph12 =>
                    let ph_121_122 := balanced_sons_height ph12 in
                    exist _
-                         (node
-                            b B.balanced
-                            (node a B.balanced t11 t121)
-                            (node c B.balanced t122 t2))
+                         (Node
+                            b B.Balanced
+                            (Node a B.Balanced t11 t121)
+                            (Node c B.Balanced t122 t2))
                          (balanced_avl
                             b
                             (balanced_avl a ph11 (proj1 ph_121_122))
                             (balanced_avl c (proj2 ph_121_122) ph2))
-               | node b B.right t121 t122 =>
+               | Node b B.Right t121 t122 =>
                  fun ph12 =>
                    let predh := Nat.predecessor h (right_leaning_height ph12) in
                    let h0 := proj1_sig predh in
@@ -548,9 +548,9 @@ Module Make (S0:SORTABLE).
                    | conj ph121 ph122 =>
                      exist
                        _
-                       (node b B.balanced
-                             (node a B.left t11 t121)
-                             (node c B.balanced t122 t2))
+                       (Node b B.Balanced
+                             (Node a B.Left t11 t121)
+                             (Node c B.Balanced t122 t2))
                        (rewrite2
                           _
                           (balanced_avl
@@ -567,22 +567,22 @@ Module Make (S0:SORTABLE).
   (** * Insertion *)
   (*====================================*)
   Section insertion.
-    Definition Put_result (x:A) (t:T): Type :=
+    Definition Put_result (x:A.t) (u:t): Type :=
       forall h,
-        Avl_height t h ->
-        Either.T {u:T | Avl_height u h} {u:T | Avl_height u (1+h)}.
+        Avl_height u h ->
+        Either.t {u:t | Avl_height u h} {u:t | Avl_height u (1+h)}.
 
-    (*Fixpoint put_generic (x:A) (t:T): Put_result x t :=
+    (*Fixpoint put_generic (x:A.t) (t:T): Put_result x t :=
       match t with
-      | empty =>
+      | Empty =>
         fun h ph =>
           Either.right
             _
             (exist
                _
-               (node x B.balanced empty empty)
+               (Node x B.Balanced Empty Empty)
                (balanced_avl x ph ph))
-      | node a bal t1 t2 =>
+      | Node a bal t1 t2 =>
         fun h ph =>
           match S.compare x a with
           | Relation.less_than  p1 notp2 =>

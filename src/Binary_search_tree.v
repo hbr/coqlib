@@ -13,35 +13,35 @@ Module Make (S0:SORTABLE) (Extra:ANY).
   (*====================================*)
   (** * Basic Definitions               *)
   (*====================================*)
-  Inductive Bounded: A -> A -> T -> Prop :=
+  Inductive Bounded: A.t -> A.t -> t -> Prop :=
   | singleton_bounded:
       forall a e,
-        Bounded a a (node a e empty empty)
+        Bounded a a (Node a e Empty Empty)
   | node_bounded:
       forall lo1 hi1 t1 lo2 hi2 t2 a e,
         Bounded lo1 hi1 t1 ->
         Bounded lo2 hi2 t2 ->
         hi1 <= a ->
         a = lo2 ->
-        Bounded lo1 hi2 (node a e t1 t2).
+        Bounded lo1 hi2 (Node a e t1 t2).
 
-  Inductive Sorted: T -> Prop :=
-  | empty_sorted: Sorted empty
+  Inductive Sorted: t -> Prop :=
+  | empty_sorted: Sorted Empty
   | node_sorted:
-      forall lo hi t,
-        Bounded lo hi t -> Sorted t.
+      forall lo hi t_,
+        Bounded lo hi t_ -> Sorted t_.
 
 
   Theorem least_is_leftmost:
-    forall (lo hi:A) (t:T),
-      Bounded lo hi t ->
-      Leftmost t lo.
+    forall (lo hi:A.t) (t_:t),
+      Bounded lo hi t_ ->
+      Leftmost t_ lo.
   Proof
     fix f lo hi t bnd :=
     match bnd in Bounded lo hi t
           return Leftmost t lo with
     | singleton_bounded a e =>
-      lm_noleft a e empty
+      lm_noleft a e Empty
     | @node_bounded
         lo1 hi1 t1 lo2 hi2 t2 a e
         bnd1 bnd2 hi1_a a_lo2 =>
@@ -54,28 +54,28 @@ Module Make (S0:SORTABLE) (Extra:ANY).
   (** * Insertion                       *)
   (*====================================*)
   Section insertion.
-    Inductive Inserted: A -> T -> T -> Prop :=
+    Inductive Inserted: A.t -> t -> t -> Prop :=
     | empty_inserted:
-        forall a e, Inserted a empty (node a e empty empty)
+        forall a e, Inserted a Empty (Node a e Empty Empty)
     | left_inserted:
         forall x t11 t12 t2 a e,
           x <= a ->
           Inserted x t11 t12 ->
-          Inserted x (node a e t11 t2) (node a e t12 t2)
+          Inserted x (Node a e t11 t2) (Node a e t12 t2)
     | right_inserted:
         forall x t1 t21 t22 a e,
           a <= x ->
           Inserted x t21 t22 ->
-          Inserted x (node a e t1 t21) (node a e t1 t22).
+          Inserted x (Node a e t1 t21) (Node a e t1 t22).
 
     Theorem inserted_is_node:
-      forall (x:A) (t1 t2:T),
+      forall (x:A.t) (t1 t2:t),
         Inserted x t1 t2 ->
-        Node t2.
+        is_Node t2.
     Proof
       fix f x t1 t2 ins:=
       match ins in Inserted x t1 t2
-            return Node t2
+            return is_Node t2
       with
       | empty_inserted _ _ => I
       | left_inserted _ _ _ _ => I
@@ -83,7 +83,7 @@ Module Make (S0:SORTABLE) (Extra:ANY).
       end.
 (*
     Theorem inserted_is_sorted:
-      forall (x:A) (t1 t2:T),
+      forall (x:A.t) (t1 t2:T),
         Sorted t1 ->
         Inserted x t1 t2 ->
         Sorted t2.
