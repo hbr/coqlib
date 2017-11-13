@@ -204,11 +204,11 @@ Module Relation.
     Definition Antisymmetric: Prop :=
       forall a b:A, R a b -> R b a -> a = b.
 
-    Definition Dichotomic: Prop :=
+    Definition Complete: Prop :=
       forall a b:A, R a b \/ R b a.
 
-    Theorem dichotomic_is_reflexive:
-      Dichotomic -> Reflexive.
+    Theorem complete_is_reflexive:
+      Complete -> Reflexive.
     Proof
       fun d a =>
         match d a a with
@@ -223,8 +223,8 @@ Module Relation.
 
     Definition Comparer: Type := forall a b:A, Comparison a b.
 
-    Theorem comparable_is_dichotomic:
-      forall (c:Comparer), Dichotomic.
+    Theorem comparable_is_complete:
+      forall (c:Comparer), Complete.
     Proof
       fun c a b =>
         match c a b with
@@ -246,13 +246,13 @@ Module Relation.
       Reflexive R /\ Transitive R.
 
     Definition Linear_preorder: Prop :=
-      Dichotomic R /\ Transitive R.
+      Complete R /\ Transitive R.
 
     Definition Partial_preorder: Prop :=
       Reflexive R /\ Transitive R /\ Antisymmetric R.
 
     Definition Linear_order: Prop :=
-      Dichotomic R /\ Transitive R /\ Antisymmetric R.
+      Complete R /\ Transitive R /\ Antisymmetric R.
 
     Definition Equivalence: Prop :=
       Reflexive R /\ Transitive R /\ Symmetric R.
@@ -286,7 +286,6 @@ Module Type SORTABLE <: ANY.
   Parameter t: Set.
   Parameter Less_equal: t -> t -> Prop.
 
-  (*Axiom dichotomic: Dichotomic  Less_equal.*)
   Axiom transitive: Transitive  Less_equal.
 
   Parameter compare: Comparer Less_equal.
@@ -298,13 +297,13 @@ Module Sortable_plus (S:SORTABLE).
 
   Definition Equivalent (a b:t): Prop := Less_equal a  b /\ Less_equal b a.
 
-  Theorem dichotomic: Dichotomic Less_equal.
+  Theorem complete: Complete Less_equal.
   Proof
-    comparable_is_dichotomic compare.
+    comparable_is_complete compare.
 
   Theorem reflexive: Reflexive Less_equal.
   Proof
-    dichotomic_is_reflexive dichotomic.
+    complete_is_reflexive complete.
 
   Module Notations.
     Notation "a <= b"  := (Less_equal a b) (at level 70).
