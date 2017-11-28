@@ -432,16 +432,17 @@ Module Make (S0:SORTABLE).
   (*====================================*)
   Section rebalancing.
     Definition Rebalance_left_result (t1 t2:t):Type :=
-      forall h,
+      let h := height t2 in
       Avl_height t1 (2 + h) ->
       Avl_height t2 h ->
       Either.t {u:t| Avl_height u (2 + h)} {u:t| Avl_height u (3 + h)}.
 
 
-    Definition rebal_left (c:A.t) (t1 t2:t): Rebalance_left_result t1 t2 :=
+    Definition rebalance_left (c:A.t) (t1 t2:t): Rebalance_left_result t1 t2 :=
+      let h := height t2 in
       match t1 with
       | Empty =>
-        fun h ph1  => match avl_height_positive_is_node ph1 with end
+        fun ph1  => match avl_height_positive_is_node ph1 with end
       | Node a B.Left t11 t12 =>
         (* left-left unbalance:
                     c                            a
@@ -449,7 +450,7 @@ Module Make (S0:SORTABLE).
           t11   t12                      x          t12   t2
           x
          *)
-        fun h ph1 ph2  =>
+        fun ph1 ph2  =>
           let t := Node a B.Balanced t11 (Node c B.Balanced t12 t2) in
           match left_leaning_sons_height ph1 with
           | conj ph11 ph12 =>
@@ -463,7 +464,7 @@ Module Make (S0:SORTABLE).
           t11   t12                      x          t12   t2
           x     x                                   x
          *)
-        fun h ph1 ph2 =>
+        fun ph1 ph2 =>
           match balanced_sons_height ph1 with
           | conj ph11 ph12 =>
             let t := Node a B.Right t11 (Node c B.Left t12 t2) in
@@ -478,7 +479,7 @@ Module Make (S0:SORTABLE).
           t11     b                          t11 t121    t122 t2
               t121 t122
          *)
-        fun h ph1 ph2 =>
+        fun ph1 ph2 =>
           let ph_11_12 := right_leaning_sons_height ph1 in
           let ph11 := proj1 ph_11_12 in
           let ph12 := proj2 ph_11_12 in
@@ -566,16 +567,43 @@ Module Make (S0:SORTABLE).
   (*====================================*)
   (** * Insertion *)
   (*====================================*)
+
+  (* Insertion is done by either inserting into an empty tree (resulting in a
+     balanced singleton tree) or insertion into the left or right subtree.
+
+     Insertion into the left or right subtree might increased the height of
+     the subtree by 1 or leave it at the same height as before.
+
+     Rebalancing is necessary:
+
+     a) left leaning, insertion into left and left subtree increases
+     b) right leaning, insertion into right and right subtree increases
+
+     Modification of balance factor from leaning to balanced:
+
+     a) left leaning, insertion into right and right subtree increases
+     b) right leaning, insertion into left and left subtree increases
+
+     Modification of balance factor from balanced to leaning (height increase):
+
+     a) insertion into left and left subtree increases
+     b) insertion into right and right subtree increases
+
+     No modification: Insertion into left or right and no increase in height.
+
+*)
+
   Section insertion.
     Definition Put_result (x:A.t) (u:t): Type :=
-      forall h,
-        Avl_height u h ->
-        Either.t {u:t | Avl_height u h} {u:t | Avl_height u (1+h)}.
+      let h := height u in
+      Avl_height u h ->
+      Either.t {v:t | Avl_height v h} {v:t | Avl_height v (1+h)}.
 
-    (*Fixpoint put_generic (x:A.t) (t:T): Put_result x t :=
-      match t with
+
+    (*Fixpoint put_generic (x:A.t) (t_:t): Put_result x t_ :=
+      match t_ with
       | Empty =>
-        fun h ph =>
+        fun ph =>
           Either.right
             _
             (exist
@@ -583,9 +611,9 @@ Module Make (S0:SORTABLE).
                (Node x B.Balanced Empty Empty)
                (balanced_avl x ph ph))
       | Node a bal t1 t2 =>
-        fun h ph =>
+        fun ph =>
           match S.compare x a with
-          | Relation.less_than  p1 notp2 =>
+          | Relation.less_than p1 notp2 =>
             _
           | Relation.equivalent _ p2
           | Relation.greater_than _ p2 =>
