@@ -213,6 +213,24 @@ Module Make (S0:SORTABLE).
       in
       fun t h avl => f t (S h) avl h eq_refl .
 
+
+    Theorem avl_node_is_positive_height:
+      forall (h:nat) (t_:t),
+        Avl_height t_ h ->
+        is_Node t_ ->
+        Nat.is_Successor h.
+    Proof
+      fun h t_ avl =>
+        match avl in Avl_height t h
+        with
+        | empty_avl => fun nd => match nd with end
+        | left_avl a ph1 ph2 => fun nd => I
+        | balanced_avl a ph1 ph2  => fun nd => I
+        | right_avl a ph1 ph2 => fun nd => I
+        end
+      .
+
+
     Theorem left_leaning_sons_height:
       forall (h:nat) (a:A.t) (t1 t2:t),
         Avl_height (Node a B.Left t1 t2) (2+h) ->
@@ -601,6 +619,7 @@ Module Make (S0:SORTABLE).
 
 
     (*Fixpoint put_generic (x:A.t) (t_:t): Put_result x t_ :=
+      let h := height t_ in
       match t_ with
       | Empty =>
         fun ph =>
@@ -611,14 +630,20 @@ Module Make (S0:SORTABLE).
                (Node x B.Balanced Empty Empty)
                (balanced_avl x ph ph))
       | Node a bal t1 t2 =>
-        fun ph =>
-          match S.compare x a with
-          | Relation.less_than p1 notp2 =>
-            _
-          | Relation.equivalent _ p2
-          | Relation.greater_than _ p2 =>
-            _
+        match S.compare x a with
+        | Relation.less_than p1 notp2 =>
+          match bal with
+          | B.Left =>
+            fun ph =>
+              let v := @put_generic x t1 in
+              _
+          | B.Balanced => _
+          | B.Right => _
           end
+        | Relation.equivalent _ p2
+        | Relation.greater_than _ p2 =>
+          _
+        end
       end.*)
   End insertion.
 
