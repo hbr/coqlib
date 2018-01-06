@@ -1,6 +1,6 @@
 # Programming in Coq
 
-We describe how to program and prove in Coq without using tactics.
+This text is an introduction to programming in Coq.
 
 
 
