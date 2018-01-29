@@ -531,10 +531,10 @@ Module Nat.
 
     Definition is_less_equal: forall a b:nat, {a <= b} + {~ a <= b} :=
       fix r a b: {a <= b} + {~ a <= b} :=
-        match a as n return {n <= b} + {~ n <= b} with
+        match a with
         | O => left (zero_is_least b)
         | S k =>
-          match b return {S k <= b} + {~ S k <= b} with
+          match b with
           | O => right(@successor_not_below_zero k)
           | S n => (* goal: {S k <= S n} + {~ S k <= S n} *)
             match r k n: {k <= n} + {~ k <= n} with
@@ -547,4 +547,13 @@ Module Nat.
           end
         end.
   End nat_order.
+
+  Module Notations.
+    Notation "x =? y" :=
+      (is_equal x y) (at level 70, no associativity) : nat_scope.
+    Open Scope nat_scope.
+    Notation "x <=? y" :=
+      (is_less_equal x y) (at level 70, no associativity) : nat_scope.
+    Open Scope nat_scope.
+  End Notations.
 End Nat.

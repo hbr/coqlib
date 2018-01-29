@@ -1,5 +1,6 @@
 Require Import Core.
 Require Binary_tree.
+Require Import List.
 Set Implicit Arguments.
 
 Module Make (S0:SORTABLE) (Extra:ANY).
@@ -13,6 +14,10 @@ Module Make (S0:SORTABLE) (Extra:ANY).
   (*====================================*)
   (** * Basic Definitions               *)
   (*====================================*)
+
+  (** [Bounded a b t] means that [a] is the least element an [b] is the
+      greatest element of the tree [t] and that the inorder sequence of the
+      tree is sorted *)
   Inductive Bounded: A.t -> A.t -> t -> Prop :=
   | singleton_bounded:
       forall a e,
@@ -25,6 +30,8 @@ Module Make (S0:SORTABLE) (Extra:ANY).
         a = lo2 ->
         Bounded lo1 hi2 (Node a e t1 t2).
 
+  (** A tree is sorted if it is either empty or it has a left and a right
+      bound. *)
   Inductive Sorted: t -> Prop :=
   | empty_sorted: Sorted Empty
   | node_sorted:
@@ -50,6 +57,16 @@ Module Make (S0:SORTABLE) (Extra:ANY).
     end.
 
 
+  (*Section inorder.
+    Import ListNotations.
+    (* Trees having the same inorder relation transfer the sortedness of the first
+       tree to the sortedness of the second tree. *)
+    Theorem sorted_via_inorder:
+      forall (t1 t2:t),  Same_inorder t1 t2 -> Sorted t1 -> Sorted t2.
+    Proof
+      _.
+  End inorder.*)
+(*
   (*====================================*)
   (** * Insertion                       *)
   (*====================================*)
@@ -104,5 +121,5 @@ Module Make (S0:SORTABLE) (Extra:ANY).
 
 
 
-  End insertion.
+  End insertion.*)
 End Make.

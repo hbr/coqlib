@@ -431,5 +431,9 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
            (Equal.rewrite eq2 (fun xs => _ = inorder t1 ++ a :: xs) eq_refl
             : _ = inorder t1 ++ a :: inorder t2))
       end.
+
+    Definition Same_inorder (t1 t2:t): Prop :=
+      inorder t1 = inorder t2.
+
   End inorder_sequence.
 End Make.
