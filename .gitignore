@@ -2,6 +2,7 @@
 todo.*
 *.save
 _book
+book.pdf
 *_draft*
 *.glob
 *.v.d
