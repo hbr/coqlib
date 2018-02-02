@@ -40,7 +40,8 @@
   + [Decision Procedure for Equality of nat](
       docs/basics/recursion.md#decision-procedure-for-equality-of-nat)
   + [Where is Induction?](docs/basics/recursion.md#where-is-induction)
-* [Inductive Propositions](docs/basics/inductive_propositions.md)
+* [Natural Numbers](docs/basics/natural.md)
+* [Wellfounded Recursion](docs/basics/wellfounded_recursion.md)
 * [Bibliography](docs/bibliography.md)
 
 
