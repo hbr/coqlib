@@ -136,6 +136,9 @@ Module Predicate.
 
     Definition Subset (P Q:A->Prop): Prop :=
       forall x, P x -> Q x.
+
+    Definition Not (P:A->Prop): A->Prop :=
+      fun x => ~ (P x).
   End predicate_basic.
 End Predicate.
 
@@ -358,12 +361,11 @@ Module Nat.
       | S _ => True
       end.
 
-    Definition predecessor (n:nat): is_Successor n -> {x:nat|S x = n} :=
-      match n return is_Successor n -> {x:nat|S x = n} with
-      | 0 => fun p:is_Successor 0 =>
-               match p with end
-      | S m => fun _ => exist (fun x => S x = S m) m eq_refl
-      end.
+    Definition predecessor (n:nat) (p:is_Successor n): {x:nat|S x = n} :=
+      (match n with
+      | 0 => fun p:is_Successor 0 => match p with end
+      | S m => fun _ => exist _ m eq_refl
+      end) p.
 
 
     Theorem successor_not_zero:
@@ -378,7 +380,7 @@ Module Nat.
 
 
     Definition is_zero (n:nat): {n = 0} + {n <> 0} :=
-      match n as x return {x = 0} + {x <> 0} with
+      match n with
       | 0   => left eq_refl
       | S n => right (@successor_not_zero n)
       end.
@@ -399,7 +401,7 @@ Module Nat.
     Proof
       let f :=
           fix f n: S n <> n:=
-            match n return S n <> n with
+            match n with
             | O =>
               fun p:S 0 = 0 => (@successor_not_zero 0) p
             | S k =>
@@ -411,7 +413,7 @@ Module Nat.
 
     Definition is_equal: forall a b:nat, {a = b} + {a <> b} :=
       fix f a b: {a = b} + {a <> b} :=
-        match a, b return {a = b} + {a <> b} with
+        match a, b with
         | O, O => left eq_refl
         | S n, O => right (@successor_not_zero n)
         | O, S n => right (Equal.flip_not_equal (@successor_not_zero n))
@@ -528,6 +530,14 @@ Module Nat.
       fun a b p =>
         predecessor_monotonic_le p.
 
+    Theorem le_ne_implies_lt:
+      forall (n m:nat), n <= m -> n <> m -> S n <= m.
+    Proof
+      fun n m le =>
+        match le in (_ <= m) return n <> m -> S n <= m with
+        | le_n _ => fun n_ne_n => match n_ne_n eq_refl with end
+        | le_S _ x p => fun _ => successor_monotonic_le p
+        end.
 
     Definition is_less_equal: forall a b:nat, {a <= b} + {~ a <= b} :=
       fix r a b: {a <= b} + {~ a <= b} :=
