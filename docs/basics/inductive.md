@@ -108,7 +108,7 @@ type `nat` can be used in proofs to represent the height of the tree.
 
 
 
-## Inequality Proofs
+## Discrimination of Constructors
 
 We can define a predicate `Successor` which states that a number is the
 successor of another number.
@@ -151,7 +151,7 @@ This method can be used on any inductive type to proof that two objects
 constructed with different constructors must be different.
 
 
-## Injectivity Proofs
+## Injectivity of Constructors
 
 Usually we need a proof for each inductive type that two equal objects
 constructed with the same constructor must have been constructed with the same
