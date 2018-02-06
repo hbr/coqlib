@@ -564,6 +564,48 @@ Module Nat.
         end.
 
 
+    Theorem transitive:
+      forall (n m k:nat), n <= m -> m <= k -> n <= k.
+    Proof
+      fix f n m k nm mk: n <= k :=
+      match mk with
+      | le_n _ => nm
+      | le_S _ l ml =>
+        let nl: n <= l := f n m l nm ml in
+        le_S n l nl
+      end.
+
+
+    Theorem lt_irreflexive:
+      forall n:nat, ~ n < n.
+    Proof
+      fun n (nn: n < n) =>
+        lt_implies_ne nn eq_refl.
+
+
+    Theorem antisymmetric:
+      forall (n m:nat), n <= m -> m <= n -> n = m.
+    Proof
+      fun n m nm =>
+      match nm with
+      | le_n _ => fun _ => eq_refl
+      | le_S _ k nk =>
+        fun Skn: S k <= n =>
+          let Skk: k < k := transitive Skn nk in
+          match lt_irreflexive Skk with end
+      end.
+
+    Definition is_less_equal_bool: forall a b:nat, bool :=
+      fix r a b: bool :=
+        match a with
+        | 0 => true
+        | S k =>
+          match b with
+          | 0 => false
+          | S n => r k n
+          end
+        end.
+
 
     Definition is_less_equal: forall a b:nat, {a <= b} + {~ a <= b} :=
       fix r a b: {a <= b} + {~ a <= b} :=
@@ -583,6 +625,30 @@ Module Nat.
           end
         end.
   End nat_order.
+
+
+
+  (** ** Wellorder of Natural Numbers *)
+  (*     ============================ *)
+  Section nat_wellorder.
+    Definition is_Lower_bound (P:nat->Prop) (n:nat): Prop :=
+      forall m, P m -> n <= m.
+
+    Definition is_Upper_bound (P:nat->Prop) (n:nat): Prop :=
+      forall m, P m -> m <= n.
+
+    Definition is_Least (P:nat->Prop) (n:nat): Prop :=
+      is_Lower_bound P n /\ P n.
+
+    Definition is_Greatest (P:nat->Prop) (n:nat): Prop :=
+      is_Upper_bound P n /\ P n.
+
+    Definition is_Supremum (P:nat->Prop) (n:nat): Prop :=
+      is_Least (is_Upper_bound P) n.
+
+    Definition is_Infimum (P:nat->Prop) (n:nat): Prop :=
+      is_Greatest (is_Lower_bound P) n.
+  End nat_wellorder.
 
   Module Notations.
     Notation "x =? y" :=
