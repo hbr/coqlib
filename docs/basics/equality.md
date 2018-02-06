@@ -298,7 +298,7 @@ Using `rewrite` it can be done easily. W pbce use the proof of `b = c` to rewrit
 
 The theorems `rewrite`, `inject`, `flip`, `flip_not_equal` and `join` are
 useful so that it is worthwhile to put them into a module for reuse. We add to
-our `Basics.v` module the following declarations.
+our `Core.v` module the following declarations.
 
     Module Equal.
         Theorem rewrite ...
@@ -312,7 +312,7 @@ our `Basics.v` module the following declarations.
       (Equal.join .. (Equal.join x y) .. z) (at level 0): equality_scope.
 
 We can use the content of this module in any other Coq source file by putting
-`Require Import Basics.` and `Open Scope equality_scope.` at the top.
+`Require Import Core.` and `Open Scope equality_scope.` at the top.
 
 We can use `Equal.rewrite ...`, `Equal.inject ...`, ... to generate proof
 terms.

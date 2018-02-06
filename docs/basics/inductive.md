@@ -122,7 +122,7 @@ successor of another number.
 The term `Successor n` is a type because its type is a sort. The proposition
 `Successor 1` needs a proof of `True` (which is trivial by the constructor `I`
 of the type `True` and the proposition `Successor 0` needs a proof of `False`
-which is possible only in an inconsitent state containing some contradictory
+which is possible only in an inconsistent state containing some contradictory
 assumptions.
 
 It is useful to define a predicate like `Successor` for all inductive types in

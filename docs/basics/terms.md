@@ -3,7 +3,7 @@
 The terms in Coq can encode sorts, types and objects.
 
 All terms in Coq have a type. We can always ask the question "What is the type
-of a term?" by issuing the command `Check t.`.
+of a term?" by issueing the command `Check t.`.
 
 Therefore sorts have types, types have types and objects have types. This
 statements seems to contain some circularity. But Coq ensures some typing
@@ -47,11 +47,11 @@ types are objects. The following judgements
     x:X
 
 ensure that `a`, `i` and `x` are objects. There is some convention that
-variables representing types are written start with an uppercase letter and
-variables representing objects start with a lowercase letter. However this
-convention is not universally used (e.g. see the type `nat` above) and not
-enforced by the Coq compiler. The syntax of Coq is defined in a way that you
-can mix uppercase and lowercase letters arbitrarily in identifiers.
+variables representing types start with an uppercase letter and variables
+representing objects start with a lowercase letter. However this convention is
+not universally used (e.g. see the type `nat` above) and not enforced by the
+Coq compiler. The syntax of Coq is defined in a way that you can mix uppercase
+and lowercase letters arbitrarily in identifiers.
 
 
 ## Propositions
@@ -79,7 +79,7 @@ be either a proposition or a datatype. There can be objects `x` of type `X`
 
 ## Type of Functions i.e. Dependent Types
 
-In Coq you can define functions. As you might guess functions are terms and
+In Coq you can define functions. As you might guess, functions are terms and
 therefore must have a type (all terms must have a type in Coq!).
 
 In mathematics a function maps objects of its domain to objects of its range
@@ -108,8 +108,8 @@ does not occur in `B` then we can write
 
 as a shorthand for `f: forall x:A,B`.
 
-In Coq types can be functions which can be applied to objects. E.g. the
-proposition `i < j` where `i` and `j` could be natural numbers clearly depends
+In Coq types can be functions which can depend on objects. E.g. the
+proposition `i < j` where `i` and `j` are natural numbers clearly depends
 on these numbers. For some numbers `i` and `j` the proposition `i < j` might
 be provable i.e. there might be an object `p` which represents a proof which
 has type `i < j` i.e. `p: i < j`.
@@ -123,12 +123,12 @@ to define a type for lists with a certain length.
 
 ## Functions
 
-We can write the term
+The term
 
     fun i:nat => i + 2
 
-which is a function mapping any natural number `i` to `i + 2`. Since all Coq
-terms must have types this function term has a type as well.
+is a function mapping any natural number `i` to `i + 2`. Since all Coq terms
+must have types, this function term has a type as well.
 
     (fun i:nat => i + 2): nat -> nat
 
@@ -168,8 +168,8 @@ the term `e` are substituted by the argument `a`.
 
 #### Delta Reduction
 
-Delta reduction is substitution a term by its definition. If the term `f` has
-the definition `(fun x:T => e)` then the following reduction is applied.
+Delta reduction is substitution of a term by its definition. If the term `f`
+has the definition `(fun x:T => e)` then the following reduction is applied.
 
     f a                     ~>  (fun x:T => e) a
 

@@ -47,7 +47,7 @@ source file (unless you know exactly what you are doing). Axioms cannot be
 checked by the system and can make your whole development inconsistent.
 
 The keywords `Definition`, `Theorem`, `Lemma` ... (and some more) can be used
-interchangeable. The names can be chose to indicate the meaning of the thing
+interchangeably. The names can be chosen to indicate the meaning of the thing
 you are defining. Usually a `Definition` defines some function and a `Theorem`
 or `Lemma` makes a definition in the `Prop` sort i.e. it has some logical
 content.
@@ -93,10 +93,9 @@ If even `a` does not occur in the subsequent types then it can be rewritten to
 You can see that the arrow type `A -> B` is just a special case of the
 dependent product `forall a:A, B`.
 
-If the type of a definition is a dependent product or its specialize companion
-an arrow type then the definition is a function and the term implementing the
-function must be a function term (or a term whose normal form is a function
-term).
+If the type of a definition is a dependent product or an arrow type then the
+definition is a function and the term implementing the function must be a
+function term (or a term whose normal form is a function term).
 
 Note that a term starting with `forall a:A, ...` or `A -> ...` is always a
 type and a term starting with `fun x ... => ... ` is always an object.
