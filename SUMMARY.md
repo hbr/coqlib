@@ -40,7 +40,11 @@
   + [Decision Procedure for Equality of nat](
       docs/basics/recursion.md#decision-procedure-for-equality-of-nat)
   + [Where is Induction?](docs/basics/recursion.md#where-is-induction)
-* [Natural Numbers](docs/basics/natural.md)
+* [Natural Numbers](docs/basics/natural/README.md)
+  + [Basics](docs/basics/natural/basics.md)
+  + [Predecessor as Partial Function](docs/basics/natural/predecessor.md)
+  + [Order Structure](docs/basics/natural/order.md)
+  + [Wellorder](docs/basics/natural/wellorder.md)
 * [Wellfounded Recursion](docs/basics/wellfounded_recursion.md)
 * [Bibliography](docs/bibliography.md)
 
