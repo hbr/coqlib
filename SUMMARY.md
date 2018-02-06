@@ -18,19 +18,8 @@
   + [Flip and Join Equalities](docs/basics/equal/flipjoin.md)
   + [Reusable Theorems](docs/basics/equal/reuse.md)
 * [Decision Procedures](docs/basics/decision.md)
-* [Inductive Types](docs/basics/inductive.md)
-  + [Parameters, Arguments and Implicits](
-      docs/basics/inductive.md#parameters-arguments-and-implicits)
-  + [Example Natural Numbers](docs/basics/inductive.md#example-natural-numbers)
-  + [Inequality Proofs](docs/basics/inductive.md#inequality-proofs)
-  + [Injectivity Proofs](docs/basics/inductive.md#injectivity-proofs)
+* [Basics of Inductive Types](docs/basics/inductive.md)
 * [Recursion](docs/basics/recursion.md)
-  + [A Term for Recursive Functions](
-      docs/basics/recursion.md#a-term-for-recursive-functions)
-  + [Proofs by Recursion](docs/basics/recursion.md#proofs-by-recursion)
-  + [Decision Procedure for Equality of nat](
-      docs/basics/recursion.md#decision-procedure-for-equality-of-nat)
-  + [Where is Induction?](docs/basics/recursion.md#where-is-induction)
 * [Natural Numbers](docs/basics/natural/README.md)
   + [Basics](docs/basics/natural/basics.md)
   + [Predecessor as Partial Function](docs/basics/natural/predecessor.md)
