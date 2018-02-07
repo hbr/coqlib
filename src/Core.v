@@ -187,6 +187,10 @@ Module Relation.
         | conj _ right_total =>
           right_total a
         end.
+
+    Definition Sub (S:A->B->Prop): Prop :=
+      forall x y, R x y -> S x y.
+
   End binary_relation.
 
 
@@ -240,6 +244,33 @@ Module Relation.
   Arguments less_than    [_] [_] [_] [_] _ _.
   Arguments equivalent   [_] [_] [_] [_] _ _.
   Arguments greater_than [_] [_] [_] [_] _ _.
+
+  Section well_founded_relation.
+    Variable A:Type.
+    Variable R: A -> A -> Prop.
+    Theorem wf_subrelation:
+      forall (S:A->A->Prop),
+        Sub S R -> well_founded R -> well_founded S.
+    Proof
+      fun S sub =>
+        let lemma: forall x, Acc R x -> Acc S x :=
+            fix f x accRx {struct accRx}: Acc S x:=
+              match accRx with
+                Acc_intro _ pr =>
+                (* pr: forall y, R y x -> Acc R y All direct conclusions of 'pr'
+                 are syntactically smaller than 'accRx', i.e. can be used to
+                 recursively call 'f'.  *)
+                Acc_intro
+                  _
+                  (fun y Syx =>
+                     let Ryx: R y x := sub y x Syx in
+                     let accRy: Acc R y := pr y Ryx in
+                     let accSy: Acc S y := f y accRy in
+                     f y accRy)
+              end
+        in
+        fun wfR a => lemma a (wfR a).
+  End well_founded_relation.
 
   Section order_relation.
     Variable A:Type.
@@ -628,27 +659,169 @@ Module Nat.
 
 
 
-  (** ** Wellorder of Natural Numbers *)
-  (*     ============================ *)
-  Section nat_wellorder.
-    Definition is_Lower_bound (P:nat->Prop) (n:nat): Prop :=
-      forall m, P m -> n <= m.
+  (** ** Order Predicates *)
+  (*     ================= *)
+  Section nat_order_predicates.
+    Definition Lower_bound (P:nat->Prop): nat->Prop :=
+      fun n => forall m, P m -> n <= m.
 
-    Definition is_Upper_bound (P:nat->Prop) (n:nat): Prop :=
-      forall m, P m -> m <= n.
+    Definition Strict_lower_bound (P:nat->Prop): nat->Prop :=
+      fun n => Lower_bound P n /\ ~ P n.
 
-    Definition is_Least (P:nat->Prop) (n:nat): Prop :=
-      is_Lower_bound P n /\ P n.
+    Definition Upper_bound (P:nat->Prop): nat->Prop :=
+      fun n => forall m, P m -> m <= n.
 
-    Definition is_Greatest (P:nat->Prop) (n:nat): Prop :=
-      is_Upper_bound P n /\ P n.
+    Definition Strict_upper_bound (P:nat->Prop): nat->Prop :=
+      fun n => Upper_bound P n /\ ~ P n.
 
-    Definition is_Supremum (P:nat->Prop) (n:nat): Prop :=
-      is_Least (is_Upper_bound P) n.
+    Definition Least (P:nat->Prop): nat->Prop :=
+      fun n => P n /\ Lower_bound P n.
 
-    Definition is_Infimum (P:nat->Prop) (n:nat): Prop :=
-      is_Greatest (is_Lower_bound P) n.
-  End nat_wellorder.
+    Definition Greatest (P:nat->Prop): nat->Prop :=
+      fun n => P n /\ Upper_bound P n.
+
+    Definition Supremum (P:nat->Prop): nat->Prop :=
+      fun n => Least (Upper_bound P) n.
+
+    Definition Infimum (P:nat->Prop): nat->Prop :=
+      fun n => Greatest (Lower_bound P) n.
+
+    Theorem successor_strict_lower_bound:
+      forall (n:nat) (P:nat->Prop) (slb:Strict_lower_bound P n),
+        Lower_bound P (S n).
+    Proof
+      fun n P slb =>
+        (* goal: Lower_bound P (S n)
+           Expanded goal: forall m, P m -> S n <= m
+           S n <= m is by definition equivalent to n < m.
+           We know forall m, P m -> n <= m and ~ (P n). We have to prove that
+           S n <= m is valid as well. If P m is valid then m must be different
+           from n because n does not satisfy the predicate. I.e. we have n <= m
+           and n <> m which is sufficient to prove S n <= m.
+         *)
+        match slb with
+          conj lb pnot =>
+          fun m mP =>
+            let n_ne_m: n <> m :=
+                fun n_eq_m =>
+                  match pnot (Equal.rewrite (Equal.flip n_eq_m)  _ mP)
+                  with end
+            in
+            le_ne_implies_lt (lb m mP)  n_ne_m
+        end.
+  End nat_order_predicates.
+
+
+
+  (** ** Wellfounded Relation: lt *)
+  (*     ======================== *)
+  Section nat_wellfounded.
+    Theorem well_founded_lt: well_founded lt.
+    Proof
+      fix f (n:nat): Acc lt n :=
+      match n with
+      | 0 =>
+        (* i < j is defined as (S i) <= j. A predecessor of 0 must satisfy i <
+           0, i.e. (S i) <= 0 which is impossible because of
+           'successor_not_below_zero' *)
+        Acc_intro
+          _
+          (fun j pj_lt_0 =>
+             match Nat.successor_not_below_zero pj_lt_0 with end)
+      | S k =>
+        (* Goal: Acc lt (S k). S k must be accessible. In order to prove that
+           we have to prove that all predecessors of S k are accessible. The
+           predecessors of S k are k and all predecessors of k. By calling f k
+           we get a proof that all k is accessible which we can pattern match
+           to get a proof that all predecessors of k are accessible as well.
+         *)
+        let pk: Acc lt k := f k in
+        match pk with
+          Acc_intro _ p =>
+          Acc_intro
+            _
+            (fun j (pj_lt_Sk:S j <= S k) =>
+               match Nat.is_equal j k with
+               | left p_eq_jk =>
+                 Equal.rewrite (Equal.flip p_eq_jk) _ pk
+               | right p_ne_jk =>
+                 let pj_le_k: j <= k := Nat.cancel_successor_le pj_lt_Sk in
+                 let pj_lt_k: j < k  := Nat.le_ne_implies_lt pj_le_k p_ne_jk in
+                 p j pj_lt_k
+               end)
+        end
+      end.
+  End nat_wellfounded.
+
+
+
+
+
+  (** ** Arithmetic *)
+  (*     ========== *)
+  Section nat_arithmetic.
+    Theorem successor_into_plus:
+      forall (n m:nat), S (n + m) = n + S m.
+    Proof
+      fix f n: forall m, S (n + m) = n + S m :=
+      match n with
+      | 0 =>
+        fun m =>
+          let p: S (0 + m) = 0 + S m := Equal.inject (eq_refl:0 + m = m) S in
+          p
+      | S k =>
+        fun m => Equal.inject (f k m) S
+
+      end.
+
+    Theorem n_plus_zero_eq_n:
+      forall (n:nat), n + 0 = n.
+    Proof
+      fix f n: n + 0 = n :=
+      match n with
+      | 0 => eq_refl
+      | S k =>
+        (* goal S k + 0 = S k,
+       hypo k + 0   = k *)
+        Equal.inject (f k) S
+      end.
+  End nat_arithmetic.
+
+  (** ** Element Search *)
+  (*     ============== *)
+  Section nat_search.
+    Definition
+      search_below (P:nat->Prop) (n:nat) (d:Predicate.Decider P)
+    : sig (Least P) + {Lower_bound P n}
+      :=
+        let LB := Lower_bound P in
+        let Fail := LB n in
+        let OK := sig (Least P) in
+        (fix f i: forall k (p:i+k=n) (lbk:LB k), OK + {Fail} :=
+           match i with
+           | 0 => fun k (eqkn:0+k=n) lbk =>
+                    inright (Equal.rewrite eqkn LB lbk)
+           | S j =>
+             fun k (eqSjkn:S j + k = n) lbk =>
+               match d k with
+               | left pk => (* found least element k satisfying P *)
+                 inleft (exist _ k (conj pk lbk))
+               | right notpk =>
+                 let SLB := Strict_lower_bound P in
+                 let slbk : SLB k := conj lbk notpk in
+                 let lbSk: LB (S k) := successor_strict_lower_bound slbk in
+                 let eqjSkn: j + S k = n :=
+                     Equal.rewrite
+                       (successor_into_plus j k)
+                       (fun x => x = n)
+                       eqSjkn
+                 in
+                 f j (S k) eqjSkn lbSk
+               end
+           end
+        )
+          n 0 (n_plus_zero_eq_n n) (fun x _ => zero_is_least x).
+  End nat_search.
 
   Module Notations.
     Notation "x =? y" :=
