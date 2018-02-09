@@ -69,9 +69,9 @@ are the predecessors of `k` (note that a predecessor of `S k` is a predecessor
 of it with respect to the relation `<`, i.e. the predecessors of `S k` are all
 numbers `j` satisfying `j < S k` or `j <= k`). In order to prove that all
 predecessors `j` of `S i` are accessible we make the case split `j = k` and `j
-<> k`. In both case a proof of the accessibility of `j` is straighforward.
+<> k`. In both cases a proof of the accessibility of `j` is straightforward.
 
-    Theorem well_founded_lt: well_founded lt.
+    Theorem lt_well_founded: well_founded lt.
     Proof
       fix f (n:nat): Acc lt n :=
       match n with
@@ -79,7 +79,7 @@ predecessors `j` of `S i` are accessible we make the case split `j = k` and `j
         Acc_intro
           _
           (fun j pj_lt_0 =>
-             match Nat.successor_not_below_zero pj_lt_0 with end)
+             match successor_not_below_zero pj_lt_0 with end)
       | S k =>
         (* Goal: Acc lt (S k). *)
         let pk: Acc lt k := f k in
@@ -88,12 +88,12 @@ predecessors `j` of `S i` are accessible we make the case split `j = k` and `j
           Acc_intro
             _
             (fun j (pj_lt_Sk:S j <= S k) =>
-               match Nat.is_equal j k with
+               match is_equal j k with
                | left p_eq_jk =>
                  Equal.rewrite (Equal.flip p_eq_jk) _ pk
                | right p_ne_jk =>
-                 let pj_le_k: j <= k := Nat.cancel_successor_le pj_lt_Sk in
-                 let pj_lt_k: j < k  := Nat.le_ne_implies_lt pj_le_k p_ne_jk in
+                 let pj_le_k: j <= k := cancel_successor_le pj_lt_Sk in
+                 let pj_lt_k: j < k  := le_ne_implies_lt pj_le_k p_ne_jk in
                  p j pj_lt_k
                end)
         end
