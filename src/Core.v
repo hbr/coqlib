@@ -595,7 +595,7 @@ Module Nat.
         end.
 
 
-    Theorem transitive:
+    Theorem le_transitive:
       forall (n m k:nat), n <= m -> m <= k -> n <= k.
     Proof
       fix f n m k nm mk: n <= k :=
@@ -614,7 +614,7 @@ Module Nat.
         lt_implies_ne nn eq_refl.
 
 
-    Theorem antisymmetric:
+    Theorem le_antisymmetric:
       forall (n m:nat), n <= m -> m <= n -> n = m.
     Proof
       fun n m nm =>
@@ -622,9 +622,27 @@ Module Nat.
       | le_n _ => fun _ => eq_refl
       | le_S _ k nk =>
         fun Skn: S k <= n =>
-          let Skk: k < k := transitive Skn nk in
+          let Skk: k < k := le_transitive Skn nk in
           match lt_irreflexive Skk with end
       end.
+
+    Theorem lt_le_transitive:
+      forall (n m k:nat), n < m -> m <= k -> n < k.
+    Proof
+      fun n m k (le_Snm: S n <= m) le_mk =>
+        le_transitive le_Snm le_mk.
+
+    Theorem le_lt_transitive:
+      forall (n m k:nat), n <= m -> m < k -> n < k.
+    Proof
+      fun n m k le_nm (le_Smk: S m <= k) =>
+        le_transitive (successor_monotonic_le le_nm) le_Smk.
+
+    Theorem lt_transitive:
+      forall (n m k:nat), n < m -> m < k -> n < k.
+    Proof
+      fun n m k (lt_nm: S n <= m) lt_mk =>
+        lt_implies_le (le_lt_transitive lt_nm lt_mk) : S n <= k.
 
     Definition is_less_equal_bool: forall a b:nat, bool :=
       fix r a b: bool :=
@@ -686,6 +704,16 @@ Module Nat.
     Definition Infimum (P:nat->Prop): nat->Prop :=
       fun n => Greatest (Lower_bound P) n.
 
+
+    Theorem lower_bound_transitive:
+      forall (P:nat->Prop) (n m:nat),
+        n <= m -> Lower_bound P m -> Lower_bound P n.
+    Proof
+      fun P n m le_nm lbm k pk =>
+        let le_mk: m <= k := lbm k pk in
+        le_transitive le_nm le_mk.
+
+
     Theorem successor_strict_lower_bound:
       forall (n:nat) (P:nat->Prop) (slb:Strict_lower_bound P n),
         Lower_bound P (S n).
@@ -716,7 +744,7 @@ Module Nat.
   (** ** Wellfounded Relation: lt *)
   (*     ======================== *)
   Section nat_wellfounded.
-    Theorem well_founded_lt: well_founded lt.
+    Theorem lt_well_founded: well_founded lt.
     Proof
       fix f (n:nat): Acc lt n :=
       match n with
@@ -727,7 +755,7 @@ Module Nat.
         Acc_intro
           _
           (fun j pj_lt_0 =>
-             match Nat.successor_not_below_zero pj_lt_0 with end)
+             match successor_not_below_zero pj_lt_0 with end)
       | S k =>
         (* Goal: Acc lt (S k). S k must be accessible. In order to prove that
            we have to prove that all predecessors of S k are accessible. The
@@ -735,18 +763,18 @@ Module Nat.
            we get a proof that all k is accessible which we can pattern match
            to get a proof that all predecessors of k are accessible as well.
          *)
-        let pk: Acc lt k := f k in
-        match pk with
+        let hypo_k: Acc lt k := f k in
+        match hypo_k with
           Acc_intro _ p =>
           Acc_intro
             _
             (fun j (pj_lt_Sk:S j <= S k) =>
-               match Nat.is_equal j k with
+               match is_equal j k with
                | left p_eq_jk =>
-                 Equal.rewrite (Equal.flip p_eq_jk) _ pk
+                 Equal.rewrite (Equal.flip p_eq_jk) _ hypo_k
                | right p_ne_jk =>
-                 let pj_le_k: j <= k := Nat.cancel_successor_le pj_lt_Sk in
-                 let pj_lt_k: j < k  := Nat.le_ne_implies_lt pj_le_k p_ne_jk in
+                 let pj_le_k: j <= k := cancel_successor_le pj_lt_Sk in
+                 let pj_lt_k: j < k  := le_ne_implies_lt pj_le_k p_ne_jk in
                  p j pj_lt_k
                end)
         end
@@ -791,7 +819,7 @@ Module Nat.
   (*     ============== *)
   Section nat_search.
     Definition
-      search_below (P:nat->Prop) (n:nat) (d:Predicate.Decider P)
+      find_below (P:nat->Prop) (n:nat) (d:Predicate.Decider P)
     : sig (Least P) + {Lower_bound P n}
       :=
         let LB := Lower_bound P in
@@ -821,6 +849,31 @@ Module Nat.
            end
         )
           n 0 (n_plus_zero_eq_n n) (fun x _ => zero_is_least x).
+
+
+    Definition
+      find_existing_below
+      (P:nat->Prop)
+      (n:nat)
+      (d:Predicate.Decider P)
+      (e: exists x, x < n /\ P x)
+      : sig (Least P) :=
+      match find_below n d with
+      | inleft least => least
+      | inright lbn =>
+        let contra: False :=
+            match e with
+              ex_intro _ x q =>
+              match q with
+                conj lt_xn px => (* S x <= n, P x *)
+                let le_nx: n <= x := lbn x px in
+                successor_not_le (le_transitive lt_xn le_nx: S x <= x)
+              end
+            end in
+        match contra with end
+      end.
+
+
   End nat_search.
 
   Module Notations.
