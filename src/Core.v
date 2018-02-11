@@ -1,31 +1,5 @@
 Set Implicit Arguments.
 
-(** * Axioms *)
-(*    ====== *)
-Section axioms.
-  Section axiom_definitions.
-    Axiom excluded_middle:
-      forall A:Prop, A \/ ~ A.
-
-    Axiom proof_irrelevance:
-      forall (A:Prop) (p q:A), p = q.
-
-    Axiom dependent_function_equality:
-      forall (A:Type) (B:A->Type) (f g: forall x, B x),
-        (forall x, f x = g x) -> f = g.
-  End axiom_definitions.
-
-  Section axiom_consequences.
-    Theorem function_equality:
-      forall (A B:Type) (f g:A->B),
-        (forall x, f x = g x) -> f = g.
-    Proof
-      fun A B f g p =>
-        dependent_function_equality (fun _ => B) f g p.
-  End axiom_consequences.
-End axioms.
-
-
 
 
 (** * Standard Types *)
