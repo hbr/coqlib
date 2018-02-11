@@ -1,10 +1,13 @@
-Require Binary_search_tree.
 Require Import Core.
+Require Natural.
+Require Binary_search_tree.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Import Equal.Notations.
 
 Set Implicit Arguments.
+
+Module Nat := Natural.
 
 Module Make (S0:SORTABLE).
 
