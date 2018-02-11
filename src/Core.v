@@ -298,9 +298,21 @@ End Relation.
 (*    ============================ *)
 Module Either.
   Inductive t (A B:Type): Type :=
-  | left:  forall a:A, t A B
-  | right: forall b:B, t A B.
+  | Left:  A -> t A B
+  | Right: B -> t A B.
 End Either.
+
+
+
+
+(** * Tristate: Three Possible Results *)
+(*    ================================ *)
+Module Tristate.
+  Inductive t (A B C:Type): Type :=
+  | Left:   A -> t A B C
+  | Middle: B -> t A B C
+  | Right:  C -> t A B C.
+End Tristate.
 
 
 

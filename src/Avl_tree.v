@@ -473,7 +473,7 @@ Module Make (S0:SORTABLE).
           match left_leaning_sons_height ph1 with
           | conj ph11 ph12 =>
             let avl := balanced_avl a ph11 (balanced_avl c ph12 ph2) in
-            Either.left _ (exist _ t avl)
+            Either.Left _ (exist _ t avl)
           end
       | Node a B.Balanced t11 t12 =>
         (* left unbalance:
@@ -488,7 +488,7 @@ Module Make (S0:SORTABLE).
             let t := Node a B.Right t11 (Node c B.Left t12 t2) in
             let ph: Avl_height t (3+h) :=
                 right_avl a ph11 (left_avl c ph12 ph2) in
-            Either.right _ (exist _ t ph)
+            Either.Right _ (exist _ t ph)
           end
       | Node a B.Right t11 t12 =>
         (* left-right unbalance:
@@ -504,7 +504,7 @@ Module Make (S0:SORTABLE).
           let f0 t h := Avl_height t h in
           let f1 t h := Avl_height t (1 + h) in
           let f2 t h := Avl_height t (1+(1+h)) in
-          Either.left
+          Either.Left
             _
             ((match
                  t12
@@ -623,7 +623,7 @@ Module Make (S0:SORTABLE).
       match t_ with
       | Empty =>
         fun ph =>
-          Either.right
+          Either.Right
             _
             (exist
                _
