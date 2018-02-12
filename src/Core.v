@@ -17,7 +17,7 @@ Module Equal.
     Variables A B: Type.
 
     Theorem
-      rewrite (a b:A) (p:a = b) (P:A->Prop) (pa:P a): P b.
+      rewrite (a b:A) (p:a = b) (P:A->Type) (pa:P a): P b.
     Proof
       match p in (_ = x) return P x with
       | eq_refl => pa
