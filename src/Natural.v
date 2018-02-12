@@ -491,31 +491,31 @@ Section comparison.
     (fix f n m: Comparison3 n m :=
        match n, m with
        | 0, 0 =>
-         Tristate.Middle _ _ eq_refl
+         Tristate.Middle eq_refl
        | 0, S j =>
-         Tristate.Left _ _ (exist _ j eq_refl)
+         Tristate.Left (exist _ j eq_refl)
        | S i, 0 =>
-         Tristate.Right _ _ (exist _ i eq_refl)
+         Tristate.Right (exist _ i eq_refl)
        | S i, S j =>
          match f i j with
-         | Tristate.Left _ _ p =>
+         | Tristate.Left p =>
            match p with
              exist _ d eq =>
-             Tristate.Left _ _ (exist _ d (Equal.inject eq S))
+             Tristate.Left (exist _ d (Equal.inject eq S))
            end
-         | Tristate.Middle _ _ p =>
-           Tristate.Middle _ _ (Equal.inject p S)
-         | Tristate.Right _ _ p =>
+         | Tristate.Middle p =>
+           Tristate.Middle (Equal.inject p S)
+         | Tristate.Right p =>
            match p with
              exist _ d eq =>
-             Tristate.Right _ _ (exist _ d (Equal.inject eq S))
+             Tristate.Right (exist _ d (Equal.inject eq S))
            end
          end
        end) n m.
 
   Definition compare_le (n m:nat): Either.t {d|n + d = m} {d|S m + d = n} :=
     match compare3 n m with
-    | Tristate.Left _ _ x =>
+    | Tristate.Left x =>
       match x with
         exist _ d p =>
         let q: n + S d = m :=
@@ -523,13 +523,13 @@ Section comparison.
               (pull_successor_plus n d: n + S d = _)
               (p: S n + d = m)
         in
-        Either.Left _ (exist _ (S d) q)
+        Either.Left (exist _ (S d) q)
       end
-    | Tristate.Middle _ _ p =>
+    | Tristate.Middle p =>
       let q: n + 0 = n := cancel_plus_zero n in
-      Either.Left _ (exist _ 0 (Equal.join q p))
-    | Tristate.Right _ _ p =>
-      Either.Right _ p
+      Either.Left (exist _ 0 (Equal.join q p))
+    | Tristate.Right p =>
+      Either.Right p
     end.
 End comparison.
 
@@ -549,7 +549,7 @@ Section more_arithmetic.
                  (Equal.flip (cancel_plus_zero (k+k)): k + k = k + k + 0)
                  (inv: _ = n)
            in
-           Either.Left _ (exist _ k p)
+           Either.Left (exist _ k p)
        | S 0 =>
          fun k inv =>
            let p: S (k + k) = n :=
@@ -558,7 +558,7 @@ Section more_arithmetic.
                  (fun x => x = n)
                  inv
            in
-           Either.Right _ (exist _ k p)
+           Either.Right (exist _ k p)
        | S (S i) =>
          fun k inv =>
            let p := push_successor_plus (S i) (k + k) in
@@ -683,7 +683,7 @@ Section wellfounded.
       in
       fun x =>
         match compare3 x bnd with
-        | Tristate.Left _ _ v =>
+        | Tristate.Left v =>
           (* v: {d:| S x + d = nbd} *)
           match v with
             exist _ k pk =>
@@ -696,9 +696,9 @@ Section wellfounded.
             in
             below_bound_accessible (S k) x q
           end
-        | Tristate.Middle _ _ p =>
+        | Tristate.Middle p =>
           below_bound_accessible 0 x p
-        | Tristate.Right _ _ v =>
+        | Tristate.Right v =>
           match v with
             exist _ d pd =>
             let p: S bnd <= S bnd + d := plus_increases1 (S bnd) d in

@@ -274,6 +274,8 @@ Module Either.
   Inductive t (A B:Type): Type :=
   | Left:  A -> t A B
   | Right: B -> t A B.
+  Arguments Left   [A] [B] _.
+  Arguments Right  [A] [B] _.
 End Either.
 
 
@@ -286,6 +288,9 @@ Module Tristate.
   | Left:   A -> t A B C
   | Middle: B -> t A B C
   | Right:  C -> t A B C.
+  Arguments Left   [A] [B] [C] _.
+  Arguments Middle [A] [B] [C] _.
+  Arguments Right  [A] [B] [C] _.
 End Tristate.
 
 
