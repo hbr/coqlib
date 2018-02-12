@@ -1,9 +1,10 @@
 Require Import Core.
+Import Equal.Notations.
 
 Set Implicit Arguments.
 
-(** * Basic Facts about Natural Numbers *)
-(*    ================================= *)
+(** * Basic Facts *)
+(*    =========== *)
 Section nat_basics.
   Definition is_Successor (n:nat): Prop :=
     match n with
@@ -85,7 +86,7 @@ End nat_basics.
 (** * Arithmetic *)
 (*    ========== *)
 Section nat_arithmetic.
-  Theorem successor_into_plus:
+  Theorem push_successor_plus:
     forall (n m:nat), S (n + m) = n + S m.
   Proof
     fix f n: forall m, S (n + m) = n + S m :=
@@ -96,10 +97,16 @@ Section nat_arithmetic.
         p
     | S k =>
       fun m => Equal.inject (f k m) S
-
     end.
 
-  Theorem n_plus_zero_eq_n:
+
+  Theorem pull_successor_plus:
+    forall (n m:nat), n + S m = S (n + m).
+  Proof
+    fun n m =>
+      Equal.flip (push_successor_plus n m).
+
+  Theorem cancel_plus_zero:
     forall (n:nat), n + 0 = n.
   Proof
     fix f n: n + 0 = n :=
@@ -110,6 +117,44 @@ Section nat_arithmetic.
        hypo k + 0   = k *)
       Equal.inject (f k) S
     end.
+
+  Theorem plus_commutative:
+    forall (n m:nat), n + m = m + n.
+  Proof
+    fix f n: forall m, n + m = m + n :=
+    match n with
+    | 0 =>
+      fun m =>
+        let p: m + 0 = m := cancel_plus_zero m in
+        let q: 0 + m = m + 0 := Equal.flip p in
+        q
+    | S k =>
+      fun m =>
+        let hypo := f k m in
+        let p: S k + m = S m + k := Equal.inject hypo S in
+        Equal.join p (push_successor_plus m k)
+    end.
+
+  Theorem zero_sum1:
+    forall (n m:nat), n + m = 0 -> n = 0.
+  Proof
+    fun n =>
+      match n return forall m (p:n+m=0), n = 0
+      with
+      | 0 => fun _ _ => eq_refl
+      | S k =>
+        fun m (eq0: S (k + m) = 0) =>
+          match successor_not_zero eq0 with end
+      end.
+
+  Theorem zero_sum2:
+    forall (n m:nat), n + m = 0 -> m = 0.
+  Proof
+    fun n m eq =>
+      let p: m + n = 0 :=
+          Equal.rewrite (plus_commutative n m) (fun x => x = 0) eq in
+      zero_sum1 m n p.
+
 End nat_arithmetic.
 
 
@@ -323,6 +368,27 @@ Section nat_order.
           end
         end
       end.
+
+
+  Theorem plus_increases1:
+    forall (n m:nat), n <= n + m.
+  Proof
+    fix f n: forall m, n <= n + m :=
+    match n with
+    | 0 => fun m => zero_is_least (0 + m)
+    | S k =>
+      fun m =>
+        let p: k <= k + m := f k m in
+        successor_monotonic_le p
+    end.
+
+  Theorem plus_increases2:
+    forall (n m:nat), m <= n + m.
+  Proof
+    fun n m =>
+      let p: m + n = n + m := plus_commutative m n in
+      Equal.rewrite p (fun x => m <= x) (plus_increases1 m n).
+
 End nat_order.
 
 
@@ -364,6 +430,30 @@ Section nat_order_predicates.
       le_transitive le_nm le_mk.
 
 
+  Theorem predecessor_lower_bound:
+    forall (P:nat->Prop) (n:nat),
+      Lower_bound P n -> P n -> Lower_bound P (pred n).
+  Proof
+    fun P n =>
+      match n with
+      | 0 => fun lb p k pk => zero_is_least k
+      | S l =>
+        fun lbSl pSl k pk =>
+          (* goal: Lower_bound P (pred n) *)
+          lt_implies_le (lbSl k pk: l < k): l <= k
+      end
+  .
+
+  Theorem successor_not_lower_bound:
+    forall (P:nat->Prop) (n:nat),
+      Lower_bound P n -> P n ->
+      ~ Lower_bound P (S n).
+  Proof
+    fun P n lb pn lbsn =>
+      match
+        successor_not_le (lbsn n pn: S n <= n)
+      with end.
+
   Theorem successor_strict_lower_bound:
     forall (n:nat) (P:nat->Prop) (slb:Strict_lower_bound P n),
       Lower_bound P (S n).
@@ -391,9 +481,110 @@ End nat_order_predicates.
 
 
 
-(** * Wellfounded Relation: lt *)
-(*    ======================== *)
-Section nat_wellfounded.
+(** * Comparison *)
+(*    ========== *)
+Section comparison.
+  Definition Comparison3 (n m:nat): Type :=
+    Tristate.t {d| S n + d = m} (n=m) {d| S m + d = n}.
+
+  Definition compare3 (n m:nat): Comparison3 n m :=
+    (fix f n m: Comparison3 n m :=
+       match n, m with
+       | 0, 0 =>
+         Tristate.Middle _ _ eq_refl
+       | 0, S j =>
+         Tristate.Left _ _ (exist _ j eq_refl)
+       | S i, 0 =>
+         Tristate.Right _ _ (exist _ i eq_refl)
+       | S i, S j =>
+         match f i j with
+         | Tristate.Left _ _ p =>
+           match p with
+             exist _ d eq =>
+             Tristate.Left _ _ (exist _ d (Equal.inject eq S))
+           end
+         | Tristate.Middle _ _ p =>
+           Tristate.Middle _ _ (Equal.inject p S)
+         | Tristate.Right _ _ p =>
+           match p with
+             exist _ d eq =>
+             Tristate.Right _ _ (exist _ d (Equal.inject eq S))
+           end
+         end
+       end) n m.
+
+  Definition compare_le (n m:nat): Either.t {d|n + d = m} {d|S m + d = n} :=
+    match compare3 n m with
+    | Tristate.Left _ _ x =>
+      match x with
+        exist _ d p =>
+        let q: n + S d = m :=
+            Equal.join
+              (pull_successor_plus n d: n + S d = _)
+              (p: S n + d = m)
+        in
+        Either.Left _ (exist _ (S d) q)
+      end
+    | Tristate.Middle _ _ p =>
+      let q: n + 0 = n := cancel_plus_zero n in
+      Either.Left _ (exist _ 0 (Equal.join q p))
+    | Tristate.Right _ _ p =>
+      Either.Right _ p
+    end.
+End comparison.
+
+
+
+(** * More Arithmetic       *)
+(*    ===================== *)
+Section more_arithmetic.
+  Definition half (n:nat): Either.t {x| x + x = n} {x| S(x + x) = n} :=
+    let RT n := Either.t {x| x + x = n} {x| S(x + x) = n} in
+    (fix f m: forall k, k + k + m = n ->  RT n :=
+       match m with
+       | 0 =>
+         fun k inv =>
+           let p: k + k = n :=
+               Equal.join
+                 (Equal.flip (cancel_plus_zero (k+k)): k + k = k + k + 0)
+                 (inv: _ = n)
+           in
+           Either.Left _ (exist _ k p)
+       | S 0 =>
+         fun k inv =>
+           let p: S (k + k) = n :=
+               Equal.rewrite
+                 (plus_commutative (k + k) 1: k + k + 1 = 1 + (k + k))
+                 (fun x => x = n)
+                 inv
+           in
+           Either.Right _ (exist _ k p)
+       | S (S i) =>
+         fun k inv =>
+           let p := push_successor_plus (S i) (k + k) in
+           let q := push_successor_plus i (S (k + k)) in
+           let r: S (k + k) = k + S k := push_successor_plus k k in
+           let eq: (S k) + (S k) + i = n :=
+               (equality_chain:
+                  (Equal.inject
+                     (pull_successor_plus (S k) k)
+                     (fun x => x + i)
+                   : S k + S k + i = _),
+                  (push_successor_plus (S (k + k)) i: S (S (k + k)) + i = _),
+                  (push_successor_plus (k + k) (S i): S (k + k) + S i = _),
+                  (inv: k + k + S (S i) = n))
+           in
+           f i (S k) eq
+       end)
+      n 0 eq_refl.
+End more_arithmetic.
+
+
+
+
+(** * Wellfounded Relations *)
+(*    ===================== *)
+Section wellfounded.
   Theorem lt_well_founded: well_founded lt.
   Proof
     fix f (n:nat): Acc lt n :=
@@ -429,14 +620,103 @@ Section nat_wellfounded.
              end)
       end
     end.
-End nat_wellfounded.
+
+  Definition gt_bounded (bnd y x:nat): Prop :=
+    x < y /\ y <= bnd.
+
+  Theorem gt_bounded_wellfounded:
+    forall bnd:nat, well_founded (gt_bounded bnd).
+  Proof
+    fun bnd =>
+      let R := gt_bounded bnd in
+      let above_bound_accessible x (ge: bnd <= x): Acc R x :=
+          Acc_intro
+            _
+            (fun y Ryx =>
+               match Ryx with
+               | conj lt_xy le_ybnd =>
+                 let lt_xbnd := lt_le_transitive lt_xy le_ybnd : x < bnd in
+                 let lt_xx := lt_le_transitive lt_xbnd ge : x < x in
+                 match lt_irreflexive lt_xx  with
+                 end
+               end
+            )
+      in
+      let below_bound_accessible:
+            forall n x, n + x = bnd -> Acc R x :=
+          fix f n: forall x (inv:n + x = bnd), Acc R x :=
+            match n with
+            | 0 =>
+              fun x (inv: 0 + x = bnd) =>
+                let eq: bnd = x := Equal.flip inv in
+                above_bound_accessible
+                  x
+                  (Equal.rewrite eq (fun z => bnd <= z) (le_n bnd))
+            | S k =>
+              fun x inv =>
+                let inv2: k + S x = bnd :=
+                    Equal.rewrite
+                      (push_successor_plus k x)
+                      (fun z => z = bnd)
+                      inv
+                in
+                let accSx: Acc R (S x) := f k (S x) inv2
+                in
+                match accSx with
+                  Acc_intro _ h =>
+                  Acc_intro
+                    _
+                    (fun y (Ryx: x < y /\ y <= bnd) =>
+                       match is_equal (S x) y with
+                       | left eq_Sxy =>
+                         Equal.rewrite eq_Sxy (fun z => Acc R z) accSx
+                       | right neq_Sxy =>
+                         match Ryx with
+                           conj lt_xy le_ybnd =>
+                           let lt_Sxy: S x < y :=
+                               le_ne_implies_lt lt_xy neq_Sxy in
+                           h y (conj lt_Sxy le_ybnd)
+                         end
+                       end)
+                end
+            end
+      in
+      fun x =>
+        match compare3 x bnd with
+        | Tristate.Left _ _ v =>
+          (* v: {d:| S x + d = nbd} *)
+          match v with
+            exist _ k pk =>
+            (* pk: S x + k = bnd *)
+            let q: S k + x = bnd :=
+                (equality_chain:
+                   (plus_commutative (S k) x: S k + x = x + S k),
+                   (pull_successor_plus x k: _ = S x + k),
+                   pk)
+            in
+            below_bound_accessible (S k) x q
+          end
+        | Tristate.Middle _ _ p =>
+          below_bound_accessible 0 x p
+        | Tristate.Right _ _ v =>
+          match v with
+            exist _ d pd =>
+            let p: S bnd <= S bnd + d := plus_increases1 (S bnd) d in
+            let q: S bnd <= x := Equal.rewrite pd (fun z => _ <= z) p in
+            above_bound_accessible x (lt_implies_le q)
+          end
+        end.
+
+End wellfounded.
+
+
 
 
 
 
 (** * Element Search *)
 (*    ============== *)
-Section nat_search.
+Section bounded_search.
   Definition
     find_below (P:nat->Prop) (n:nat) (d:Predicate.Decider P)
   : sig (Least P) + {Lower_bound P n}
@@ -459,7 +739,7 @@ Section nat_search.
                let lbSk: LB (S k) := successor_strict_lower_bound slbk in
                let eqjSkn: j + S k = n :=
                    Equal.rewrite
-                     (successor_into_plus j k)
+                     (push_successor_plus j k)
                      (fun x => x = n)
                      eqSjkn
                in
@@ -467,7 +747,7 @@ Section nat_search.
              end
          end
       )
-        n 0 (n_plus_zero_eq_n n) (fun x _ => zero_is_least x).
+        n 0 (cancel_plus_zero n) (fun x _ => zero_is_least x).
 
 
   Definition
@@ -491,9 +771,65 @@ Section nat_search.
           end in
       match contra with end
     end.
+End bounded_search.
 
 
-End nat_search.
+Section unbounded_search.
+  Variable P: nat -> Prop.
+  Variable n: nat.
+  Variable d: Predicate.Decider P.
+  Variable e: ex P.
+
+  Let LB := Lower_bound P.
+
+  Let R (y x:nat): Prop :=
+    y = S x /\ LB y /\ LB x.
+
+  Let R_wf: well_founded R.
+  Proof
+    match e with
+      ex_intro _ bnd p_bnd =>
+      let RBnd := gt_bounded bnd in
+      let RsubRbnd: Relation.Sub R RBnd :=
+          fun y x Ryx =>
+            match Ryx with
+              conj y_eq_Sx p =>
+              match p with
+                conj lby lbx =>
+                let _: S x = y := Equal.flip y_eq_Sx in
+                let q: y <= bnd := lby bnd p_bnd in
+                let r: x < y :=
+                    Equal.rewrite
+                      (Equal.flip y_eq_Sx: S x = y)
+                      (fun z => S x <= z)
+                      (le_n (S x))
+                in
+                conj r q
+              end
+            end
+      in
+      Relation.wf_subrelation RsubRbnd (gt_bounded_wellfounded bnd)
+    end.
+
+  Definition least: sig (Least P) :=
+    (fix f k (lb_k: LB k) (acc_k: Acc R k): sig (Least P) :=
+       match d k with
+       | left pk => exist _ k (conj pk lb_k)
+       | right not_pk =>
+         let h: forall y, R y k -> Acc R y :=
+             match acc_k with Acc_intro _ h => h end
+         in
+         let lb_Sk: LB (S k) :=
+             successor_strict_lower_bound (conj lb_k not_pk) in
+         let RSkk: (S k = S k /\ LB (S k) /\ LB k) :=
+             conj eq_refl (conj lb_Sk lb_k)
+         in
+         f (S k) lb_Sk (h (S k) RSkk)
+       end
+    ) 0 (fun x _ => zero_is_least x) (R_wf 0).
+End unbounded_search.
+
+
 
 Module Notations.
   Notation "x =? y" :=
