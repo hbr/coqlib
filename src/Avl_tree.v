@@ -458,19 +458,19 @@ Module Make (S0:SORTABLE).
       Avl_height t2 h ->
       Either.t {u:t| Avl_height u (2 + h)} {u:t| Avl_height u (3 + h)}.
 
-
     Definition rebalance_left (c:A.t) (t1 t2:t): Rebalance_left_result t1 t2 :=
       let h := height t2 in
       match t1 with
       | Empty =>
         fun ph1  => match avl_height_positive_is_node ph1 with end
       | Node a B.Left t11 t12 =>
-        (* left-left unbalance:
-                    c                            a
-              a          t2              t11            c
-          t11   t12                      x          t12   t2
-          x
-         *)
+(** <<
+        left-left unbalance:
+                   c                            a
+             a          t2              t11            c
+         t11   t12                      x          t12   t2
+         x
+>>*)
         fun ph1 ph2  =>
           let t := Node a B.Balanced t11 (Node c B.Balanced t12 t2) in
           match left_leaning_sons_height ph1 with
@@ -479,12 +479,13 @@ Module Make (S0:SORTABLE).
             Either.Left _ (exist _ t avl)
           end
       | Node a B.Balanced t11 t12 =>
-        (* left unbalance:
+(** <<
+        left unbalance:
                     c                            a
               a          t2              t11            c
           t11   t12                      x          t12   t2
           x     x                                   x
-         *)
+>>*)
         fun ph1 ph2 =>
           match balanced_sons_height ph1 with
           | conj ph11 ph12 =>
@@ -494,12 +495,13 @@ Module Make (S0:SORTABLE).
             Either.Right _ (exist _ t ph)
           end
       | Node a B.Right t11 t12 =>
-        (* left-right unbalance:
-                      c                               b
-              a            t2                   a            c
-          t11     b                          t11 t121    t122 t2
-              t121 t122
-         *)
+(** <<
+        left-right unbalance:
+                    c                               b
+            a            t2                   a            c
+        t11     b                          t11 t121    t122 t2
+            t121 t122
+>>*)
         fun ph1 ph2 =>
           let ph_11_12 := right_leaning_sons_height ph1 in
           let ph11 := proj1 ph_11_12 in
