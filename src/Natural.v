@@ -152,7 +152,7 @@ Section nat_arithmetic.
   Proof
     fun n m eq =>
       let p: m + n = 0 :=
-          Equal.rewrite (plus_commutative n m) (fun x => x = 0) eq in
+          Equal.join (plus_commutative m n) eq in
       zero_sum1 m n p.
 
 End nat_arithmetic.
@@ -260,8 +260,14 @@ Section nat_order.
     end.
 
 
+  Theorem eq_to_le:
+    forall (n m:nat), n = m -> n <= m.
+  Proof
+    fun n m eq =>
+      Equal.rewrite eq _ (le_n n).
 
-  Theorem lt_implies_le:
+
+  Theorem lt_to_le:
     forall (n m:nat), n < m -> n <= m.
   Proof
     fix f n m lt: n <= m :=
@@ -271,7 +277,7 @@ Section nat_order.
     end.
 
 
-  Theorem lt_implies_ne:
+  Theorem lt_to_neq:
     forall (n m:nat), n < m -> n <> m.
   Proof
     fun n m lt eq =>
@@ -280,7 +286,7 @@ Section nat_order.
 
 
 
-  Theorem le_ne_implies_lt:
+  Theorem le_neq_to_lt:
     forall (n m:nat), n <= m -> n <> m -> S n <= m.
   Proof
     fun n m le =>
@@ -306,7 +312,7 @@ Section nat_order.
     forall n:nat, ~ n < n.
   Proof
     fun n (nn: n < n) =>
-      lt_implies_ne nn eq_refl.
+      lt_to_neq nn eq_refl.
 
 
   Theorem le_antisymmetric:
@@ -333,11 +339,23 @@ Section nat_order.
     fun n m k le_nm (le_Smk: S m <= k) =>
       le_transitive (successor_monotonic_le le_nm) le_Smk.
 
+  Theorem le_eq_transitive:
+    forall (n m k:nat), n <= m -> m = k -> n <= k.
+  Proof
+    fun n m k le eq =>
+      Equal.rewrite eq (fun x => n <= x) le.
+
+  Theorem lt_eq_transitive:
+    forall (n m k:nat), n < m -> m = k -> n < k.
+  Proof
+    fun n m k lt eq =>
+      Equal.rewrite eq (fun x => n < x) lt.
+
   Theorem lt_transitive:
     forall (n m k:nat), n < m -> m < k -> n < k.
   Proof
     fun n m k (lt_nm: S n <= m) lt_mk =>
-      lt_implies_le (le_lt_transitive lt_nm lt_mk) : S n <= k.
+      lt_to_le (le_lt_transitive lt_nm lt_mk) : S n <= k.
 
   Definition is_less_equal_bool: forall a b:nat, bool :=
     fix r a b: bool :=
@@ -389,6 +407,17 @@ Section nat_order.
       let p: m + n = n + m := plus_commutative m n in
       Equal.rewrite p (fun x => m <= x) (plus_increases1 m n).
 
+  Theorem left_summand_to_le:
+    forall (n m k:nat), n + m = k -> n <= k.
+  Proof
+    fun n m k eq =>
+      le_eq_transitive (plus_increases1 n m) eq.
+
+  Theorem right_summand_to_le:
+    forall (n m k:nat), n + m = k -> m <= k.
+  Proof
+    fun n m k eq =>
+      le_eq_transitive (plus_increases2 n m) eq.
 End nat_order.
 
 
@@ -440,7 +469,7 @@ Section nat_order_predicates.
       | S l =>
         fun lbSl pSl k pk =>
           (* goal: Lower_bound P (pred n) *)
-          lt_implies_le (lbSl k pk: l < k): l <= k
+          lt_to_le (lbSl k pk: l < k): l <= k
       end
   .
 
@@ -454,7 +483,7 @@ Section nat_order_predicates.
         successor_not_le (lbsn n pn: S n <= n)
       with end.
 
-  Theorem successor_strict_lower_bound:
+  Theorem successor_lower_bound:
     forall (n:nat) (P:nat->Prop) (slb:Strict_lower_bound P n),
       Lower_bound P (S n).
   Proof
@@ -475,7 +504,7 @@ Section nat_order_predicates.
                 match pnot (Equal.rewrite (Equal.flip n_eq_m)  _ mP)
                 with end
           in
-          le_ne_implies_lt (lb m mP)  n_ne_m
+          le_neq_to_lt (lb m mP)  n_ne_m
       end.
 End nat_order_predicates.
 
@@ -615,7 +644,7 @@ Section wellfounded.
                Equal.rewrite (Equal.flip p_eq_jk) _ hypo_k
              | right p_ne_jk =>
                let pj_le_k: j <= k := cancel_successor_le pj_lt_Sk in
-               let pj_lt_k: j < k  := le_ne_implies_lt pj_le_k p_ne_jk in
+               let pj_lt_k: j < k  := le_neq_to_lt pj_le_k p_ne_jk in
                p j pj_lt_k
              end)
       end
@@ -674,7 +703,7 @@ Section wellfounded.
                          match Ryx with
                            conj lt_xy le_ybnd =>
                            let lt_Sxy: S x < y :=
-                               le_ne_implies_lt lt_xy neq_Sxy in
+                               le_neq_to_lt lt_xy neq_Sxy in
                            h y (conj lt_Sxy le_ybnd)
                          end
                        end)
@@ -703,7 +732,7 @@ Section wellfounded.
             exist _ d pd =>
             let p: S bnd <= S bnd + d := plus_increases1 (S bnd) d in
             let q: S bnd <= x := Equal.rewrite pd (fun z => _ <= z) p in
-            above_bound_accessible x (lt_implies_le q)
+            above_bound_accessible x (lt_to_le q)
           end
         end.
 
@@ -736,7 +765,7 @@ Section bounded_search.
              | right notpk =>
                let SLB := Strict_lower_bound P in
                let slbk : SLB k := conj lbk notpk in
-               let lbSk: LB (S k) := successor_strict_lower_bound slbk in
+               let lbSk: LB (S k) := successor_lower_bound slbk in
                let eqjSkn: j + S k = n :=
                    Equal.rewrite
                      (push_successor_plus j k)
@@ -820,7 +849,7 @@ Section unbounded_search.
              match acc_k with Acc_intro _ h => h end
          in
          let lb_Sk: LB (S k) :=
-             successor_strict_lower_bound (conj lb_k not_pk) in
+             successor_lower_bound (conj lb_k not_pk) in
          let RSkk: (S k = S k /\ LB (S k) /\ LB k) :=
              conj eq_refl (conj lb_Sk lb_k)
          in
