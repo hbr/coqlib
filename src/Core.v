@@ -24,7 +24,14 @@ Module Equal.
       end.
 
     Theorem
-      inject (a b:A) (p:a=b) (f:A->B): f a = f b.
+      rewrite2 {a b:A} (P:A->Type) (pa:P a) (p:a = b): P b.
+    Proof
+      match p in (_ = x) return P x with
+      | eq_refl => pa
+      end.
+
+    Theorem
+      inject {a b:A} (p:a=b) (f:A->B): f a = f b.
     Proof
       match p in (_ = x) return f a = f x with
       | eq_refl => eq_refl
@@ -32,7 +39,7 @@ Module Equal.
 
 
     Theorem
-      flip (a b:A) (p:a=b): b=a.
+      flip {a b:A} (p:a=b): b=a.
     Proof
       rewrite p (fun x => x=a) eq_refl.
 
@@ -42,12 +49,17 @@ Module Equal.
       rewrite pbc (fun x => a=x) pab.
 
     Theorem
-      flip_not_equal (a b:A) (p:a<>b): b<>a.
+      flip_not_equal {a b:A} (p:a<>b): b<>a.
     Proof
       (* p: a=b -> False
          goal: b=a -> False
        *)
       fun q:b=a => p (flip q).
+
+    Theorem
+      rewrite2_backwards {a b:A} (P:A->Type) (pb:P b) (p:a = b): P a.
+    Proof
+      rewrite2 P pb (flip p).
 
 
     Definition Decider: Type := forall a b:A, {a = b} + {a <> b}.
