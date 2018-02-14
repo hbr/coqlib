@@ -2,12 +2,18 @@ Set Implicit Arguments.
 
 
 
-(** * Standard Types *)
-(*    ============== *)
+(** * Extraction of Standard Types to Ocaml *)
+(*    ===================================== *)
 
 Extract Inductive bool => "bool" [ "true" "false" ].
-Extract Inductive list => "list" [ "[]" "(::)" ].
 Extract Inductive sumbool => "bool" [ "true" "false" ].
+Extract Inductive sumor => option [ Some None ].
+Extract Inductive unit => unit [ "()" ].
+Extract Inductive list => "list" [ "[]" "(::)" ].
+Extract Inductive option => option [ Some None ].
+Extract Inductive prod => "( * )" [ "" ]. (* "" instead of "(,)" *)
+Extract Inlined Constant andb => "(&&)".
+Extract Inlined Constant orb => "(||)".
 
 
 (** * Equality *)
