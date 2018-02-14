@@ -2,6 +2,7 @@
 
 lib/Core.v
 lib/Natural.v
+lib/String_.v
 lib/List_.v
 lib/Binary_tree.v
 lib/Binary_search_tree.v
