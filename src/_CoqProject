@@ -1,8 +1,9 @@
-Core.v
-Natural.v
-Boolean.v
-List_.v
-Binary_tree.v
-Binary_search_tree.v
-Avl_tree.v
-Extract.v
+-R lib/ Coqlib
+
+lib/Core.v
+lib/Natural.v
+lib/List_.v
+lib/Binary_tree.v
+lib/Binary_search_tree.v
+lib/Avl_tree.v
+lib/Extract.v

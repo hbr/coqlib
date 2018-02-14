@@ -1,7 +1,7 @@
 .PHONY:  compile html
 
 compile:
-	make -f CoqMakefile COQLIBS?=''
+	make -f CoqMakefile
 
 html:
 	make -f CoqMakefile  \
