@@ -11,7 +11,7 @@ Extract Inductive ascii =>
          char_of_int (f b0 1 + f b1 2 + f b2 4 + f b3 8
                       + f b4 16 + f b5 32 + f b6 64 + f b7 128)" ].
 Extract Inductive string =>
-"(int,string)"
+"(int*string)"
   [ "(0,"""")"
          "(fun (c,(p,s))->0,String.make 1 c^String.sub s p (String.length s-p))"
   ]
