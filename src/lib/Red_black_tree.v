@@ -339,6 +339,7 @@ Module M1 (S0: SORTABLE).
       rot_node c c x r1 r2
     end.
 
+
   Inductive Bounded: S.t -> tree -> S.t -> Prop :=
   | leaf_bounded:
       forall lo hi,
@@ -422,8 +423,52 @@ Module M1 (S0: SORTABLE).
             (f _ _ _ _ bnd2 le_hi2_x)
       end.
 
-
-
+  Theorem rotation_bounded:
+    forall (t u:tree),
+      Rotation t u ->
+      forall (lo hi:S.t),
+        Bounded lo t hi ->
+        Bounded lo u hi.
+  Proof
+    fix f t u rot :=
+    match rot with
+    | @rot_left c1 c2 c3 c4 a x b y c =>
+      fun lo hi bnd =>
+        use_node_bounded
+          bnd
+          (fun bnd1 bnd2 =>
+             use_node_bounded
+               bnd2
+               (fun bnd2a bnd2b =>
+                  node_bounded c1 (node_bounded c2 bnd1 bnd2a) bnd2b
+               )
+          )
+    | @rot_right c1 c2 c3 c4 a x b y c =>
+      fun lo hi bnd =>
+        use_node_bounded
+          bnd
+          (fun bnd1 bnd2 =>
+             use_node_bounded
+               bnd1
+               (fun bnd1a bnd1b =>
+                  node_bounded c3 bnd1a (node_bounded c4 bnd1b bnd2)
+               )
+          )
+    | rot_leaf =>
+      fun _ _ b => b
+    | @rot_node c1 c2 x u1 u2 v1 v2 ru rv =>
+      fun lo hi bnd =>
+        use_node_bounded
+          bnd
+          (fun bnd1 bnd2 =>
+             let b1new := f u1 u2 ru lo x bnd1 in
+             let b2new := f v1 v2 rv x hi bnd2 in
+             node_bounded c2 b1new b2new
+          )
+    | @rot_trans t u v tu uv =>
+      fun lo hi bnd =>
+        f u v uv lo hi (f t u tu lo hi bnd)
+    end.
 
   Definition Sorted (t:tree): Prop :=
     is_Node t -> exists lo hi, Bounded lo t hi.
@@ -655,62 +700,6 @@ Module M1 (S0: SORTABLE).
         Insert x t1 t3.
 
 
-  (* Theorem nearly complete, only the rotation part is missing
-     ----------------------------------------------------------
-  Theorem insert_left:
-    forall (x:S.t) (t u:tree),
-      Insert x t u ->
-      forall lo hi,
-        lo <= x ->
-        x <= hi ->
-        Bounded0 lo t hi ->
-        Bounded0 lo u hi.
-  Proof.
-    refine (
-        let refl := S.reflexive in
-        fix f x t u ins :=
-          match ins with
-          | @ins_leaf c z =>
-            fun lo hi le1 le2 b  =>
-              node_bounded c
-                           (leaf_bounded (refl _)) (leaf_bounded (refl _))
-                           le1 le2
-          | @ins_left c x z t1 u1 t2 le_xz ins =>
-            fun lo hi le1 le2 b  =>
-              And.use
-                (sons_bounded b)
-                (fun b1 b2 =>
-                   node_bounded
-                     c
-                     (f x t1 u1 ins lo z le1 le_xz b1)
-                     b2 (refl _) (refl _)
-                )
-          | @ins_right c x z t1 t2 v2 le_zx ins =>
-            fun lo hi le1 le2 b  =>
-              And.use
-                (sons_bounded b)
-                (fun b1 b2 =>
-                   node_bounded
-                     c b1
-                     (f x t2 v2 ins z hi le_zx le2 b2)
-                     (refl _) (refl _)
-                )
-          | @ins_replace c x z t1 t2 eqv =>
-            And.use
-              eqv
-              (fun xz zx =>
-                 fun lo hi le1 le2 b =>
-                   And.use
-                     (sons_bounded b)
-                     (fun b1 b2 => node_bounded c b1 b2 zx xz)
-              )
-              | @ins_rotation z t1 t2 t3 ins rot =>
-                fun lo hi le1 le2 b =>
-                  _
-          end
-      ).
-    Qed.*)
-
 
 
 
@@ -722,47 +711,64 @@ Module M1 (S0: SORTABLE).
         Inorder l2 t2 ->
         Inorder (l1 ++ x :: l2) (Node c t1 x t2).
 
-
-  (* Theorem is proven as text, but not yet done formally
-     ----------------------------------------------------
-  Theorem insert_to_sorted:
+  Theorem insert_to_bounded:
     forall (x:S.t) (t1 t2:tree),
       Insert x t1 t2 ->
-      Sorted t1 ->
-      Sorted t2.
-  (* Analyze Insert x t1 t2. The case that t1 = Leaf generates a singleton
-     which is trivially sorted.
+      forall lo hi,
+        lo <= x ->
+        x <= hi ->
+        Bounded lo t1 hi ->
+        Bounded lo t2 hi.
+  Proof
+    fix f x t1 t2 ins :=
+    match ins with
+    | ins_leaf c x =>
+      fun lo hi lox xhi b =>
+        node_bounded c (leaf_bounded lox) (leaf_bounded xhi)
+    | @ins_left c x y t1 t1new t2 xy ins =>
+      fun lo hi lox xhi b =>
+        use_node_bounded
+          b
+          (fun b1 b2 =>
+             let loy := bounds_le b1 in
+             let yhi := bounds_le b2 in
+             let bnew := f x t1 t1new ins lo y lox xy b1 in
+             node_bounded c bnew b2
+          )
+    | @ins_right c x y t1 t2 t2new yx ins =>
+      fun lo hi lox xhi b =>
+        use_node_bounded
+          b
+          (fun b1 b2 =>
+             let loy := bounds_le b1 in
+             let yhi := bounds_le b2 in
+             let bnew := f x t2 t2new ins y hi yx xhi b2 in
+             node_bounded c b1 bnew
+          )
+    | @ins_replace c x y t1 t2 eqv =>
+      fun _ _ _ _ b =>
+        use_node_bounded
+          b
+          (fun b1 b2 =>
+             And.use
+               eqv
+               (fun xy yx  =>
+                  node_bounded
+                    c
+                    (bounded_right_transitive b1 yx)
+                    (bounded_left_transitive b2 xy)
+               )
+          )
+    | @ins_rotation x t1 t2 t3 ins rot =>
+      fun lo hi lox xhi b =>
+        rotation_bounded
+          rot
+          (f x t1 t2 ins lo hi lox xhi b)
+    end.
 
-     Assume that t1 has the form Node c u1 y u2. The insertion either happens
-     on u1 or u2 or it replaces y. t1 is sorted which implies that u1 and u2
-     are sorted and y is a highbound for u1 and a lowbound for u2.
 
-     A recursive call returns Insert x u1 u1new -> Sorted u1new and Insert x
-     u2 u2new -> Sorted u2new. Now we have to see that y is still a bound for
-     u1new or u2new. I.e. we need theorems of the form
 
-         x <= y -> Low_bound y u1 -> Insert x u1 u1new -> Low_bound y u1new
 
-     In order to stick the inserted subtrees together we need a theorem of the
-     form
-
-        node_sorted: High_bound y u1 -> Low_bound y u2 -> Sorted (Node c u1 y u2)
- *)
-  Proof.
-    refine (
-        fix f x t1 t2 ins :=
-          match ins with
-          | ins_leaf c x =>
-            fun _ => @singleton_sorted c x
-          | @ins_left c x y t1 t1new t2 le ins =>
-            fun sort nd => _
-          | ins_right c t2 le ins =>
-            fun sort nd => _
-          | ins_replace c t1 t2 eqv => _
-          | ins_rotation ins rot => _
-          end
-      ).
-    Qed.*)
 
   Definition RBT: Type := {t:tree | Red_black t}.
 
