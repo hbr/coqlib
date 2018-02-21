@@ -31,7 +31,7 @@ Module Equal.
       end.
 
     Theorem
-      rewrite {a b:A} (P:A->Type) (pa:P a) (p:a = b): P b.
+      rewrite {a b:A} (P:A->Type) (p:a = b) (pa:P a): P b.
     Proof
       match p in (_ = x) return P x with
       | eq_refl => pa
@@ -64,9 +64,9 @@ Module Equal.
       fun q:b=a => p (flip q).
 
     Theorem
-      rewrite_bwd {a b:A} (P:A->Type) (pb:P b) (p:a = b): P a.
+      rewrite_bwd {a b:A} (P:A->Type) (p:a = b) (pb:P b): P a.
     Proof
-      rewrite P pb (flip p).
+      rewrite  P (flip p) pb.
 
 
     Definition Decider: Type := forall a b:A, {a = b} + {a <> b}.
