@@ -521,7 +521,7 @@ Module Make (S0:SORTABLE).
                    match (avl_height_positive_is_node ph12) with end
                | Node b B.Left t121 t122 =>
                  fun ph12 =>
-                   let predh := Nat.predecessor h (left_leaning_height ph12) in
+                   let predh := Nat.predecessor0 h (left_leaning_height ph12) in
                    let h0 := proj1_sig predh in
                    let eqh0: h = 1 + h0 := Equal.flip (proj2_sig predh) in
                    let rewrite0 t ph := Equal.rewrite0 eqh0 (f0 t) ph in
@@ -560,7 +560,7 @@ Module Make (S0:SORTABLE).
                             (balanced_avl c (proj2 ph_121_122) ph2))
                | Node b B.Right t121 t122 =>
                  fun ph12 =>
-                   let predh := Nat.predecessor h (right_leaning_height ph12) in
+                   let predh := Nat.predecessor0 h (right_leaning_height ph12) in
                    let h0 := proj1_sig predh in
                    let eqh0: h = 1 + h0 := Equal.flip (proj2_sig predh) in
                    let rewrite0 t ph := Equal.rewrite0 eqh0 (f0 t) ph in

@@ -12,12 +12,17 @@ Section nat_basics.
     | S _ => True
     end.
 
-  Definition predecessor (n:nat) (p:is_Successor n): {x:nat|S x = n} :=
+  Definition predecessor0 (n:nat) (p:is_Successor n): {x:nat|S x = n} :=
     (match n with
      | 0 => fun p:is_Successor 0 => match p with end
      | S m => fun _ => exist _ m eq_refl
      end) p.
 
+  Definition predecessor (n:nat): {x:nat|S x = n} + {n = 0} :=
+    match n with
+    | 0 => inright eq_refl
+    | S x => inleft (exist _ x eq_refl)
+    end.
 
   Theorem successor_not_zero:
     forall n:nat, S n <> 0.
@@ -29,6 +34,27 @@ Section nat_basics.
          result. *)
       Equal.rewrite0 p is_Successor I.
 
+
+  Theorem pred_correct:
+    forall (n:nat),
+      is_Successor n ->
+      S (pred n) = n.
+  Proof
+    fun n =>
+      match predecessor n with
+      | inleft x =>
+        fun p =>
+          let q x: S (pred (S x)) = S x := eq_refl in
+          Sigma.use
+            x
+            (fun x (px:S x = n) =>
+               Equal.rewrite (fun z => S (pred z) = z) px (q x)
+            )
+      | inright p =>
+        let Q n := is_Successor n -> S (Nat.pred n) = n in
+        let q: Q 0 := ex_falso in
+        Equal.rewrite_bwd Q (p:n=0) q
+      end.
 
   Definition is_zero (n:nat): {n = 0} + {n <> 0} :=
     match n with
