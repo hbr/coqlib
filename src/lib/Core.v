@@ -17,6 +17,110 @@ Extract Inlined Constant andb => "(&&)".
 Extract Inlined Constant orb => "(||)".
 
 
+(** * Propositions *)
+(*    ============ *)
+
+Definition ex_falso {A:Type} (p:False):A :=
+  match p with end.
+
+Module And.
+  Definition make3 {A B C:Prop} (a:A) (b:B) (c:C) : A /\ B /\ C :=
+    conj a (conj b c).
+
+  Definition make4 {A B C D:Prop} (a:A) (b:B) (c:C) (d:D) : A /\ B /\ C /\ D :=
+    conj a (conj b (conj c d)).
+
+  Definition use {A B C:Prop} (p:A/\B) (f:A->B->C): C :=
+    match p with
+      conj a b => f a b
+    end.
+
+  Definition use3 {A B C D:Prop} (p:A/\B/\C) (f:A->B->C->D): D :=
+    match p with
+      conj a (conj b c) => f a b c
+    end.
+
+  Definition use4 {A B C D E:Prop} (p:A/\B/\C/\D) (f:A->B->C->D->E): E :=
+    match p with
+      conj a (conj b (conj c d)) => f a b c d
+    end.
+
+  Definition proj1 {A B:Prop} (p:A/\B): A :=
+    use p (fun a b => a).
+
+  Definition proj2 {A B:Prop} (p:A/\B): B :=
+    use p (fun a b => b).
+End And.
+
+
+Module Or.
+  Definition use {A B C:Prop} (p:A\/B) (f:A->C) (g:B->C): C :=
+    match p with
+    | or_introl a => f a
+    | or_intror b => g b
+    end.
+End Or.
+
+Module Sigma.
+  Definition value {A:Type} {P:A->Prop} (s:sig P): A :=
+    match s with
+      exist _ v _ => v
+    end.
+
+  Definition proof {A:Type} {P:A->Prop} (s:sig P): P (value s) :=
+    match s with
+      exist _ _ p => p
+    end.
+
+  Definition use {A B:Type} {P:A->Prop} (s:sig P) (f:forall a, P a -> B): B :=
+    match s with
+      exist _ v p => f v p
+    end.
+
+  Definition use2 {A B:Type} {P1 P2:A->Prop}
+             (s:sig (fun a => P1 a /\ P2 a))
+             (f:forall a, P1 a -> P2 a -> B): B :=
+    match s with
+      exist _ v (conj p1 p2) => f v p1 p2
+    end.
+
+  Definition use3 {A B:Type} {P1 P2 P3:A->Prop}
+             (s:sig (fun a => P1 a /\ P2 a /\ P3 a))
+             (f:forall a, P1 a -> P2 a -> P3 a -> B): B :=
+    match s with
+      exist _ v (conj p1 (conj p2 p3)) => f v p1 p2 p3
+    end.
+
+  Definition use4 {A B:Type} {P1 P2 P3 P4:A->Prop}
+             (s:sig (fun a => P1 a /\ P2 a /\ P3 a /\ P4 a))
+             (f:forall a, P1 a -> P2 a -> P3 a -> P4 a -> B): B :=
+    match s with
+      exist _ v (conj p1 (conj p2 (conj p3 p4))) => f v p1 p2 p3 p4
+    end.
+End Sigma.
+
+Module Exist.
+  Definition
+    make2
+    {A B:Type} {P:A->B->Prop} {a:A} {b:B} (p: P a b) : exists a b, P a b :=
+    ex_intro _ a (ex_intro _ b p).
+
+  Definition use {A:Type} {P:A->Prop} {B:Prop}
+             (e:exists a, P a) (f:forall a, P a -> B): B :=
+    match e with
+      ex_intro _ v p => f v p
+    end.
+
+  Definition use2 {A B:Type} {P:A->B->Prop} {C:Prop}
+             (e:exists a b, P a b) (f:forall a b, P a b -> C): C :=
+    match e with
+      ex_intro _ a e2 =>
+      match e2 with
+        ex_intro _ b p => f a b p
+      end
+    end.
+End Exist.
+
 (** * Equality *)
 (*    ======== *)
 Module Equal.
