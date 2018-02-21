@@ -5,102 +5,6 @@ Import ListNotations.
 
 Set Implicit Arguments.
 
-Definition ex_falso {A:Type} (p:False):A :=
-  match p with end.
-
-Module And.
-  Definition make3 {A B C:Prop} (a:A) (b:B) (c:C) : A /\ B /\ C :=
-    conj a (conj b c).
-
-  Definition make4 {A B C D:Prop} (a:A) (b:B) (c:C) (d:D) : A /\ B /\ C /\ D :=
-    conj a (conj b (conj c d)).
-
-  Definition use {A B C:Prop} (p:A/\B) (f:A->B->C): C :=
-    match p with
-      conj a b => f a b
-    end.
-
-  Definition use3 {A B C D:Prop} (p:A/\B/\C) (f:A->B->C->D): D :=
-    match p with
-      conj a (conj b c) => f a b c
-    end.
-
-  Definition use4 {A B C D E:Prop} (p:A/\B/\C/\D) (f:A->B->C->D->E): E :=
-    match p with
-      conj a (conj b (conj c d)) => f a b c d
-    end.
-End And.
-
-
-Module Or.
-  Definition use {A B C:Prop} (p:A\/B) (f:A->C) (g:B->C): C :=
-    match p with
-    | or_introl a => f a
-    | or_intror b => g b
-    end.
-End Or.
-
-Module Sigma.
-  Definition value {A:Type} {P:A->Prop} (s:sig P): A :=
-    match s with
-      exist _ v _ => v
-    end.
-
-  Definition proof {A:Type} {P:A->Prop} (s:sig P): P (value s) :=
-    match s with
-      exist _ _ p => p
-    end.
-
-  Definition use {A B:Type} {P:A->Prop} (s:sig P) (f:forall a, P a -> B): B :=
-    match s with
-      exist _ v p => f v p
-    end.
-
-  Definition use2 {A B:Type} {P1 P2:A->Prop}
-             (s:sig (fun a => P1 a /\ P2 a))
-             (f:forall a, P1 a -> P2 a -> B): B :=
-    match s with
-      exist _ v (conj p1 p2) => f v p1 p2
-    end.
-
-  Definition use3 {A B:Type} {P1 P2 P3:A->Prop}
-             (s:sig (fun a => P1 a /\ P2 a /\ P3 a))
-             (f:forall a, P1 a -> P2 a -> P3 a -> B): B :=
-    match s with
-      exist _ v (conj p1 (conj p2 p3)) => f v p1 p2 p3
-    end.
-
-  Definition use4 {A B:Type} {P1 P2 P3 P4:A->Prop}
-             (s:sig (fun a => P1 a /\ P2 a /\ P3 a /\ P4 a))
-             (f:forall a, P1 a -> P2 a -> P3 a -> P4 a -> B): B :=
-    match s with
-      exist _ v (conj p1 (conj p2 (conj p3 p4))) => f v p1 p2 p3 p4
-    end.
-End Sigma.
-
-Module Exist.
-  Definition
-    make2
-    {A B:Type} {P:A->B->Prop} {a:A} {b:B} (p: P a b) : exists a b, P a b :=
-    ex_intro _ a (ex_intro _ b p).
-
-  Definition use {A:Type} {P:A->Prop} {B:Prop}
-             (e:exists a, P a) (f:forall a, P a -> B): B :=
-    match e with
-      ex_intro _ v p => f v p
-    end.
-
-  Definition use2 {A B:Type} {P:A->B->Prop} {C:Prop}
-             (e:exists a b, P a b) (f:forall a b, P a b -> C): C :=
-    match e with
-      ex_intro _ a e2 =>
-      match e2 with
-        ex_intro _ b p => f a b p
-      end
-    end.
-End Exist.
-
-
 
 (* Invariant:
    1. The black depth in both subtrees is the same.
@@ -221,13 +125,30 @@ Module M1 (S0: SORTABLE).
       left I
     end.
 
+  Definition color (t:tree): Color :=
+    match t with
+    | Leaf => Black
+    | Node c _ _ _ => c
+    end.
+
+  Theorem invert_tree:
+    forall {A:Type} {c:Color} {x:S.t} {u v:tree},
+      Leaf = Node c u x v -> A.
+  Proof.
+    refine (
+        fun A c x u v eq =>
+          let p := Equal.rewrite_bwd is_Node eq I in
+          match p with end
+      ).
+  Qed.
+
   Theorem leaf_ne_node:
     forall (c:Color) (x:S.t) (u v:tree),
       Leaf <> Node c u x v.
   Proof.
     intros c x u v eq. inversion eq.
   Qed.
-  
+
   Theorem node_injective:
     forall (c1 c2:Color) (x1 x2:S.t) (t1 t2 u1 u2:tree),
       Node c1 t1 x1 u1 = Node c2 t2 x2 u2 ->
@@ -237,7 +158,7 @@ Module M1 (S0: SORTABLE).
     inversion eq.
     split. reflexivity. split. reflexivity. split;reflexivity.
   Qed.
-  
+
   Inductive Domain: tree -> S.t -> Prop :=
   | dom_singleton:
       forall c x,
@@ -252,7 +173,7 @@ Module M1 (S0: SORTABLE).
       forall x c t y u,
         x = y  -> Domain (Node c t y u) x.
 
-  
+
   Inductive RB_inv: nat -> Color -> tree -> Prop :=
   | rb_leaf: RB_inv 0 Black Leaf
   | rb_red:
@@ -266,12 +187,81 @@ Module M1 (S0: SORTABLE).
         RB_inv n c2 t2 ->
         RB_inv (S n) Black (Node Black t1 x t2).
 
+  Theorem rb_inv_leaf:
+    forall (h:nat) (c:Color),
+      RB_inv h c Leaf ->
+      h = 0 /\ c = Black.
+  Proof.
+    refine(
+        fun h c rb =>
+          _
+      ).
+    inversion rb.
+    split; reflexivity.
+  Qed.
 
-  Definition color (t:tree): Color :=
-    match t with
-    | Leaf => Black
-    | Node c _ _ _ => c
-    end.
+  Theorem rb_inv_color:
+    forall (h:nat) (c:Color) (t:tree),
+      RB_inv h c t ->
+      RB_inv h (color t) t.
+  Proof.
+    intros h c t rb.
+    inversion rb as [ | | n c1 t1 x c2 t2 ].
+    - apply rb_leaf.
+    - simpl. apply rb_red;assumption.
+    - simpl. apply rb_black with (c1:=c1) (c2:=c2);assumption.
+  Qed.
+
+  Theorem use_rb_leaf:
+    forall (h:nat) (c:Color),
+      RB_inv h c Leaf ->
+      forall (P:nat->Color->Prop),
+        P 0 Black ->
+        P h c.
+  Proof.
+    refine(
+      fun h c inv =>
+        _
+      ).
+    inversion inv. intros P p. assumption.
+  Qed.
+
+
+  Theorem use_rb_red:
+    forall (h:nat) (x:S.t) (t1 t2:tree),
+      RB_inv h Red (Node Red t1 x t2) ->
+      forall P:nat->tree->S.t->tree->Prop,
+        (RB_inv h Black t1 -> RB_inv h Black t2 -> P h t1 x t2) ->
+        P h t1 x t2.
+  Proof.
+    refine (
+        fun h x t1 t2 inv =>
+          _
+      ).
+    inversion inv. intros P impl. apply impl; assumption.
+  Qed.
+
+
+  Theorem use_rb_black:
+    forall (h:nat) (x:S.t) (t1 t2:tree),
+      RB_inv h Black (Node Black t1 x t2) ->
+      forall (P:nat->tree->S.t->tree->Prop),
+        (
+         RB_inv (pred h) (color t1) t1 ->
+         RB_inv (pred h) (color t2) t2 ->
+         P h t1 x t2) ->
+        P h t1 x t2.
+  Proof.
+    refine (
+        fun h x t1 t2 inv =>
+          _
+      ).
+    inversion inv as [| | n d1 u1 y d2 u2 rb1 rb2 ].
+    intros P impl. apply impl.
+    - apply rb_inv_color with (c:=d1);assumption.
+    - apply rb_inv_color with (c:=d2);assumption.
+  Qed.
+
 
   Fixpoint black_height (t:tree): nat :=
     match t with
@@ -349,19 +339,37 @@ Module M1 (S0: SORTABLE).
       rot_node c c x r1 r2
     end.
 
-
   Inductive Bounded: S.t -> tree -> S.t -> Prop :=
   | leaf_bounded:
       forall lo hi,
         lo <= hi ->
-        Bounded  lo Leaf hi
+        Bounded lo Leaf hi
   | node_bounded:
-      forall lo1 hi1 t1 lo2 hi2 t2 c x,
-        Bounded lo1 t1 hi1 ->
-        Bounded lo2 t2 hi2 ->
-        hi1 <= x ->
-        x <= lo2 ->
-        Bounded lo1 (Node c t1 x t2) hi2.
+      forall lo t1 x t2 hi c,
+        Bounded lo t1 x ->
+        Bounded x t2 hi ->
+        Bounded lo (Node c t1 x t2) hi.
+
+  Theorem use_leaf_bounded:
+    forall (lo hi:S.t),
+      Bounded lo Leaf hi ->
+      forall (A:Prop) (P:lo<=hi->A), A.
+  Proof.
+    intros lo hi b.
+    inversion b. intros A impl. apply impl. assumption.
+  Qed.
+
+  Theorem use_node_bounded:
+    forall (c:Color) (lo x hi:S.t) (t1 t2:tree),
+      Bounded lo (Node c t1 x t2) hi ->
+      forall (A:Prop) (P:Bounded lo t1 x -> Bounded x t2 hi -> A),
+        A.
+  Proof.
+    intros c lo x hi t1 t2 b.
+    inversion b.
+    intros A impl. apply impl;assumption.
+  Qed.
+
 
   Theorem bounds_le:
     forall (lo hi:S.t) (t:tree),
@@ -371,14 +379,11 @@ Module M1 (S0: SORTABLE).
     fix f lo hi t bnd:=
       match bnd with
       | leaf_bounded le => le
-      | @node_bounded lo1 hi1 t1 lo2 hi2 t2 c x b1 b2 le1 le2 =>
-        (transitivity_chain:
-           (f lo1 hi1 t1 b1:  lo1 <= hi1),
-           (le1:  hi1 <= x ),
-           (le2:  x <= lo2 ),
-           (f lo2 hi2 t2 b2:  lo2 <= hi2))
-          end.
-
+      | @node_bounded lo t1 x t2 hi c b1 b2 =>
+        S.transitive
+          (f lo x t1 b1)
+          (f x hi t2 b2)
+      end.
 
 
   Theorem bounded_left_transitive:
@@ -392,35 +397,12 @@ Module M1 (S0: SORTABLE).
       | leaf_bounded le_lo_hi =>
         fun le_x_lo =>
           leaf_bounded (S.transitive le_x_lo le_lo_hi)
-      | node_bounded c bnd1 bnd2 le1 le2 =>
+      | node_bounded c bnd1 bnd2 =>
         fun le_x_lo1 =>
           node_bounded
             c (f _ _ _ _ bnd1 le_x_lo1)
-            bnd2 le1 le2
+            bnd2
       end.
-
-  Theorem leaf_bounded_forall:
-      forall (x y:S.t),
-        x <= y ->
-        Bounded x Leaf y.
-  Proof
-    let f:
-          forall (t:tree) (x y:S.t),
-            x <= y -> ~ is_Node t -> Bounded x t y :=
-        fun t x y le =>
-          match t return ~ is_Node t -> Bounded x t y with
-          | Leaf => fun _ => leaf_bounded le
-          | Node _ _ _ _ =>
-            fun notnd =>
-              ex_falso (notnd I)
-          end
-    in
-    fun x y le =>
-      f Leaf x y le (fun nd => match nd with end).
-
-
-
-
 
   Theorem bounded_right_transitive:
     forall (x lo hi:S.t) (t:tree),
@@ -433,17 +415,15 @@ Module M1 (S0: SORTABLE).
       | leaf_bounded le_lo_hi =>
         fun le_hi_x =>
           leaf_bounded (S.transitive le_lo_hi le_hi_x)
-      | node_bounded c bnd1 bnd2 le1 le2 =>
+      | node_bounded c bnd1 bnd2 =>
         fun le_hi2_x =>
           node_bounded
             c bnd1
             (f _ _ _ _ bnd2 le_hi2_x)
-            le1 le2
       end.
 
 
 
-    
 
   Definition Sorted (t:tree): Prop :=
     is_Node t -> exists lo hi, Bounded lo t hi.
@@ -461,7 +441,7 @@ Module M1 (S0: SORTABLE).
       let leafb: Bounded x Leaf x := leaf_bounded le_xx in
       let t := Node c Leaf x Leaf in
       let b: Bounded x t x :=
-          node_bounded c leafb leafb le_xx le_xx
+          node_bounded c leafb leafb
       in
       Exist.make2 b.
 
@@ -489,22 +469,17 @@ Module M1 (S0: SORTABLE).
       Exist.use hb (fun ls bnd => Exist.make2 bnd).
 
 
-
-
   Theorem sons_bounded:
     forall (c:Color) (lo hi x:S.t) (u v:tree),
       Bounded lo (Node c u x v) hi ->
       Bounded lo u x /\ Bounded x v hi.
-  Proof.
-    refine(
-        fun c lo hi x u v b => _
-      ).
-    inversion b as [| lo1 hi1 u1 lo2 hi2 u2 c1 y b1 b2 hi1x xlo2 eqlo1lo].
-    split.
-    - apply bounded_right_transitive with (hi:=hi1); assumption.
-    - apply bounded_left_transitive with (lo:=lo2); assumption.
-  Qed.
+  Proof
+    fun c lo hi x u v b =>
+      use_node_bounded
+        b
+        (fun b1 b2 => conj b1 b2).
 
+  (*
   Theorem sons_sorted:
     forall (c:Color) (x:S.t) (t u:tree),
       Sorted (Node c t x u) ->
@@ -524,7 +499,7 @@ Module M1 (S0: SORTABLE).
                      (fun _ => Exist.make2 b2) )))
       | right p => ex_falso (p I)
       end.
-
+*)
   Theorem lower_upper_to_bounded:
     forall (lo hi:S.t) (t:tree),
       Lower_bound t lo ->
@@ -558,7 +533,7 @@ Module M1 (S0: SORTABLE).
            Exist.use
              lb
              (fun hi2 bnd2 =>
-                Exist.make2 (node_bounded c bnd1 bnd2 le_xx le_xx)
+                Exist.make2 (node_bounded c bnd1 bnd2)
              )
         ).
 
@@ -614,8 +589,8 @@ Module M1 (S0: SORTABLE).
                 (fun b1 b2 =>
                    Equal.rewrite_bwd
                      (fun z => lo <= z /\ z <= hi)
-                     (conj (bounds_le b1) (bounds_le b2))
                      eq
+                     (conj (bounds_le b1) (bounds_le b2))
                 )
           end
       ).
@@ -688,8 +663,8 @@ Module M1 (S0: SORTABLE).
       forall lo hi,
         lo <= x ->
         x <= hi ->
-        Bounded lo t hi ->
-        Bounded lo u hi.
+        Bounded0 lo t hi ->
+        Bounded0 lo u hi.
   Proof.
     refine (
         let refl := S.reflexive in
@@ -699,7 +674,7 @@ Module M1 (S0: SORTABLE).
             fun lo hi le1 le2 b  =>
               node_bounded c
                            (leaf_bounded (refl _)) (leaf_bounded (refl _))
-                           le1 le2 
+                           le1 le2
           | @ins_left c x z t1 u1 t2 le_xz ins =>
             fun lo hi le1 le2 b  =>
               And.use
@@ -735,7 +710,7 @@ Module M1 (S0: SORTABLE).
           end
       ).
     Qed.*)
-  
+
 
 
 
@@ -901,14 +876,85 @@ Module M1 (S0: SORTABLE).
     inversion eq.
   Defined.
 
+
+
   Definition Insert_result (x:S.t) (t:tree): Type :=
-    {u:tree | Red_black u /\ Insert x t u}.
+    {u:tree | Red_black t -> Sorted t -> Red_black u /\ Insert x t u}.
 
   Import Relation.
 
   Definition insert
+             (x:S.t) (t:tree): Insert_result x t :=
+    let Res0 t :=
+        {u |
+         forall lo hi h c,
+           Bounded lo t hi ->
+           RB_inv h c t ->
+           RB_nearly_inv h u /\ Insert x t u} in
+    let bal_left c t1 (r1:Res0 t1) z t2: Res0 (Node c t1 z t2) :=
+        Sigma.use
+          r1
+          (fun u1 p1 =>
+             match c return Res0 (Node c t1 z t2) with
+             | Red => _
+             | Black =>
+               match u1 with
+               | Node Red (Node Red a x b) y c => _
+               | Node Red a x (Node Red b y c) => _
+               | _ => _
+               end
+             end
+          )
+    in
+    let bal_right c t1 y t2  (r2:Res0 t2): Res0 (Node c t1 y t2) :=
+        _
+    in
+    let sub c t1 y t2 (xy:x<=y) (yx:y<=x): Res0 (Node c t1 y t2) :=
+        _
+    in
+    let ins: forall t,  Res0 t :=
+        fix f t :=
+          match t with
+          | Leaf =>
+            let u := Node Red Leaf x Leaf in
+            exist
+              _ u
+              (fun lo hi h c b rb =>
+                 conj
+                   (Equal.rewrite_bwd
+                      (fun h => _ )
+                      (And.proj1 (rb_inv_leaf rb):h = 0)
+                      (singleton_nearly Red x))
+                   (ins_leaf Red x:Insert x Leaf u))
+          | Node c t1 y t2 =>
+            match S.compare3 x y with
+            | less_than xy => bal_left c t1 (f t1) y t2
+            | equivalent xy yx => sub c t1 y t2 xy yx
+            | greater_than yx => bal_right c t1 y t2 (f t2)
+            end
+          end
+    in
+    let mblack: Res0 t -> Insert_result x t := _ in
+    mblack (ins t).
+
+
+
+
+
+
+
+  Definition Insert_result (x:S.t) (t:tree): Type :=
+    {u:tree | Red_black u /\ Insert x t u}.
+
+  Definition insert
              (x:S.t) (t:tree) (rb:Red_black t) (s:Sorted t)
     : Insert_result x t :=
+    let Res00 t :=
+        {u |
+         forall lo hi h c,
+           Bounded0 lo t hi ->
+           RB_inv h c t ->
+           RB_nearly_inv h u /\ Insert x t u} in
     let Res0 t :=
         {u | RB_nearly u /\ Insert x t u} in
     let Res t  := Insert_result x t in
@@ -927,7 +973,8 @@ Module M1 (S0: SORTABLE).
             fun rb sort =>
               match S.compare3 x y with
               | less_than xy =>
-                let ssons := sons_sorted sort in
+                let s1 := And.proj1 (sons_sorted sort) in
+                let s2 := And.proj2 (sons_sorted sort) in
                 _
                 (*Sigma.use
                   (f t1 _)
