@@ -45,15 +45,15 @@ Module Make (S0:SORTABLE).
 
     Theorem left_not_balanced: Left <> Balanced.
     Proof
-      fun eq => Equal.rewrite eq is_Left I.
+      fun eq => Equal.rewrite0 eq is_Left I.
 
     Theorem balanced_not_right: Balanced <> Right.
     Proof
-      fun eq => Equal.rewrite eq is_Balanced I.
+      fun eq => Equal.rewrite0 eq is_Balanced I.
 
     Theorem right_not_left: Right <> Left.
     Proof
-      fun eq => Equal.rewrite eq is_Right I.
+      fun eq => Equal.rewrite0 eq is_Right I.
   End Balance_indicator.
   Module B := Balance_indicator.
 
@@ -175,17 +175,17 @@ Module Make (S0:SORTABLE).
       with
       | empty_avl => empty_height
       | balanced_avl a ph1 ph2 =>
-        Equal.rewrite
+        Equal.rewrite0
           (maxhh _)
           (fun x => Height  _ (1 + x))
           (node_height a B.Balanced (f _ _ ph1) (f _ _ ph2))
       | left_avl a ph1 ph2 =>
-        Equal.rewrite
+        Equal.rewrite0
           (maxh1h _)
           (fun x => Height _ (1 + x))
           (node_height a B.Left (f _ _ ph1) (f _ _ ph2))
       | right_avl a ph1 ph2 =>
-        Equal.rewrite
+        Equal.rewrite0
           (maxhh1 _)
           (fun x => Height _ (1 + x))
           (node_height a B.Right (f _ _ ph1) (f _ _ ph2))
@@ -265,15 +265,15 @@ Module Make (S0:SORTABLE).
              let eqh_plus1: 1 + _ = 1 + _ := Nat.successor_injective eqh_plus2 in
              let eqh: _ = _ := Nat.successor_injective eqh_plus1 in
              let p1 :=
-                 Equal.rewrite
+                 Equal.rewrite0
                    eqh_plus1
                    (fun x => Avl_height _ x)
-                   (Equal.rewrite eqt1 (fun t => Avl_height t _) avl01) in
+                   (Equal.rewrite0 eqt1 (fun t => Avl_height t _) avl01) in
              let p2 :=
-                 Equal.rewrite
+                 Equal.rewrite0
                    eqh
                    (fun x => Avl_height _ x)
-                   (Equal.rewrite eqt2 (fun t => Avl_height t _) avl02) in
+                   (Equal.rewrite0 eqt2 (fun t => Avl_height t _) avl02) in
              conj p1 p2
          | right_avl _ _ _ =>
            fun eq =>
@@ -321,15 +321,15 @@ Module Make (S0:SORTABLE).
              let eqh_plus1: 1 + _ = 1 + _ := Nat.successor_injective eqh_plus2 in
              let eqh: _ = _ := Nat.successor_injective eqh_plus1 in
              let p1 :=
-                 Equal.rewrite
+                 Equal.rewrite0
                    eqh
                    (fun x => Avl_height _ x)
-                   (Equal.rewrite eqt1 (fun t => Avl_height t _) avl01) in
+                   (Equal.rewrite0 eqt1 (fun t => Avl_height t _) avl01) in
              let p2 :=
-                 Equal.rewrite
+                 Equal.rewrite0
                    eqh_plus1
                    (fun x => Avl_height _ x)
-                   (Equal.rewrite eqt2 (fun t => Avl_height t _) avl02) in
+                   (Equal.rewrite0 eqt2 (fun t => Avl_height t _) avl02) in
              conj p1 p2
          end) eq_refl eq_refl.
 
@@ -363,15 +363,15 @@ Module Make (S0:SORTABLE).
              let eqt2 := node_injective_right_son eqt in
              let eqh: _ = _ := Nat.successor_injective eqh_plus1 in
              let p1 :=
-                 Equal.rewrite
+                 Equal.rewrite0
                    eqh
                    (fun x => Avl_height _ x)
-                   (Equal.rewrite eqt1 (fun t => Avl_height t _) avl01) in
+                   (Equal.rewrite0 eqt1 (fun t => Avl_height t _) avl01) in
              let p2 :=
-                 Equal.rewrite
+                 Equal.rewrite0
                    eqh
                    (fun x => Avl_height _ x)
-                   (Equal.rewrite eqt2 (fun t => Avl_height t _) avl02) in
+                   (Equal.rewrite0 eqt2 (fun t => Avl_height t _) avl02) in
              conj p1 p2
          | right_avl _ _ _ =>
            fun eq =>
@@ -402,7 +402,7 @@ Module Make (S0:SORTABLE).
              with end
          | left_avl a0 avl01 avl02 =>
            fun eqt eqh =>
-             Equal.rewrite
+             Equal.rewrite0
                (Nat.successor_injective eqh: S _ = h)
                Nat.is_Successor
                I
@@ -438,7 +438,7 @@ Module Make (S0:SORTABLE).
              with end
          | right_avl a0 avl01 avl02 =>
            fun eqt eqh =>
-             Equal.rewrite
+             Equal.rewrite0
                (Nat.successor_injective eqh: S _ = h)
                Nat.is_Successor
                I
@@ -524,10 +524,10 @@ Module Make (S0:SORTABLE).
                    let predh := Nat.predecessor h (left_leaning_height ph12) in
                    let h0 := proj1_sig predh in
                    let eqh0: h = 1 + h0 := Equal.flip (proj2_sig predh) in
-                   let rewrite0 t ph := Equal.rewrite eqh0 (f0 t) ph in
-                   let rewrite1 t ph := Equal.rewrite eqh0 (f1 t) ph in
+                   let rewrite0 t ph := Equal.rewrite0 eqh0 (f0 t) ph in
+                   let rewrite1 t ph := Equal.rewrite0 eqh0 (f1 t) ph in
                    let rewrite2 t ph :=
-                       Equal.rewrite (Equal.flip eqh0) (f2 t) ph in
+                       Equal.rewrite0 (Equal.flip eqh0) (f2 t) ph in
                    let ph_121_122 := left_leaning_sons_height (rewrite1 _ ph12) in
                    match left_leaning_sons_height (rewrite1 _ ph12) with
                    | conj ph121 ph122 =>
@@ -563,10 +563,10 @@ Module Make (S0:SORTABLE).
                    let predh := Nat.predecessor h (right_leaning_height ph12) in
                    let h0 := proj1_sig predh in
                    let eqh0: h = 1 + h0 := Equal.flip (proj2_sig predh) in
-                   let rewrite0 t ph := Equal.rewrite eqh0 (f0 t) ph in
-                   let rewrite1 t ph := Equal.rewrite eqh0 (f1 t) ph in
+                   let rewrite0 t ph := Equal.rewrite0 eqh0 (f0 t) ph in
+                   let rewrite1 t ph := Equal.rewrite0 eqh0 (f1 t) ph in
                    let rewrite2 t ph :=
-                       Equal.rewrite (Equal.flip eqh0) (f2 t) ph in
+                       Equal.rewrite0 (Equal.flip eqh0) (f2 t) ph in
                    match right_leaning_sons_height (rewrite1 _ ph12) with
                    | conj ph121 ph122 =>
                      exist

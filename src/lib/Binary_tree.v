@@ -48,7 +48,7 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
         Node a i t1 t2 <> Empty.
     Proof
       fun a i t1 t2 p =>
-        Equal.rewrite p is_Node I.
+        Equal.rewrite0 p is_Node I.
 
     Definition is_node (t_:t): {is_Node t_} + {~ is_Node t_} :=
       match t_ return {is_Node t_} + {~ is_Node t_} with
@@ -325,7 +325,7 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
            with
            | Empty =>
              fun _ =>
-               Equal.rewrite
+               Equal.rewrite0
                  (Equal.flip eq_refl: a = leftmost (Node a e Empty t2) I)
                  (fun x => Leftmost (Node a e Empty t2) x)
                  (lm_noleft a e t2)
@@ -364,7 +364,7 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
            with
            | Empty =>
              fun _ =>
-               Equal.rewrite
+               Equal.rewrite0
                  (Equal.flip eq_refl: a = rightmost (Node a e t1 Empty) I)
                  (fun x => Rightmost (Node a e t1 Empty) x)
                  (rm_noright a e t1)
@@ -426,9 +426,9 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
         let eq2: xs2 = inorder t2 := f t2 xs2 ord2 in
         (equality_chain:
            (eq_refl: xs1 ++ a :: xs2 = _),
-           (Equal.rewrite eq1 (fun xs => _ = xs ++ a :: xs2) eq_refl
+           (Equal.rewrite0 eq1 (fun xs => _ = xs ++ a :: xs2) eq_refl
             : _ = inorder t1 ++ a :: xs2),
-           (Equal.rewrite eq2 (fun xs => _ = inorder t1 ++ a :: xs) eq_refl
+           (Equal.rewrite0 eq2 (fun xs => _ = inorder t1 ++ a :: xs) eq_refl
             : _ = inorder t1 ++ a :: inorder t2))
       end.
 

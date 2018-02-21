@@ -24,14 +24,14 @@ Module Equal.
     Variables A B: Type.
 
     Theorem
-      rewrite (a b:A) (p:a = b) (P:A->Type) (pa:P a): P b.
+      rewrite0 (a b:A) (p:a = b) (P:A->Type) (pa:P a): P b.
     Proof
       match p in (_ = x) return P x with
       | eq_refl => pa
       end.
 
     Theorem
-      rewrite2 {a b:A} (P:A->Type) (pa:P a) (p:a = b): P b.
+      rewrite {a b:A} (P:A->Type) (pa:P a) (p:a = b): P b.
     Proof
       match p in (_ = x) return P x with
       | eq_refl => pa
@@ -48,12 +48,12 @@ Module Equal.
     Theorem
       flip {a b:A} (p:a=b): b=a.
     Proof
-      rewrite p (fun x => x=a) eq_refl.
+      rewrite0 p (fun x => x=a) eq_refl.
 
     Theorem
       join (a b c:A) (pab:a=b) (pbc:b=c): a=c.
     Proof
-      rewrite pbc (fun x => a=x) pab.
+      rewrite0 pbc (fun x => a=x) pab.
 
     Theorem
       flip_not_equal {a b:A} (p:a<>b): b<>a.
@@ -64,9 +64,9 @@ Module Equal.
       fun q:b=a => p (flip q).
 
     Theorem
-      rewrite2_backwards {a b:A} (P:A->Type) (pb:P b) (p:a = b): P a.
+      rewrite_bwd {a b:A} (P:A->Type) (pb:P b) (p:a = b): P a.
     Proof
-      rewrite2 P pb (flip p).
+      rewrite P pb (flip p).
 
 
     Definition Decider: Type := forall a b:A, {a = b} + {a <> b}.
@@ -82,7 +82,7 @@ Module Equal.
           ((join
              (eq_refl: f a = f a)
              (inject eqab _: f a = f b)): f a = f b)
-          (rewrite eqfg (fun g => f b = g b) eq_refl: f b = g b).
+          (rewrite0 eqfg (fun g => f b = g b) eq_refl: f b = g b).
   End application.
 
   Module Notations.
@@ -216,27 +216,43 @@ Module Relation.
         | or_intror p => p
         end.
 
-    Inductive Comparison (a b:A): Set :=
-    | less_than: R a b -> ~ R b a -> Comparison a b
-    | equivalent: R a b -> R b a  -> Comparison a b
-    | greater_than: ~ R a b -> R b a -> Comparison a b.
+    Inductive Comparison2 (a b:A): Set :=
+    | less_equal:    R a b -> Comparison2 a b
+    | greater_equal: R b a -> Comparison2 a b.
 
-    Definition Comparer: Type := forall a b:A, Comparison a b.
+    Inductive Comparison3 (a b:A): Set :=
+    | less_than: R a b -> Comparison3 a b
+    | equivalent: R a b -> R b a  -> Comparison3 a b
+    | greater_than: R b a -> Comparison3 a b.
 
-    Theorem comparable_is_complete:
-      forall (c:Comparer), Complete.
+    Definition Comparer2: Type := forall a b:A, Comparison2 a b.
+    Definition Comparer3: Type := forall a b:A, Comparison3 a b.
+
+    Theorem comparable2_is_complete:
+      forall (c:Comparer2), Complete.
     Proof
       fun c a b =>
         match c a b with
-        | less_than p1 p2 => or_introl p1
+        | less_equal    p => or_introl p
+        | greater_equal p => or_intror p
+        end.
+
+    Theorem comparable3_is_complete:
+      forall (c:Comparer3), Complete.
+    Proof
+      fun c a b =>
+        match c a b with
+        | less_than p => or_introl p
         | equivalent p1 p2 => or_introl p1
-        | greater_than p1 p2 => or_intror p2
-      end.
+        | greater_than p => or_intror p
+        end.
   End endorelation.
 
-  Arguments less_than    [_] [_] [_] [_] _ _.
+  Arguments less_than    [_] [_] [_] [_] _.
   Arguments equivalent   [_] [_] [_] [_] _ _.
-  Arguments greater_than [_] [_] [_] [_] _ _.
+  Arguments greater_than [_] [_] [_] [_] _.
+  Arguments less_equal    [_ _ _ _]  _.
+  Arguments greater_equal [_ _ _ _]  _.
 
   Section well_founded_relation.
     Variable A:Type.
@@ -332,7 +348,8 @@ Module Type SORTABLE <: ANY.
 
   Axiom transitive: Transitive  Less_equal.
 
-  Parameter compare: Comparer Less_equal.
+  Parameter compare2: Comparer2 Less_equal.
+  Parameter compare3: Comparer3 Less_equal.
 End SORTABLE.
 
 Module Sortable_plus (S:SORTABLE).
@@ -343,7 +360,7 @@ Module Sortable_plus (S:SORTABLE).
 
   Theorem complete: Complete Less_equal.
   Proof
-    comparable_is_complete compare.
+    comparable2_is_complete compare2.
 
   Theorem reflexive: Reflexive Less_equal.
   Proof
@@ -386,7 +403,3 @@ End FINITE_SET.
 (*    ========== *)
 Module Type FINITE_MAP.
 End FINITE_MAP.
-
-
-
-
