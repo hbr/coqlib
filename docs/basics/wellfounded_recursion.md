@@ -18,7 +18,10 @@ sequence
 
     a0 a1 a2 ...
 
-where `R aj ai` holds for `j = i+1`. `R` is wellfounded if all such chains are
+    R a1 a0, R a2 a1, R a3 a2, ...
+
+where $$R a_j a_i$$ holds for $$j = i+1$$ (i.e. $$a_j$$ is a predecessor of
+$$a_i$$ in the relation $$R$$). `R` is wellfounded if all such chains are
 finite.
 
 Coq uses accessability to define a wellfounded relation. An element `x` is
