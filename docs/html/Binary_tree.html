@@ -1,0 +1,342 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Binary_tree</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Binary_tree</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Core</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Coq.Lists.List</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">Equal.Notations</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Set Implicit Arguments</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="var">Make</span> (<span class="id" title="var">ElementM</span>:<span class="id" title="var">ANY</span>) (<span class="id" title="var">ExtraM</span>:<span class="id" title="var">ANY</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">A</span> := <span class="id" title="var">ElementM</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">E</span> := <span class="id" title="var">ExtraM</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab20"></a><h1 class="section">List</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">List</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">L</span>: <span class="id" title="keyword">Set</span> := <span class="id" title="var">list</span> <span class="id" title="var">A.t</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">Permutation</span>: <span class="id" title="var">L</span> → <span class="id" title="var">L</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">perm_empty</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Permutation</span> [] []<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">perm_prefix</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">x</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>, <span class="id" title="var">Permutation</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span> → <span class="id" title="var">Permutation</span> (<span class="id" title="var">x</span>::<span class="id" title="var">a</span>) (<span class="id" title="var">x</span>::<span class="id" title="var">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">perm_swap</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">a</span>,  <span class="id" title="var">Permutation</span> (<span class="id" title="var">x</span>::<span class="id" title="var">y</span>::<span class="id" title="var">a</span>) (<span class="id" title="var">y</span>::<span class="id" title="var">x</span>::<span class="id" title="var">a</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">perm_transitive</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span> <span class="id" title="var">c</span>,  <span class="id" title="var">Permutation</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span> → <span class="id" title="var">Permutation</span> <span class="id" title="var">b</span> <span class="id" title="var">c</span> → <span class="id" title="var">Permutation</span> <span class="id" title="var">a</span> <span class="id" title="var">c</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">List</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab21"></a><h1 class="section">Basic Definitions</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Section</span> <span class="id" title="var">basic_definitions</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">tree</span>: <span class="id" title="keyword">Set</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span>: <span class="id" title="var">tree</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span>:  <span class="id" title="var">E.t</span> → <span class="id" title="var">tree</span> → <span class="id" title="var">A.t</span> →  <span class="id" title="var">tree</span> → <span class="id" title="var">tree</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">is_Node</span> (<span class="id" title="var">t</span>:<span class="id" title="var">tree</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒ <span class="id" title="var">False</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">node_not_empty</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span>(<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">i</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>: <span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Node</span> <span class="id" title="var">i</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span> ≠ <span class="id" title="var">Empty</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">is_node</span> (<span class="id" title="var">t</span>:<span class="id" title="var">tree</span>): {<span class="id" title="var">is_Node</span> <span class="id" title="var">t</span>} + {~ <span class="id" title="var">is_Node</span> <span class="id" title="var">t</span>} :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t</span> <span class="id" title="keyword">return</span> {<span class="id" title="var">is_Node</span> <span class="id" title="var">t</span>} + {~ <span class="id" title="var">is_Node</span> <span class="id" title="var">t</span>} <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Empty</span> ⇒ <span class="id" title="tactic">right</span> (<span class="id" title="keyword">fun</span> <span class="id" title="var">p</span>:<span class="id" title="var">False</span> ⇒ <span class="id" title="keyword">match</span> <span class="id" title="var">p</span> <span class="id" title="keyword">with</span> <span class="id" title="keyword">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="tactic">left</span> <span class="id" title="var">I</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">Element</span>: <span class="id" title="var">tree</span> → <span class="id" title="var">A.t</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">element_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>, <span class="id" title="var">Element</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">a</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">Extra</span>: <span class="id" title="var">tree</span> → <span class="id" title="var">E.t</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">extra_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>, <span class="id" title="var">Extra</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">e</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">extra_is_node</span>: <span class="id" title="keyword">∀</span> (<span class="id" title="var">t</span>:<span class="id" title="var">tree</span>) (<span class="id" title="var">e</span>:<span class="id" title="var">E.t</span>), <span class="id" title="var">Extra</span> <span class="id" title="var">t</span> <span class="id" title="var">e</span> → <span class="id" title="var">is_Node</span> <span class="id" title="var">t</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">left_son</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span> → <span class="id" title="var">tree</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t_</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">nd</span> ⇒ <span class="id" title="keyword">match</span> <span class="id" title="var">nd</span> <span class="id" title="keyword">with</span> <span class="id" title="keyword">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">t1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">right_son</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span> → <span class="id" title="var">tree</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t_</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">nd</span> ⇒ <span class="id" title="keyword">match</span> <span class="id" title="var">nd</span> <span class="id" title="keyword">with</span> <span class="id" title="keyword">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">a</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">t2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">element</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span> → <span class="id" title="var">A.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t_</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">nd</span> ⇒ <span class="id" title="keyword">match</span> <span class="id" title="var">nd</span> <span class="id" title="keyword">with</span> <span class="id" title="keyword">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">a</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">extra</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span> → <span class="id" title="var">E.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t_</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">nd</span> ⇒ <span class="id" title="keyword">match</span> <span class="id" title="var">nd</span> <span class="id" title="keyword">with</span> <span class="id" title="keyword">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">e</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">left_son_correct</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">e</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t1</span> = <span class="id" title="var">left_son</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">I</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">right_son_correct</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">e</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t2</span> = <span class="id" title="var">right_son</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">I</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">element_correct</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">e</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">a</span> = <span class="id" title="var">element</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">I</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">extra_correct</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">e</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> = <span class="id" title="var">extra</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">I</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">node_injective_extra</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a1</span> <span class="id" title="var">a2</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">e1</span> <span class="id" title="var">e2</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t11</span> <span class="id" title="var">t12</span> <span class="id" title="var">t21</span> <span class="id" title="var">t22</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">t11</span> <span class="id" title="var">a1</span> <span class="id" title="var">t12</span> = <span class="id" title="var">Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">t21</span> <span class="id" title="var">a2</span> <span class="id" title="var">t22</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e1</span> = <span class="id" title="var">e2</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">node_injective_element</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a1</span> <span class="id" title="var">a2</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">e1</span> <span class="id" title="var">e2</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t11</span> <span class="id" title="var">t12</span> <span class="id" title="var">t21</span> <span class="id" title="var">t22</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">t11</span> <span class="id" title="var">a1</span> <span class="id" title="var">t12</span> = <span class="id" title="var">Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">t21</span> <span class="id" title="var">a2</span> <span class="id" title="var">t22</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">a1</span> = <span class="id" title="var">a2</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">node_injective_left_son</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a1</span> <span class="id" title="var">a2</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">e1</span> <span class="id" title="var">e2</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t11</span> <span class="id" title="var">t12</span> <span class="id" title="var">t21</span> <span class="id" title="var">t22</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">t11</span> <span class="id" title="var">a1</span> <span class="id" title="var">t12</span> = <span class="id" title="var">Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">t21</span> <span class="id" title="var">a2</span> <span class="id" title="var">t22</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t11</span> = <span class="id" title="var">t21</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">node_injective_right_son</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a1</span> <span class="id" title="var">a2</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">e1</span> <span class="id" title="var">e2</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">t11</span> <span class="id" title="var">t12</span> <span class="id" title="var">t21</span> <span class="id" title="var">t22</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">t11</span> <span class="id" title="var">a1</span> <span class="id" title="var">t12</span> = <span class="id" title="var">Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">t21</span> <span class="id" title="var">a2</span> <span class="id" title="var">t22</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t12</span> = <span class="id" title="var">t22</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">basic_definitions</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab22"></a><h1 class="section">Height</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Section</span> <span class="id" title="var">height</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">Height</span>: <span class="id" title="var">tree</span> → <span class="id" title="var">nat</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">empty_height</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Height</span> <span class="id" title="var">Empty</span> 0<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">node_height</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">t1</span> <span class="id" title="var">h1</span> <span class="id" title="var">t2</span> <span class="id" title="var">h2</span> <span class="id" title="var">a</span> <span class="id" title="var">i</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Height</span> <span class="id" title="var">t1</span> <span class="id" title="var">h1</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Height</span> <span class="id" title="var">t2</span> <span class="id" title="var">h2</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Height</span> (<span class="id" title="var">Node</span> <span class="id" title="var">i</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) (1 + <span class="id" title="var">max</span> <span class="id" title="var">h1</span> <span class="id" title="var">h2</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">height</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">nat</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t_</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒ 0<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">_</span> <span class="id" title="var">t1</span> <span class="id" title="var">_</span> <span class="id" title="var">t2</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1 + <span class="id" title="var">max</span> (<span class="id" title="var">height</span> <span class="id" title="var">t1</span>) (<span class="id" title="var">height</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">height_is_only_height</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>) (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Height</span> <span class="id" title="var">t_</span> <span class="id" title="var">h</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">h</span> = <span class="id" title="var">height</span> <span class="id" title="var">t_</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">height_is_height</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>, <span class="id" title="var">Height</span> <span class="id" title="var">t_</span> (<span class="id" title="var">height</span> <span class="id" title="var">t_</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">height_is_unique</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>) (<span class="id" title="var">h1</span> <span class="id" title="var">h2</span>:<span class="id" title="var">nat</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Height</span> <span class="id" title="var">t_</span> <span class="id" title="var">h1</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Height</span> <span class="id" title="var">t_</span> <span class="id" title="var">h2</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">h1</span> = <span class="id" title="var">h2</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">height</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab23"></a><h1 class="section">Leftmost and Rightmost</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Section</span> <span class="id" title="var">leftmost_and_rightmost</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">Leftmost</span>: <span class="id" title="var">tree</span> → <span class="id" title="var">A.t</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">lm_noleft</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">e</span> <span class="id" title="var">t2</span>, <span class="id" title="var">Leftmost</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">Empty</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">a</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">lm_left</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">x</span> <span class="id" title="var">a</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Leftmost</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Leftmost</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">x</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">Rightmost</span>: <span class="id" title="var">tree</span> → <span class="id" title="var">A.t</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">rm_noright</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span>, <span class="id" title="var">Rightmost</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">Empty</span>) <span class="id" title="var">a</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">rm_right</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">x</span> <span class="id" title="var">a</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Rightmost</span> <span class="id" title="var">t2</span> <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Rightmost</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) <span class="id" title="var">x</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">leftmost_is_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Leftmost</span> <span class="id" title="var">t_</span> <span class="id" title="var">a</span> → <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">rightmost_is_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Rightmost</span> <span class="id" title="var">t_</span> <span class="id" title="var">a</span> → <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">leftmost</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span> → <span class="id" title="var">A.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t_</span> <span class="id" title="keyword">return</span> <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span> → <span class="id" title="var">A.t</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">fun</span> <span class="id" title="var">nd</span> ⇒ <span class="id" title="keyword">match</span> <span class="id" title="var">nd</span> <span class="id" title="keyword">with</span> <span class="id" title="keyword">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">is_node</span> <span class="id" title="var">t1</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="tactic">left</span>  <span class="id" title="var">nd</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">leftmost</span> <span class="id" title="var">t1</span> (<span class="id" title="var">nd</span>:<span class="id" title="var">is_Node</span> <span class="id" title="var">t1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="tactic">right</span> <span class="id" title="var">_</span>  ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">a</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">leftmost_correct</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>) (<span class="id" title="var">nd</span>:<span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Leftmost</span> <span class="id" title="var">t_</span> (<span class="id" title="var">leftmost</span> <span class="id" title="var">t_</span> <span class="id" title="var">nd</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">rightmost</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span> → <span class="id" title="var">A.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t_</span> <span class="id" title="keyword">return</span> <span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span> → <span class="id" title="var">A.t</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">fun</span> <span class="id" title="var">nd</span> ⇒ <span class="id" title="keyword">match</span> <span class="id" title="var">nd</span> <span class="id" title="keyword">with</span> <span class="id" title="keyword">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">is_node</span> <span class="id" title="var">t2</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="tactic">left</span>  <span class="id" title="var">nd</span> ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">rightmost</span> <span class="id" title="var">t2</span> (<span class="id" title="var">nd</span>:<span class="id" title="var">is_Node</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="tactic">right</span> <span class="id" title="var">p</span>  ⇒ <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">a</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">rightmost_correct</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>) (<span class="id" title="var">nd</span>:<span class="id" title="var">is_Node</span> <span class="id" title="var">t_</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Rightmost</span> <span class="id" title="var">t_</span> (<span class="id" title="var">rightmost</span> <span class="id" title="var">t_</span> <span class="id" title="var">nd</span>).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">leftmost_and_rightmost</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab24"></a><h1 class="section">Inorder Sequence</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Section</span> <span class="id" title="var">inorder_sequence</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">Inorder</span>: <span class="id" title="var">tree</span> → <span class="id" title="var">list</span> <span class="id" title="var">A.t</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">empty_inorder</span>: <span class="id" title="var">Inorder</span> <span class="id" title="var">Empty</span> []<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">node_inorder</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">t1</span> <span class="id" title="var">xs1</span> <span class="id" title="var">t2</span> <span class="id" title="var">xs2</span> <span class="id" title="var">a</span> <span class="id" title="var">e</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Inorder</span> <span class="id" title="var">t1</span> <span class="id" title="var">xs1</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Inorder</span> <span class="id" title="var">t2</span> <span class="id" title="var">xs2</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Inorder</span> (<span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) (<span class="id" title="var">xs1</span> ++ <span class="id" title="var">a</span> :: <span class="id" title="var">xs2</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">inorder</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">list</span> <span class="id" title="var">A.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t_</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒ []<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Node</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">inorder</span> <span class="id" title="var">t1</span> ++ <span class="id" title="var">a</span> :: <span class="id" title="var">inorder</span> <span class="id" title="var">t2</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">inorder_correct</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>, <span class="id" title="var">Inorder</span> <span class="id" title="var">t_</span> (<span class="id" title="var">inorder</span> <span class="id" title="var">t_</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">inorder_unique</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">t_</span>:<span class="id" title="var">tree</span>) (<span class="id" title="var">xs</span>:<span class="id" title="var">list</span> <span class="id" title="var">A.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Inorder</span> <span class="id" title="var">t_</span> <span class="id" title="var">xs</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">xs</span> = <span class="id" title="var">inorder</span> <span class="id" title="var">t_</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">Same_inorder</span> (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">inorder</span> <span class="id" title="var">t1</span> = <span class="id" title="var">inorder</span> <span class="id" title="var">t2</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">inorder_sequence</span>.<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">Make</span>.<br/>
+</div>
+<hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

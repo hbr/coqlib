@@ -645,36 +645,6 @@ Module M1 (S0: SORTABLE).
 
 
 
-  (*
-  Theorem sons_sorted0:
-    forall (t:tree),
-      Sorted t ->
-      forall (c:Color) (t1:tree) (x:S.t) (t2:tree),
-        t = Node c t1 x t2 ->
-      Sorted t1 /\ Sorted t2 /\ High_bound t1 x /\ Low_bound x t2.
-  Proof.
-    refine (
-        fun t sort =>
-          Or.use
-            sort
-            (fun eq_leaf =>
-               fun c t1 x t2 eq =>
-                 let eq_contra := Equal.join (Equal.flip eq_leaf) eq in
-                 _)
-            (fun exist_lo_hi =>
-               Exist.use2
-                  exist_lo_hi
-                  (fun lo hi bnd =>
-                     match bnd with
-                     | leaf_bounded le => _
-                     | node_bounded c bnd1 bnd2 le1 le2 => _
-                     end)
-            )
-      ).
-    inversion eq_contra.
-  Qed.
-*)
-
 
   Inductive Insert: S.t -> tree -> tree -> Prop :=
   | ins_leaf:

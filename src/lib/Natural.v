@@ -14,14 +14,20 @@ Section nat_basics.
 
   Definition predecessor0 (n:nat) (p:is_Successor n): {x:nat|S x = n} :=
     (match n with
-     | 0 => fun p:is_Successor 0 => match p with end
+     | 0 => fun p:is_Successor 0 => ex_falso p
      | S m => fun _ => exist _ m eq_refl
      end) p.
 
-  Definition predecessor (n:nat): {x:nat|S x = n} + {n = 0} :=
+  Definition is_successor (n:nat): {x:nat|S x = n} + {n = 0} :=
     match n with
     | 0 => inright eq_refl
     | S x => inleft (exist _ x eq_refl)
+    end.
+
+  Definition predecessor (n:nat) (p:is_Successor n): {x:nat|S x = n} :=
+    match is_successor n with
+    | inleft p => p
+    | inright neq0 => ex_falso (Equal.rewrite is_Successor neq0 p)
     end.
 
   Theorem successor_not_zero:
@@ -41,7 +47,7 @@ Section nat_basics.
       S (pred n) = n.
   Proof
     fun n =>
-      match predecessor n with
+      match is_successor n with
       | inleft x =>
         fun p =>
           let q x: S (pred (S x)) = S x := eq_refl in

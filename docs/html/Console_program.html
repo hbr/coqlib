@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Console_program</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Console_program</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Core</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">String_</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <span class="id" title="var">int</span>:<span class="id" title="keyword">Set</span>.<br/>
+<span class="id" title="keyword">Parameter</span> <span class="id" title="var">zero</span>:<span class="id" title="var">int</span>.<br/>
+<span class="id" title="keyword">Parameter</span> <span class="id" title="var">one</span>:<span class="id" title="var">int</span>.<br/>
+<span class="id" title="keyword">Parameter</span>  <span class="id" title="var">int_plus</span>: <span class="id" title="var">int</span> → <span class="id" title="var">int</span> → <span class="id" title="var">int</span>.<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Inlined</span> <span class="id" title="var">Constant</span> <span class="id" title="var">int</span>  ⇒ "int".<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Inlined</span> <span class="id" title="var">Constant</span> <span class="id" title="var">zero</span> ⇒ "0".<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Inlined</span> <span class="id" title="var">Constant</span> <span class="id" title="var">one</span>  ⇒ "1".<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Inlined</span> <span class="id" title="var">Constant</span> <span class="id" title="var">int_plus</span> ⇒ "(+)".<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <span class="id" title="var">ocaml_exit</span>: <span class="id" title="var">int</span> → <span class="id" title="var">unit</span>.<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Constant</span> <span class="id" title="var">ocaml_exit</span> ⇒ "exit".<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="var">Character</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">newline</span>:<span class="id" title="var">ascii</span> := "010"%<span class="id" title="var">char</span>.<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">Character</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="var">String_</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">newline</span>:<span class="id" title="var">string</span> := <span class="id" title="var">String</span> <span class="id" title="var">Character.newline</span> <span class="id" title="var">EmptyString</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">normal</span>: <span class="id" title="var">string</span> → <span class="id" title="var">string</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Extract</span> <span class="id" title="var">Constant</span> <span class="id" title="var">normal</span> ⇒<br/>
+&nbsp;&nbsp;"(fun (p,s) -&gt; if p=0 then (p,s) else 0,String.(sub s p (length s - p)))".<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">String_</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">Result</span> (<span class="id" title="var">A</span> <span class="id" title="var">B</span>:<span class="id" title="keyword">Type</span>): <span class="id" title="keyword">Type</span> :=<br/>
+| <span class="id" title="var">Ok</span>:    <span class="id" title="var">A</span> → <span class="id" title="var">Result</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span><br/>
+| <span class="id" title="var">Error</span>: <span class="id" title="var">B</span> → <span class="id" title="var">Result</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">with_exit</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Type</span>): <span class="id" title="keyword">Type</span> :=<br/>
+| <span class="id" title="var">Normal</span>: <span class="id" title="var">A</span> → <span class="id" title="var">with_exit</span> <span class="id" title="var">A</span><br/>
+| <span class="id" title="var">Exit</span>: <span class="id" title="var">int</span> → <span class="id" title="var">with_exit</span> <span class="id" title="var">A</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <span class="id" title="var">IO_TYPE</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">t</span>: <span class="id" title="keyword">Type</span> → <span class="id" title="keyword">Type</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">bind</span>: <span class="id" title="keyword">∀</span> {<span class="id" title="var">A</span> <span class="id" title="var">B</span>:<span class="id" title="keyword">Type</span>}, <span class="id" title="var">t</span> <span class="id" title="var">A</span> → (<span class="id" title="var">A</span> → <span class="id" title="var">t</span> <span class="id" title="var">B</span>) → <span class="id" title="var">t</span> <span class="id" title="var">B</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">map</span>:  <span class="id" title="keyword">∀</span> {<span class="id" title="var">A</span> <span class="id" title="var">B</span>:<span class="id" title="keyword">Type</span>}, (<span class="id" title="var">A</span>→<span class="id" title="var">B</span>) → <span class="id" title="var">t</span> <span class="id" title="var">A</span> → <span class="id" title="var">t</span> <span class="id" title="var">B</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">exit</span>: <span class="id" title="var">int</span> → <span class="id" title="var">t</span> (<span class="id" title="var">with_exit</span> <span class="id" title="var">unit</span>).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">execute</span>: <span class="id" title="var">t</span> (<span class="id" title="var">with_exit</span> <span class="id" title="var">unit</span>) → <span class="id" title="var">unit</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">ocaml_put_string</span>: <span class="id" title="var">string</span> → <span class="id" title="var">t</span> <span class="id" title="var">unit</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">ocaml_put_line</span>: <span class="id" title="var">string</span> → <span class="id" title="var">t</span> <span class="id" title="var">unit</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">get_line</span>: <span class="id" title="var">t</span> (<span class="id" title="var">option</span> <span class="id" title="var">string</span>).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">put_string</span>: <span class="id" title="var">string</span> → <span class="id" title="var">t</span> <span class="id" title="var">unit</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">put_newline</span>: <span class="id" title="var">t</span> <span class="id" title="var">unit</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">put_line</span>: <span class="id" title="var">string</span> → <span class="id" title="var">t</span> <span class="id" title="var">unit</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">iterate</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span> <span class="id" title="var">S</span>:<span class="id" title="keyword">Type</span>), <span class="id" title="var">t</span> <span class="id" title="var">A</span> → <span class="id" title="var">S</span> → (<span class="id" title="var">A</span>→<span class="id" title="var">S</span>→<span class="id" title="var">t</span> <span class="id" title="var">unit</span>×<span class="id" title="var">S</span>) → (<span class="id" title="var">S</span>→<span class="id" title="var">bool</span>) → <span class="id" title="var">t</span> <span class="id" title="var">unit</span> × <span class="id" title="var">S</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">interactive</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">string</span> → <span class="id" title="var">option</span> <span class="id" title="var">string</span>) → <span class="id" title="var">t</span> (<span class="id" title="var">with_exit</span> <span class="id" title="var">unit</span>).<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">IO_TYPE</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="var">IO</span>: <span class="id" title="var">IO_TYPE</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Section</span> <span class="id" title="var">basics</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">t</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Type</span>): <span class="id" title="keyword">Type</span> := <span class="id" title="var">unit</span> → <span class="id" title="var">A</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">make</span> {<span class="id" title="var">A</span>:<span class="id" title="keyword">Type</span>} (<span class="id" title="var">a</span>:<span class="id" title="var">A</span>): <span class="id" title="var">t</span> <span class="id" title="var">A</span> := <span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">a</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">bind</span> {<span class="id" title="var">A</span> <span class="id" title="var">B</span>:<span class="id" title="keyword">Type</span>} (<span class="id" title="var">m</span>:<span class="id" title="var">t</span> <span class="id" title="var">A</span>) (<span class="id" title="var">f</span>:<span class="id" title="var">A</span> → <span class="id" title="var">t</span> <span class="id" title="var">B</span>): <span class="id" title="var">t</span> <span class="id" title="var">B</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">f</span> (<span class="id" title="var">m</span> <span class="id" title="var">tt</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">map</span> {<span class="id" title="var">A</span> <span class="id" title="var">B</span>:<span class="id" title="keyword">Type</span>} (<span class="id" title="var">f</span>:<span class="id" title="var">A</span>→<span class="id" title="var">B</span>) (<span class="id" title="var">m</span>:<span class="id" title="var">t</span> <span class="id" title="var">A</span>): <span class="id" title="var">t</span> <span class="id" title="var">B</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">bind</span> <span class="id" title="var">m</span> (<span class="id" title="keyword">fun</span> <span class="id" title="var">a</span> ⇒ <span class="id" title="var">make</span> (<span class="id" title="var">f</span> <span class="id" title="var">a</span>)).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">join</span> {<span class="id" title="var">A</span>:<span class="id" title="keyword">Type</span>} (<span class="id" title="var">m</span>: <span class="id" title="var">t</span> (<span class="id" title="var">t</span> <span class="id" title="var">A</span>)): <span class="id" title="var">t</span> <span class="id" title="var">A</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">bind</span> <span class="id" title="var">m</span> (<span class="id" title="keyword">fun</span> <span class="id" title="var">m_inner</span> ⇒ <span class="id" title="var">m_inner</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">exit</span> (<span class="id" title="var">code</span>:<span class="id" title="var">int</span>): <span class="id" title="var">t</span> (<span class="id" title="var">with_exit</span> <span class="id" title="var">unit</span>) := <span class="id" title="var">make</span> (<span class="id" title="var">Exit</span> <span class="id" title="var">_</span> <span class="id" title="var">code</span>).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">execute</span> (<span class="id" title="var">m</span>: <span class="id" title="var">t</span> (<span class="id" title="var">with_exit</span> <span class="id" title="var">unit</span>)): <span class="id" title="var">unit</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">m</span> <span class="id" title="var">tt</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Normal</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">ocaml_exit</span> <span class="id" title="var">zero</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Exit</span> <span class="id" title="var">_</span> <span class="id" title="var">code</span> ⇒ <span class="id" title="var">ocaml_exit</span> <span class="id" title="var">code</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">basics</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">get_line</span>: <span class="id" title="var">t</span> (<span class="id" title="var">option</span> <span class="id" title="var">string</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">ocaml_put_string</span>: <span class="id" title="var">string</span> → <span class="id" title="var">t</span> <span class="id" title="var">unit</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">ocaml_put_line</span>: <span class="id" title="var">string</span> → <span class="id" title="var">t</span> <span class="id" title="var">unit</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">put_string</span> (<span class="id" title="var">s</span>:<span class="id" title="var">string</span>): <span class="id" title="var">t</span> <span class="id" title="var">unit</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">ocaml_put_string</span> (<span class="id" title="var">String_.normal</span> <span class="id" title="var">s</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">put_newline</span>: <span class="id" title="var">t</span> <span class="id" title="var">unit</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">put_line</span> (<span class="id" title="var">s</span>:<span class="id" title="var">string</span>): <span class="id" title="var">t</span> <span class="id" title="var">unit</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">ocaml_put_line</span> (<span class="id" title="var">String_.normal</span> <span class="id" title="var">s</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Parameter</span> <span class="id" title="var">iterate</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> {<span class="id" title="var">B</span> <span class="id" title="var">S</span>:<span class="id" title="keyword">Type</span>} (<span class="id" title="var">action</span>: <span class="id" title="var">t</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">start</span>:<span class="id" title="var">S</span>) (<span class="id" title="var">f</span>:<span class="id" title="var">B</span>→<span class="id" title="var">S</span>→<span class="id" title="var">t</span> <span class="id" title="var">unit</span>×<span class="id" title="var">S</span>) (<span class="id" title="var">d</span>:<span class="id" title="var">S</span>→<span class="id" title="var">bool</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t</span> <span class="id" title="var">unit</span>×<span class="id" title="var">S</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">interactive</span> (<span class="id" title="var">f</span>:<span class="id" title="var">string</span> → <span class="id" title="var">option</span> <span class="id" title="var">string</span>): <span class="id" title="var">t</span> (<span class="id" title="var">with_exit</span> <span class="id" title="var">unit</span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">let</span> (<span class="id" title="var">m</span>,<span class="id" title="var">s</span>) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">iterate</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">get_line</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">true</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">fun</span> <span class="id" title="var">s_opt</span> <span class="id" title="var">_</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">s_opt</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">None</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">make</span> <span class="id" title="var">tt</span>, <span class="id" title="var">false</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Some</span> <span class="id" title="var">s</span> ⇒<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">put_line</span> <span class="id" title="var">s</span>, <span class="id" title="var">true</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">fun</span> <span class="id" title="var">x</span> ⇒ <span class="id" title="var">x</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">in</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">map</span> (<span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">Exit</span> <span class="id" title="var">_</span> <span class="id" title="var">zero</span>) <span class="id" title="var">m</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">IO</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Constant</span> <span class="id" title="var">IO.get_line</span> ⇒<br/>
+"fun _ -&gt; try Some (0,Pervasives.read_line ()) with End_of_file -&gt; None".<br/>
+
+<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Constant</span> <span class="id" title="var">IO.ocaml_put_string</span> ⇒<br/>
+"fun (p,s) _ -&gt; Pervasives.print_string s".<br/>
+
+<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Constant</span> <span class="id" title="var">IO.ocaml_put_line</span> ⇒<br/>
+"fun (p,s) _ -&gt; Pervasives.print_endline s".<br/>
+
+<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Constant</span> <span class="id" title="var">IO.put_newline</span> ⇒ "Pervasives.print_newline".<br/>
+
+<br/>
+<span class="id" title="keyword">Extract</span> <span class="id" title="var">Constant</span> <span class="id" title="var">IO.iterate</span> ⇒<br/>
+&nbsp;&nbsp;"fun (a:'b t) (s:'s) (f:'b-&gt;'s-&gt;(unit t)*'s) (d:'s-&gt;bool) -&gt;
+       let rec iter (s:'s): unit t*'s =
+         if d s then
+           let m,s = bind a (fun b -&gt; f b s) in
+           (m (); iter s) (* evalute the last action *)
+         else make (),s
+       in
+       iter s".<br/>
+
+<br/>
+</div>
+<hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>
