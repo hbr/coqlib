@@ -18,21 +18,21 @@ Module Make (S0:SORTABLE) (Extra:ANY).
   (** [Bounded a b t] means that [a] is the least element an [b] is the
       greatest element of the tree [t] and that the inorder sequence of the
       tree is sorted *)
-  Inductive Bounded: A.t -> A.t -> t -> Prop :=
+  Inductive Bounded: A.t -> A.t -> tree -> Prop :=
   | singleton_bounded:
       forall a e,
-        Bounded a a (Node a e Empty Empty)
+        Bounded a a (Node e Empty a Empty)
   | node_bounded:
       forall lo1 hi1 t1 lo2 hi2 t2 a e,
         Bounded lo1 hi1 t1 ->
         Bounded lo2 hi2 t2 ->
         hi1 <= a ->
         a = lo2 ->
-        Bounded lo1 hi2 (Node a e t1 t2).
+        Bounded lo1 hi2 (Node e t1 a t2).
 
   (** A tree is sorted if it is either empty or it has a left and a right
       bound. *)
-  Inductive Sorted: t -> Prop :=
+  Inductive Sorted: tree -> Prop :=
   | empty_sorted: Sorted Empty
   | node_sorted:
       forall lo hi t_,
@@ -40,7 +40,7 @@ Module Make (S0:SORTABLE) (Extra:ANY).
 
 
   Theorem least_is_leftmost:
-    forall (lo hi:A.t) (t_:t),
+    forall (lo hi:A.t) (t_:tree),
       Bounded lo hi t_ ->
       Leftmost t_ lo.
   Proof
@@ -62,7 +62,7 @@ Module Make (S0:SORTABLE) (Extra:ANY).
     (* Trees having the same inorder relation transfer the sortedness of the first
        tree to the sortedness of the second tree. *)
     Theorem sorted_via_inorder:
-      forall (t1 t2:t),  Same_inorder t1 t2 -> Sorted t1 -> Sorted t2.
+      forall (t1 t2:tree),  Same_inorder t1 t2 -> Sorted t1 -> Sorted t2.
     Proof
       _.
   End inorder.*)
@@ -86,7 +86,7 @@ Module Make (S0:SORTABLE) (Extra:ANY).
           Inserted x (Node a e t1 t21) (Node a e t1 t22).
 
     Theorem inserted_is_node:
-      forall (x:A.t) (t1 t2:t),
+      forall (x:A.t) (t1 t2:tree),
         Inserted x t1 t2 ->
         is_Node t2.
     Proof
@@ -100,7 +100,7 @@ Module Make (S0:SORTABLE) (Extra:ANY).
       end.
 (*
     Theorem inserted_is_sorted:
-      forall (x:A.t) (t1 t2:T),
+      forall (x:A.t) (t1 t2:tree),
         Sorted t1 ->
         Inserted x t1 t2 ->
         Sorted t2.
