@@ -2,6 +2,7 @@ Require Import Core.
 Import Equal.Notations.
 
 Set Implicit Arguments.
+Set Warnings "-extraction-opaque-accessed".
 
 (** * Basic Facts *)
 (*    =========== *)
@@ -12,23 +13,27 @@ Section nat_basics.
     | S _ => True
     end.
 
-  Definition predecessor0 (n:nat) (p:is_Successor n): {x:nat|S x = n} :=
+  Fact predecessor0 (n:nat) (p:is_Successor n): {x:nat|S x = n}.
+  Proof
     (match n with
      | 0 => fun p:is_Successor 0 => ex_falso p
      | S m => fun _ => exist _ m eq_refl
      end) p.
 
-  Definition is_successor (n:nat): {x:nat|S x = n} + {n = 0} :=
+  Fact is_successor (n:nat): {x:nat|S x = n} + {n = 0}.
+  Proof
     match n with
     | 0 => inright eq_refl
     | S x => inleft (exist _ x eq_refl)
     end.
 
-  Definition predecessor (n:nat) (p:is_Successor n): {x:nat|S x = n} :=
+  Fact predecessor (n:nat) (p:is_Successor n): {x:nat|S x = n}.
+  Proof
     match is_successor n with
     | inleft p => p
     | inright neq0 => ex_falso (Equal.rewrite is_Successor neq0 p)
     end.
+
 
   Theorem successor_not_zero:
     forall n:nat, S n <> 0.

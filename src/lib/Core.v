@@ -127,6 +127,23 @@ Module Equal.
   Section equal_basics.
     Variables A B: Type.
 
+    Theorem use {a b:A} (eq:a=b) (T:A->Type) (pa:T a): T b.
+    Proof
+      match eq with
+        eq_refl => pa
+      end.
+
+    Theorem use2 {a1 b1:A} {a2 b2:B}
+            (eq1:a1=b1) (eq2:a2=b2) (T:A->B->Type) (p: T a1 a2)
+      : T b1 b2.
+    Proof
+      match eq1 with
+        eq_refl =>
+        match eq2 with
+          eq_refl => p
+        end
+      end.
+
     Theorem
       rewrite0 (a b:A) (p:a = b) (P:A->Type) (pa:P a): P b.
     Proof
@@ -166,6 +183,10 @@ Module Equal.
          goal: b=a -> False
        *)
       fun q:b=a => p (flip q).
+
+    Theorem use_bwd {a b:A} (eq:a=b) (T:A->Type) (pb:T b): T a.
+    Proof
+      use (flip eq) T pb.
 
     Theorem
       rewrite_bwd {a b:A} (P:A->Type) (p:a = b) (pb:P b): P a.
