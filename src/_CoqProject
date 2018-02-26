@@ -1,10 +1,10 @@
 -R lib/ Coqlib
 
 lib/Core.v
+lib/List.v
 lib/Natural.v
 lib/String_.v
 lib/Console_program.v
-lib/List_.v
 lib/Binary_tree.v
 lib/Binary_search_tree.v
 lib/Avl_tree.v
