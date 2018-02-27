@@ -1,7 +1,9 @@
 Require Import Core.
 Require Natural.
-Require Import Coq.Lists.List.
-Import ListNotations.
+Require List.
+
+Import List.Notations.
+Import Equal.Notations.
 
 Set Implicit Arguments.
 Set Warnings "-extraction-opaque-accessed".
@@ -257,6 +259,104 @@ Module M1 (S0: SORTABLE).
             (Equal.inject eq right)
       ).
   Qed.
+
+
+
+
+  Module Inorder.
+    Inductive R: tree -> list S.t -> Prop :=
+    | leaf: R Leaf []
+    | node:
+        forall c t1 l1 x t2 l2,
+          R t1 l1 ->
+          R t2 l2 ->
+          R (Node c t1 x t2) (l1 ++ x :: l2).
+
+    Fixpoint make (t:tree): list S.t :=
+      match t with
+      | Leaf => []
+      | Node c t x u => make t ++ x :: (make u)
+      end.
+
+    Theorem list_to_rel:
+      forall (t:tree) (l:list S.t),
+        l = make t ->
+        R t l.
+    Proof
+      fix f t :=
+      match t with
+      | Leaf =>
+        fun l (eq: l = make Leaf) =>
+          let p := leaf in
+          Equal.use
+            (Equal.flip eq)
+            (fun l => R Leaf l)
+            leaf
+      | Node c u x v =>
+        fun l (eq: l = make (Node c u x v)) =>
+          Equal.use
+            (Equal.flip eq)
+            (fun l => R _ l)
+            (node c x (f u (make u) eq_refl) (f v (make v) eq_refl))
+      end.
+
+
+    Theorem rel_to_list:
+      forall (t:tree) (l:list S.t),
+        R t l ->
+        l = make t.
+    Proof
+      fix f t l r {struct r}:=
+      match r with
+      | leaf =>
+        eq_refl: [] = make Leaf
+      | node c x r1 r2 =>
+        Equal.use2
+           (Equal.flip (f _ _ r1) : make _ = _)
+           (Equal.flip (f _ _ r2) : make _ = _)
+           (fun a b => a ++ x :: b = _)
+           eq_refl
+        : _ ++ x :: _ = make (Node c _ x _)
+      end.
+
+
+    Theorem make_correct1 (t:tree): R t (make t).
+    Proof
+      (fix f t :=
+      match t with
+      | Leaf => leaf:R Leaf (make Leaf)
+      | Node c t x u =>
+        node c x (f t) (f u) : R _ (make (Node c t x u))
+      end) t.
+
+    Theorem make_correct2:
+      forall (t:tree) (l:list S.t),
+        R t l ->
+        l = make t.
+    Proof
+      fix f t l r {struct r}:=
+      match r with
+      | leaf => eq_refl
+      | @node c t1 l1 x t2 l2 r1 r2 =>
+        Equal.use2
+          (Equal.flip (f t1 l1 r1) : make t1 = l1)
+          (Equal.flip (f t2 l2 r2) : make t2 = l2)
+          (fun a b => a ++ x :: b = _)
+          eq_refl
+      end.
+
+    Theorem unique:
+      forall (t:tree) (a b:list S.t),
+        R t a ->
+        R t b ->
+        a = b.
+    Proof
+      fun t a b r1 r2 =>
+        let p := make_correct2 r1 in
+        Equal.join (make_correct2 r1) (Equal.flip (make_correct2 r2)).
+  End Inorder.
+
+
 
 
   Inductive Domain: tree -> S.t -> Prop :=
@@ -618,18 +718,18 @@ Module M1 (S0: SORTABLE).
     exists h, RB_nearly0 h t.
 
   Inductive Rotation: tree -> tree -> Prop :=
+  | rot_leaf:
+      Rotation Leaf Leaf
   | rot_left:
       forall c1 c2 c3 c4 a x b y c,
         Rotation
-          (Node c3 a x (Node c4 b y c))
-          (Node c1 (Node c2 a x b) y c)
+          (Node c1 a x (Node c2 b y c))
+          (Node c3 (Node c4 a x b) y c)
   | rot_right:
       forall c1 c2 c3 c4 a x b y c,
         Rotation
           (Node c1 (Node c2 a x b) y c)
           (Node c3 a x (Node c4 b y c))
-  | rot_leaf:
-      Rotation Leaf Leaf
   | rot_node:
       forall c1 c2 x t11 t12 t21 t22,
         Rotation t11 t12 ->
@@ -650,6 +750,85 @@ Module M1 (S0: SORTABLE).
       let r2 := f t2 in
       rot_node c c x r1 r2
     end.
+
+
+  (** Rotation keeps the inorder sequence. The proof recurses over all
+  constructors of a rotation. The left and right rotation uses the
+  associativity of list append. *)
+  Theorem rotation_inorder:
+    forall (t u:tree),
+      Rotation t u ->
+      forall l,
+        Inorder.R t l ->
+        Inorder.R u l.
+  Proof
+    fix f t u rot:=
+    match rot with
+    | rot_leaf =>
+      fun l ord => ord
+    | @rot_left c1 c2 c3 c4 a x b y c =>
+      fun l inord =>
+        let t := Node c1 a x (Node c2 b y c) in
+        let u := Node c3 (Node c4 a x b) y c in
+        let eq: l = Inorder.make u :=
+            Equal.join
+               (Inorder.rel_to_list inord
+                : l = _ ++ x :: _ ++ y :: _)
+               (Equal.flip (List.app_associative _ (x::_) (y::_))
+                : _ = (_ ++ x :: _) ++ y :: _)
+        in
+        Inorder.list_to_rel u eq
+        : Inorder.R u l
+    | @rot_right c1 c2 c3 c4 a x b y c =>
+      fun l inord =>
+        let t := Node c1 (Node c2 a x b) y c in
+        let u := Node c3 a x (Node c4 b y c) in
+        let eq : l = Inorder.make u :=
+            Equal.join
+               (Inorder.rel_to_list inord: l = (_ ++ x :: _) ++ y :: _)
+               (List.app_associative _ (x::_) (y::_)
+                : _ = _ ++ x :: _ ++ y :: _)
+        in
+        Inorder.list_to_rel u eq: Inorder.R u l
+    | @rot_node c1 c2 x t1 t2 u1 u2 rt ru =>
+      fun l ord =>
+        let lt1 := Inorder.make t1 in
+        let lu1 := Inorder.make u1 in
+        let lt2 := Inorder.make t2 in
+        let lu2 := Inorder.make u2 in
+        let eql1: lt1 ++ x :: lu1 = l :=
+            Inorder.unique
+              (Equal.use
+                 eq_refl (fun l => Inorder.R _ l)
+                 (Inorder.make_correct1 (Node c1 t1 x u1)))
+              ord
+        in
+        let eqlt: lt1 = lt2 :=
+            Inorder.unique
+              (f t1 t2 rt lt1 (Inorder.make_correct1 t1))
+              (Inorder.make_correct1 t2)
+        in
+        let eqlu: lu1 = lu2 :=
+            Inorder.unique
+              (f u1 u2 ru lu1 (Inorder.make_correct1 u1))
+              (Inorder.make_correct1 u2)
+        in
+        let eql2: lt2 ++ x :: lu2 = l :=
+            Equal.use2
+              eqlt eqlu (fun lt lu => lt ++ x :: lu = l)
+              eql1
+        in
+        Equal.use
+          eql2 (fun l => Inorder.R _ l)
+          (Inorder.node c2 x (Inorder.make_correct1 t2) (Inorder.make_correct1 u2))
+    | @rot_trans u v w ruv rvw =>
+      fun l ord_ul =>
+        f v w rvw l (f u v ruv  l ord_ul)
+    end.
+
+
+
+
 
 
   Inductive Bounded: S.t -> tree -> S.t -> Prop :=
@@ -780,7 +959,7 @@ Module M1 (S0: SORTABLE).
              use_node_bounded
                bnd2
                (fun bnd2a bnd2b =>
-                  node_bounded c1 (node_bounded c2 bnd1 bnd2a) bnd2b
+                  node_bounded c3 (node_bounded c4 bnd1 bnd2a) bnd2b
                )
           )
     | @rot_right c1 c2 c3 c4 a x b y c =>
@@ -1050,14 +1229,6 @@ Module M1 (S0: SORTABLE).
 
 
 
-  Inductive Inorder: list S.t -> tree -> Prop :=
-  | inorder_leaf: Inorder [] Leaf
-  | inorder_node:
-      forall c l1 t1 x l2 t2,
-        Inorder l1 t1 ->
-        Inorder l2 t2 ->
-        Inorder (l1 ++ x :: l2) (Node c t1 x t2).
-
   Theorem insert_to_bounded:
     forall (x:S.t) (t1 t2:tree),
       Inserted x t1 t2 ->
@@ -1235,9 +1406,6 @@ Module M1 (S0: SORTABLE).
   (*====================================*)
 
 
-
-  (* A third definition for insertions
-     ---------------------------------*)
 
 
   Definition Insert_result (x:S.t) (t:tree): Type :=
