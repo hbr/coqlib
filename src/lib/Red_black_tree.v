@@ -320,7 +320,7 @@ Module M1 (S0: SORTABLE).
       end.
 
 
-    Theorem make_correct1 (t:tree): R t (make t).
+    Theorem make_correct (t:tree): R t (make t).
     Proof
       (fix f t :=
       match t with
@@ -329,22 +329,6 @@ Module M1 (S0: SORTABLE).
         node c x (f t) (f u) : R _ (make (Node c t x u))
       end) t.
 
-    Theorem make_correct2:
-      forall (t:tree) (l:list S.t),
-        R t l ->
-        l = make t.
-    Proof
-      fix f t l r {struct r}:=
-      match r with
-      | leaf => eq_refl
-      | @node c t1 l1 x t2 l2 r1 r2 =>
-        Equal.use2
-          (Equal.flip (f t1 l1 r1) : make t1 = l1)
-          (Equal.flip (f t2 l2 r2) : make t2 = l2)
-          (fun a b => a ++ x :: b = _)
-          eq_refl
-      end.
-
     Theorem unique:
       forall (t:tree) (a b:list S.t),
         R t a ->
@@ -352,8 +336,8 @@ Module M1 (S0: SORTABLE).
         a = b.
     Proof
       fun t a b r1 r2 =>
-        let p := make_correct2 r1 in
-        Equal.join (make_correct2 r1) (Equal.flip (make_correct2 r2)).
+        let p := rel_to_list r1 in
+        Equal.join (rel_to_list r1) (Equal.flip (rel_to_list r2)).
   End Inorder.
 
 
@@ -751,10 +735,39 @@ Module M1 (S0: SORTABLE).
       rot_node c c x r1 r2
     end.
 
+  Theorem rotation_to_node:
+    forall (u v:tree),
+      Rotation u v ->
+      is_Node u ->
+      is_Node v.
+  Proof
+    fix f u v rot :=
+    match rot with
+    | rot_leaf =>
+    fun nd => ex_falso nd
+    | @rot_left c1 c2 c3 c4 a x b y c =>
+      fun nd => I
+    | @rot_right c1 c2 c3 c4 a x b y c =>
+      fun nd => I
+    | @rot_node c1 c2 x t1 t2 u1 u2 rt ru =>
+      fun nd => I
+    | @rot_trans u v w ruv rvw =>
+      fun ndu => f v w rvw (f u v ruv ndu)
+    end.
+
 
   (** Rotation keeps the inorder sequence. The proof recurses over all
-  constructors of a rotation. The left and right rotation uses the
-  associativity of list append. *)
+  constructors of a rotation.
+
+  The left and right rotation uses the associativity of list append.
+
+  The node construction uses the fact that rotations of the sons keep their
+  inorder sequence. Using this we can transform an inorder sequence of the
+  node before the rotation into the same inorder sequence of the node after
+  rotation.
+
+  Transitivity is a simple application of two rotations keeping the inorder
+  sequence.*)
   Theorem rotation_inorder:
     forall (t u:tree),
       Rotation t u ->
@@ -792,35 +805,24 @@ Module M1 (S0: SORTABLE).
         Inorder.list_to_rel u eq: Inorder.R u l
     | @rot_node c1 c2 x t1 t2 u1 u2 rt ru =>
       fun l ord =>
-        let lt1 := Inorder.make t1 in
-        let lu1 := Inorder.make u1 in
-        let lt2 := Inorder.make t2 in
-        let lu2 := Inorder.make u2 in
-        let eql1: lt1 ++ x :: lu1 = l :=
-            Inorder.unique
-              (Equal.use
-                 eq_refl (fun l => Inorder.R _ l)
-                 (Inorder.make_correct1 (Node c1 t1 x u1)))
-              ord
+        let t := Node c1 t1 x u1 in
+        let u := Node c2 t2 x u2 in
+        let eq: l = Inorder.make u :=
+            (equality_chain:
+               (Inorder.rel_to_list ord
+                : l = Inorder.make t1 ++ x :: Inorder.make u1),
+               (
+                Equal.use2
+                  (Inorder.rel_to_list (f _ _ rt _ (Inorder.make_correct t1))
+                   : Inorder.make t1 = Inorder.make t2)
+                  (Inorder.rel_to_list (f _ _ ru _ (Inorder.make_correct u1))
+                   : Inorder.make u1 = Inorder.make u2)
+                  (fun a b => _ = a ++ x :: b)
+                  eq_refl
+                : _ = Inorder.make t2 ++ x :: Inorder.make u2)
+            )
         in
-        let eqlt: lt1 = lt2 :=
-            Inorder.unique
-              (f t1 t2 rt lt1 (Inorder.make_correct1 t1))
-              (Inorder.make_correct1 t2)
-        in
-        let eqlu: lu1 = lu2 :=
-            Inorder.unique
-              (f u1 u2 ru lu1 (Inorder.make_correct1 u1))
-              (Inorder.make_correct1 u2)
-        in
-        let eql2: lt2 ++ x :: lu2 = l :=
-            Equal.use2
-              eqlt eqlu (fun lt lu => lt ++ x :: lu = l)
-              eql1
-        in
-        Equal.use
-          eql2 (fun l => Inorder.R _ l)
-          (Inorder.node c2 x (Inorder.make_correct1 t2) (Inorder.make_correct1 u2))
+        Inorder.list_to_rel u eq : Inorder.R u l
     | @rot_trans u v w ruv rvw =>
       fun l ord_ul =>
         f v w rvw l (f u v ruv  l ord_ul)
@@ -1226,10 +1228,27 @@ Module M1 (S0: SORTABLE).
         Inserted x t1 t3.
 
 
+  Theorem inserted_to_node:
+    forall (x:S.t) (u v:tree),
+      Inserted x u v ->
+      is_Node v.
+  Proof
+    fix f x u v ins :=
+    match ins with
+    | ins_leaf c x =>
+      I
+    | @ins_left c x y t1 t1new t2 xy ins =>
+      I
+    | @ins_right c x y t1 t2 t2new yx ins =>
+      I
+    | @ins_replace c x y t1 t2 eqv =>
+      I
+    | @ins_rotation x t1 t2 t3 ins rot =>
+      rotation_to_node rot (f x t1 t2 ins)
+    end.
 
 
-
-  Theorem insert_to_bounded:
+  Theorem inserted_to_bounded:
     forall (x:S.t) (t1 t2:tree),
       Inserted x t1 t2 ->
       forall lo hi,
