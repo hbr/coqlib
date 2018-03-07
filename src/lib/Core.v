@@ -24,31 +24,58 @@ Definition ex_falso {A:Type} (p:False):A :=
   match p with end.
 
 Module And.
-  Definition make3 {A B C:Prop} (a:A) (b:B) (c:C) : A /\ B /\ C :=
+  Theorem make3 {A B C:Prop} (a:A) (b:B) (c:C) : A /\ B /\ C.
+  Proof
     conj a (conj b c).
 
-  Definition make4 {A B C D:Prop} (a:A) (b:B) (c:C) (d:D) : A /\ B /\ C /\ D :=
+  Theorem make4 {A B C D:Prop} (a:A) (b:B) (c:C) (d:D) : A /\ B /\ C /\ D.
+  Proof
     conj a (conj b (conj c d)).
 
-  Definition use {A B C:Prop} (p:A/\B) (f:A->B->C): C :=
+  Theorem use {A B C:Prop} (p:A/\B) (f:A->B->C): C.
+  Proof
     match p with
       conj a b => f a b
     end.
 
-  Definition use3 {A B C D:Prop} (p:A/\B/\C) (f:A->B->C->D): D :=
+  Theorem use3 {A B C D:Prop} (p:A/\B/\C) (f:A->B->C->D): D.
+  Proof
     match p with
       conj a (conj b c) => f a b c
     end.
 
-  Definition use4 {A B C D E:Prop} (p:A/\B/\C/\D) (f:A->B->C->D->E): E :=
+  Theorem use4 {A B C D E:Prop} (p:A/\B/\C/\D) (f:A->B->C->D->E): E.
+  Proof
     match p with
       conj a (conj b (conj c d)) => f a b c d
     end.
 
-  Definition proj1 {A B:Prop} (p:A/\B): A :=
+  Theorem use8
+          {A B C D E F G H R:Prop}
+          (p:A/\B/\C/\D/\E/\F/\G/\H)
+          (q:A -> B -> C -> D -> E -> F -> G -> H -> R) : R.
+  Proof
+    match p with
+      conj a (conj b (conj c (conj d (conj e (conj f (conj g h)))))) =>
+      q a b c d e f g h
+    end.
+
+  Theorem use9
+          {A B C D E F G H K R:Prop}
+          (p:A/\B/\C/\D/\E/\F/\G/\H/\K)
+          (q:A -> B -> C -> D -> E -> F -> G -> H -> K -> R) : R.
+  Proof
+    match p with
+      conj a (conj b (conj c (conj d (conj e (conj f (conj g (conj h k))))))) =>
+      q a b c d e f g h k
+    end.
+
+  Theorem proj1 {A B:Prop} (p:A/\B): A.
+  Proof
     use p (fun a b => a).
 
-  Definition proj2 {A B:Prop} (p:A/\B): B :=
+  Theorem proj2 {A B:Prop} (p:A/\B): B.
+  Proof
     use p (fun a b => b).
 End And.
 
@@ -125,7 +152,7 @@ End Exist.
 (*    ======== *)
 Module Equal.
   Section equal_basics.
-    Variables A B: Type.
+    Variables A B C: Type.
 
     Theorem use {a b:A} (eq:a=b) (T:A->Type) (pa:T a): T b.
     Proof
@@ -141,6 +168,20 @@ Module Equal.
         eq_refl =>
         match eq2 with
           eq_refl => p
+        end
+      end.
+
+    Theorem use3 {a1 b1:A} {a2 b2:B} {a3 b3:C}
+            (eq1:a1=b1) (eq2:a2=b2) (eq3:a3=b3) (T:A->B->C->Type) (p: T a1 a2 a3)
+      : T b1 b2 b3.
+    Proof
+      match eq1 with
+        eq_refl =>
+        match eq2 with
+          eq_refl =>
+          match eq3 with
+            eq_refl => p
+          end
         end
       end.
 
@@ -491,11 +532,38 @@ Module Sortable_plus (S:SORTABLE).
   Proof
     complete_is_reflexive complete.
 
+
   Module Notations.
     Notation "a <= b"  := (Less_equal a b) (at level 70).
     Notation "( 'transitivity_chain:' x , y , .. , z )" :=
       (transitive .. (transitive x y) .. z) (at level 0).
   End Notations.
+
+  Import Notations.
+
+  Definition max (a b:t): {m:t | a <= m /\ b <= m /\ (m = a \/ m = b)}.
+  Proof.
+    exact(
+        match compare2 a b with
+        | less_equal le =>
+          exist _ b (And.make3 le (reflexive b) (or_intror eq_refl))
+        | greater_equal ge =>
+          exist _ a (And.make3 (reflexive a) ge (or_introl eq_refl))
+        end
+      ).
+  Defined.
+
+  Definition min (a b:t): {m:t | m <= a /\ m <= b /\ (m = a \/ m = b)}.
+  Proof.
+    exact(
+        match compare2 a b with
+        | less_equal le =>
+          exist _ a (And.make3 (reflexive a) le (or_introl eq_refl))
+        | greater_equal ge =>
+          exist _ b (And.make3 ge (reflexive b) (or_intror eq_refl))
+        end
+      ).
+  Defined.
 End Sortable_plus.
 
 
