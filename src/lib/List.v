@@ -112,58 +112,66 @@ Section fast_app_rev.
   (** This section defines functions for efficient list reversal and list
   append. The functions are tail recursive and perform in linear time. *)
 
-  Fact reverse_append (xs ys:list A): {b:list A | b = rev xs ++ ys}.
-  Proof
-    (fix f a b: rev a ++ b = rev xs ++ ys ->
-                {b | b = rev xs ++ ys} :=
-       match a with
-       | [] =>
-         fun inv =>
-           exist
-             _ b
-             inv
-       | x :: tl =>
-         fun inv =>
-           f tl (x::b)
-             (equality_chain:
-                (Equal.flip (app_associative (rev tl) [x] b)
-                 : rev tl ++ x :: b  =  (rev tl ++ [x]) ++ b),
-                (eq_refl: _ = rev (x :: tl) ++ b),
-                (inv: _ = rev xs ++ ys))
-       end
-    ) xs ys eq_refl.
+  Definition reverse_append (xs ys:list A): {b:list A | b = rev xs ++ ys}.
+  Proof.
+    exact(
+      (fix f a b: rev a ++ b = rev xs ++ ys ->
+                  {b | b = rev xs ++ ys} :=
+         match a with
+         | [] =>
+           fun inv =>
+             exist
+               _ b
+               inv
+         | x :: tl =>
+           fun inv =>
+             f tl (x::b)
+               (equality_chain:
+                  (Equal.flip (app_associative (rev tl) [x] b)
+                   : rev tl ++ x :: b  =  (rev tl ++ [x]) ++ b),
+                  (eq_refl: _ = rev (x :: tl) ++ b),
+                  (inv: _ = rev xs ++ ys))
+         end
+      ) xs ys eq_refl
+    ).
+  Defined.
 
-  Fact reverse (a:list A):  {b:list A | b = rev a}.
-  Proof
-    match reverse_append a [] with
-    | exist _ b eq =>
-      exist _ b
-            (Equal.join eq (app_nil_right_neutral _))
-    end.
 
-  Fact append (a b:list A): {c:list A | c = a ++ b}.
-  Proof
-    match (reverse a) with
-    | exist _ ra pa =>
-      match reverse_append ra b with
-      | exist _ c pc =>
-        exist
-          _ c
-          ((equality_chain:
-              (pc: c = rev ra ++ b),
-              (Equal.use
-                 pa
-                 (fun x => _ = rev x ++ b)
-                 eq_refl
-               : _ = rev (rev a) ++ b),
-              (
-                Equal.use_bwd
-                  (rev_involutive a)
-                  (fun x => x ++ b = a ++ b)
-                  eq_refl
-               : _ = a ++ b)
-           )
-           : c = a ++ b)
-      end
-    end.
+  Definition reverse (a:list A):  {b:list A | b = rev a}.
+  Proof.
+    exact(
+        match reverse_append a [] with
+        | exist _ b eq =>
+          exist _ b
+                (Equal.join eq (app_nil_right_neutral _))
+        end).
+  Defined.
+
+  Definition append (a b:list A): {c:list A | c = a ++ b}.
+  Proof.
+    exact(
+        match (reverse a) with
+        | exist _ ra pa =>
+          match reverse_append ra b with
+          | exist _ c pc =>
+            exist
+              _ c
+              ((equality_chain:
+                  (pc: c = rev ra ++ b),
+                  (Equal.use
+                     pa
+                     (fun x => _ = rev x ++ b)
+                     eq_refl
+                   : _ = rev (rev a) ++ b),
+                  (
+                    Equal.use_bwd
+                      (rev_involutive a)
+                      (fun x => x ++ b = a ++ b)
+                      eq_refl
+                    : _ = a ++ b)
+               )
+               : c = a ++ b)
+          end
+        end).
+  Defined.
 End fast_app_rev.
