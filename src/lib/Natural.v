@@ -45,6 +45,16 @@ Section nat_basics.
          result. *)
       Equal.rewrite0 p is_Successor I.
 
+  Theorem successor_equal_zero {A:Prop}:
+    forall (n:nat), S n = 0 -> A.
+  Proof
+    fun n eq => ex_falso (successor_not_zero eq).
+
+  Theorem zero_equal_successor {A:Prop}:
+    forall (n:nat), 0 = S n -> A.
+  Proof
+    fun n eq => successor_equal_zero (Equal.flip eq).
+
 
   Theorem pred_correct:
     forall (n:nat),
