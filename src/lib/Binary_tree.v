@@ -1,4 +1,5 @@
 Require Import Core.
+Require List.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Import Equal.Notations.
@@ -26,6 +27,353 @@ Module Make (ElementM:ANY) (ExtraM:ANY).
     | perm_transitive:
         forall a b c,  Permutation a b -> Permutation b c -> Permutation a c.
   End List.
+
+
+  (*====================================*)
+  (** * Tree                            *)
+  (*====================================*)
+  Module Tree.
+    Inductive t: Type :=
+    | Leaf: t
+    | Node: E.t -> t -> A.t -> t -> t.
+
+    Definition is_Node (a:t): Prop :=
+      match a with
+      | Leaf => False
+      | Node _ _ _ _ => True
+      end.
+
+    Definition is_Leaf (a:t): Prop :=
+      match a with
+      | Leaf => True
+      | Node _ _ _ _ => False
+      end.
+
+    Definition extra (a:t): is_Node a -> E.t :=
+      match a with
+      | Leaf =>
+        fun nd => ex_falso nd
+      | Node e _ _ _ =>
+        fun _ => e
+      end.
+
+    Definition change_extra (e:E.t) (a:t): t :=
+      match a with
+      | Leaf => Leaf
+      | Node _ t1 x t2 => Node e t1 x t2
+      end.
+
+    Theorem node_equal_leaf
+            {A:Type} {e:E.t} {x:A.t} {u v:t}
+            (eq:Node e u x v = Leaf): A.
+    Proof
+      ex_falso (Equal.use eq is_Node I).
+
+    Theorem leaf_equal_node
+            {A:Type} {e:E.t} {x:A.t} {u v:t}
+            (eq:Leaf = Node e u x v): A.
+    Proof
+      node_equal_leaf (Equal.flip eq).
+
+  Theorem use_node_equal:
+    forall {A:Prop} (e1 e2:E.t) (x1 x2:A.t) (t1 t2 u1 u2:t),
+      Node e1 t1 x1 u1 = Node e2 t2 x2 u2 ->
+      (e1=e2 -> x1=x2 -> t1=t2 -> u1=u2 -> A)
+      -> A.
+  Proof
+    fun A e1 e2 x1 x2 t1 t2 u1 u2 eq P =>
+      let extra t :=
+          match t with
+          | Leaf => e1
+          | Node e _ _ _  => e
+          end in
+      let elem t :=
+          match t with
+          | Leaf => x1
+          | Node c t x u => x
+          end in
+      let left t :=
+          match t with
+          | Leaf => t1
+          | Node c t x u => t
+          end in
+      let right t :=
+          match t with
+          | Leaf => t2
+          | Node c t x u => u
+          end in
+      P (Equal.inject eq extra)
+        (Equal.inject eq elem)
+        (Equal.inject eq left)
+        (Equal.inject eq right).
+  End Tree.
+
+
+  (*====================================*)
+  (** * Inorder Sequence                *)
+  (*====================================*)
+  Module Inorder.
+    Inductive R: Tree.t -> list A.t -> Prop :=
+    | leaf: R Tree.Leaf []
+    | node:
+        forall c t1 l1 x t2 l2,
+          R t1 l1 ->
+          R t2 l2 ->
+          R (Tree.Node c t1 x t2) (l1 ++ x :: l2).
+
+    Fixpoint make (t:Tree.t): list A.t :=
+      match t with
+      | Tree.Leaf => []
+      | Tree.Node c t x u => make t ++ x :: (make u)
+      end.
+
+    Theorem of_list:
+      forall (t:Tree.t) (l:list A.t),
+        l = make t ->
+        R t l.
+    Proof
+      fix f t :=
+      match t with
+      | Tree.Leaf =>
+        fun l (eq: l = make Tree.Leaf) =>
+          let p := leaf in
+          Equal.use
+            (Equal.flip eq)
+            (fun l => R Tree.Leaf l)
+            leaf
+      | Tree.Node c u x v =>
+        fun l (eq: l = make (Tree.Node c u x v)) =>
+          Equal.use
+            (Equal.flip eq)
+            (fun l => R _ l)
+            (node c x (f u (make u) eq_refl) (f v (make v) eq_refl))
+      end.
+
+
+    Theorem to_list:
+      forall (t:Tree.t) (l:list A.t),
+        R t l ->
+        l = make t.
+    Proof
+      fix f t l r {struct r}:=
+      match r with
+      | leaf =>
+        eq_refl: [] = make Tree.Leaf
+      | node c x r1 r2 =>
+        Equal.use2
+           (Equal.flip (f _ _ r1) : make _ = _)
+           (Equal.flip (f _ _ r2) : make _ = _)
+           (fun a b => a ++ x :: b = _)
+           eq_refl
+        : _ ++ x :: _ = make (Tree.Node c _ x _)
+      end.
+
+
+    Theorem make_correct (t:Tree.t): R t (make t).
+    Proof
+      (fix f t :=
+      match t with
+      | Tree.Leaf => leaf:R Tree.Leaf (make Tree.Leaf)
+      | Tree.Node c t x u =>
+        node c x (f t) (f u) : R _ (make (Tree.Node c t x u))
+      end) t.
+
+    Theorem unique:
+      forall (t:Tree.t) (a b:list A.t),
+        R t a ->
+        R t b ->
+        a = b.
+    Proof
+      fun t a b r1 r2 =>
+        let p := to_list r1 in
+        Equal.join (to_list r1) (Equal.flip (to_list r2)).
+  End Inorder.
+
+
+
+
+  (*====================================*)
+  (** * Rotations                       *)
+  (*====================================*)
+  Module Rotation.
+    Inductive R: Tree.t -> Tree.t -> Prop :=
+    | leaf:
+        R Tree.Leaf Tree.Leaf
+    | left:
+        forall c1 c2 c3 c4 a x b y c,
+          R (Tree.Node c1 a x (Tree.Node c2 b y c))
+            (Tree.Node c3 (Tree.Node c4 a x b) y c)
+    | right:
+        forall c1 c2 c3 c4 a x b y c,
+          R (Tree.Node c1 (Tree.Node c2 a x b) y c)
+            (Tree.Node c3 a x (Tree.Node c4 b y c))
+    | node:
+        forall c1 c2 x t11 t12 t21 t22,
+          R t11 t12 ->
+          R t21 t22 ->
+          R (Tree.Node c1 t11 x t21) (Tree.Node c2 t12 x t22)
+    | transitive:
+        forall t1 t2 t3,
+          R t1 t2 -> R t2 t3 -> R t1 t3.
+
+  Theorem reflexive:
+    forall (t:Tree.t), R t t.
+  Proof
+    fix f t :=
+    match t with
+    | Tree.Leaf => leaf
+    | Tree.Node c t1 x t2 =>
+      let r1 := f t1 in
+      let r2 := f t2 in
+      node c c x r1 r2
+    end.
+
+  Theorem to_node:
+    forall (u v:Tree.t),
+      R u v ->
+      Tree.is_Node u ->
+      Tree.is_Node v.
+  Proof
+    fix f u v rot :=
+    match rot with
+    | leaf =>
+    fun nd => ex_falso nd
+    | left c1 c2 c3 c4 a x b y c =>
+      fun nd => I
+    | right c1 c2 c3 c4 a x b y c =>
+      fun nd => I
+    | node  c1 c2 x rt ru =>
+      fun nd => I
+    | transitive ruv rvw =>
+      fun ndu => f _ _ rvw (f _ _ ruv ndu)
+    end.
+
+
+  Theorem symmetric:
+    forall (u v:Tree.t),
+      R u v ->
+      R v u.
+  Proof
+    fix f u v rot :=
+    match rot with
+    | leaf =>
+      leaf
+    | left c1 c2 c3 c4 a x b y c =>
+      right c3 c4 c1 c2 a x b y c
+    | right c1 c2 c3 c4 a x b y c =>
+      left c3 c4 c1 c2 a x b y c
+    | node c1 c2 x rt ru =>
+      node c2 c1 x (f _ _ rt) (f _ _ ru)
+    | transitive ruv rvw =>
+      transitive (f _ _ rvw) (f _ _ ruv)
+    end.
+
+
+  Theorem ignore_extra:
+    forall (e:E.t) (u v:Tree.t),
+      R u v ->
+      R u (Tree.change_extra e v).
+  Proof
+    fix f cnew u v rot :=
+    match rot with
+    | leaf => leaf
+    | left c1 c2 c3 c4 a x b y c =>
+      left c1 c2 cnew c4 a x b y c
+    | right c1 c2 c3 c4 a x b y c =>
+      right c1 c2 cnew c4 a x b y c
+    | node c1 c2 x r1 r2 =>
+      node c1 cnew x r1 r2
+    | transitive r12 r23 =>
+      transitive r12 (f _ _ _ r23)
+    end.
+
+  Theorem ignore_extra1:
+    forall (e:E.t) (u v w:Tree.t),
+      R u v ->
+      w = Tree.change_extra e v ->
+      R u w.
+  Proof
+    fun e u v w rot eq =>
+      Equal.use_bwd eq _ (ignore_extra e rot).
+
+
+
+
+
+  (** Rotations keep the inorder sequence. The proof recurses over all
+  constructors of a rotation.
+
+  The left and right rotation use the associativity of list append.
+
+  The node construction uses the fact that rotations of the sons keep their
+  inorder sequence. Using this we can transform an inorder sequence of the
+  node before the rotation into the same inorder sequence of the node after
+  rotation.
+
+  Transitivity is a simple application of two rotations keeping the inorder
+  sequence.*)
+  Theorem keep_inorder:
+    forall (t u:Tree.t),
+      R t u ->
+      forall l,
+        Inorder.R t l ->
+        Inorder.R u l.
+  Proof
+    fix f t u rot:=
+    match rot with
+    | leaf =>
+      fun l ord => ord
+    | @left c1 c2 c3 c4 a x b y c =>
+      fun l inord =>
+        let t := Tree.Node c1 a x (Tree.Node c2 b y c) in
+        let u := Tree.Node c3 (Tree.Node c4 a x b) y c in
+        let eq: l = Inorder.make u :=
+            Equal.join
+               (Inorder.to_list inord
+                : l = _ ++ x :: _ ++ y :: _)
+               (Equal.flip (List.app_associative _ (x::_) (y::_))
+                : _ = (_ ++ x :: _) ++ y :: _)
+        in
+        Inorder.of_list u eq
+        : Inorder.R u l
+    | @right c1 c2 c3 c4 a x b y c =>
+      fun l inord =>
+        let t := Tree.Node c1 (Tree.Node c2 a x b) y c in
+        let u := Tree.Node c3 a x (Tree.Node c4 b y c) in
+        let eq : l = Inorder.make u :=
+            Equal.join
+               (Inorder.to_list inord: l = (_ ++ x :: _) ++ y :: _)
+               (List.app_associative _ (x::_) (y::_)
+                : _ = _ ++ x :: _ ++ y :: _)
+        in
+        Inorder.of_list u eq: Inorder.R u l
+    | @node c1 c2 x t1 t2 u1 u2 rt ru =>
+      fun l ord =>
+        let t := Tree.Node c1 t1 x u1 in
+        let u := Tree.Node c2 t2 x u2 in
+        let eq: l = Inorder.make u :=
+            (equality_chain:
+               (Inorder.to_list ord
+                : l = Inorder.make t1 ++ x :: Inorder.make u1),
+               (
+                Equal.use2
+                  (Inorder.to_list (f _ _ rt _ (Inorder.make_correct t1))
+                   : Inorder.make t1 = Inorder.make t2)
+                  (Inorder.to_list (f _ _ ru _ (Inorder.make_correct u1))
+                   : Inorder.make u1 = Inorder.make u2)
+                  (fun a b => _ = a ++ x :: b)
+                  eq_refl
+                : _ = Inorder.make t2 ++ x :: Inorder.make u2)
+            )
+        in
+        Inorder.of_list u eq : Inorder.R u l
+    | @transitive u v w ruv rvw =>
+      fun l ord_ul =>
+        f v w rvw l (f u v ruv  l ord_ul)
+    end.
+  End Rotation.
+
+
 
 
 
