@@ -3,7 +3,7 @@
 compile:
 	make -f CoqMakefile
 
-html:
+html: compile
 	make -f CoqMakefile  \
         COQFLAGS?='-w none' \
 	COQDOCFLAGS?='-g -interpolate -utf8 --no-index' \
