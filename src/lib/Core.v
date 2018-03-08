@@ -206,6 +206,13 @@ Module Equal.
       | eq_refl => eq_refl
       end.
 
+    Theorem inject2 {a1 a2:A} {b1 b2:B}
+            (pa:a1=a2) (pb:b1=b2) (f:A->B->C): f a1 b1 = f a2 b2.
+    Proof
+      match pa in (_ = x), pb in (_ = y) return f a1 b1 = f x y with
+        eq_refl, eq_refl => eq_refl
+      end.
+
 
     Theorem
       flip {a b:A} (p:a=b): b=a.
