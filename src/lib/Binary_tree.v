@@ -6,10 +6,9 @@ Import Equal.Notations.
 
 Set Implicit Arguments.
 
-Module Make (ElementM:ANY) (ExtraM:ANY).
-
-  Module A := ElementM.
-  Module E := ExtraM.
+Module Make
+       (A:ANY)  (* Elements *)
+       (E:ANY). (* Extra Info *)
 
 
 (** * List *)

@@ -63,7 +63,9 @@ Module Make (S0:SORTABLE).
 (** * Use Module 'Binary_search_tree' *)
 (*====================================*)
 
-  Include (Binary_search_tree.Make S0 B).
+  Module BST := Binary_search_tree.Make S0 B.
+  Import BST.BT.
+  Import BST.
 
 
 (*====================================*)
@@ -101,7 +103,7 @@ Module Make (S0:SORTABLE).
         end.
 
     Theorem not_leaning_balanced:
-      forall (a:A.t) (t1 t2:tree),
+      forall (a:S.t) (t1 t2:tree),
         ~ Leaning (Node B.Balanced t1 a t2).
     Proof
       fun a t1 t2 leaning =>
@@ -235,7 +237,7 @@ Module Make (S0:SORTABLE).
 
 
     Theorem left_leaning_sons_height:
-      forall (h:nat) (a:A.t) (t1 t2:tree),
+      forall (h:nat) (a:S.t) (t1 t2:tree),
         Avl_height (Node B.Left t1 a t2) (2+h) ->
         Avl_height t1 (1+h) /\ Avl_height t2 h.
     Proof
@@ -284,7 +286,7 @@ Module Make (S0:SORTABLE).
          end) eq_refl eq_refl.
 
     Theorem right_leaning_sons_height:
-      forall (h:nat) (a:A.t) (t1 t2:tree),
+      forall (h:nat) (a:S.t) (t1 t2:tree),
         Avl_height (Node B.Right t1 a t2) (2+h) ->
         Avl_height t1 h /\ Avl_height t2 (1+h).
     Proof
@@ -334,7 +336,7 @@ Module Make (S0:SORTABLE).
          end) eq_refl eq_refl.
 
     Theorem balanced_sons_height:
-      forall (h:nat) (a:A.t) (t1 t2:tree),
+      forall (h:nat) (a:S.t) (t1 t2:tree),
         Avl_height (Node B.Balanced t1 a t2) (1+h) ->
         Avl_height t1 h /\ Avl_height t2 h.
     Proof
@@ -383,7 +385,7 @@ Module Make (S0:SORTABLE).
          end) eq_refl eq_refl.
 
     Theorem left_leaning_height:
-      forall (h:nat) (a:A.t) (t1 t2:tree),
+      forall (h:nat) (a:S.t) (t1 t2:tree),
         Avl_height (Node B.Left t1 a t2) (1 + h) ->
         Nat.is_Successor h.
     Proof
@@ -414,7 +416,7 @@ Module Make (S0:SORTABLE).
          end) eq_refl eq_refl.
 
     Theorem right_leaning_height:
-      forall (h:nat) (a:A.t) (t1 t2:tree),
+      forall (h:nat) (a:S.t) (t1 t2:tree),
         Avl_height (Node B.Right t1 a t2) (1 + h) ->
         Nat.is_Successor h.
     Proof
@@ -458,7 +460,7 @@ Module Make (S0:SORTABLE).
       Avl_height t2 h ->
       Either.t {u:tree| Avl_height u (2 + h)} {u:tree| Avl_height u (3 + h)}.
 
-    Definition rebalance_left (c:A.t) (t1 t2:tree): Rebalance_left_result t1 t2 :=
+    Definition rebalance_left (c:S.t) (t1 t2:tree): Rebalance_left_result t1 t2 :=
       let h := height t2 in
       match t1 with
       | Empty =>
@@ -619,13 +621,13 @@ Module Make (S0:SORTABLE).
 *)
 
   Section insertion.
-    Definition Put_result (x:A.t) (u:tree): Type :=
+    Definition Put_result (x:S.t) (u:tree): Type :=
       let h := height u in
       Avl_height u h ->
       Either.t {v:tree | Avl_height v h} {v:tree | Avl_height v (1+h)}.
 
 
-    (*Fixpoint put_generic (x:A.t) (t_:tree): Put_result x t_ :=
+    (*Fixpoint put_generic (x:S.t) (t_:tree): Put_result x t_ :=
       let h := height t_ in
       match t_ with
       | Empty =>
