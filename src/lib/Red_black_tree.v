@@ -438,7 +438,7 @@ Module Make (S0:SORTABLE).
           fun rbu f =>
             Red_black.use_left_red
               (Red_black.pull_color rbt_0) rbu
-              (fun cv rbu rbv rbt =>
+              (fun h cv rbu rbv rbt =>
                  let st := Sorted.change_extra Color.Black st in
                  Sorted.use_node
                    st
