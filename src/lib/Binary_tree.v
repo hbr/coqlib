@@ -268,7 +268,7 @@ Module Make
     end.
 
 
-  Theorem ignore_extra:
+  Theorem change_extra:
     forall (e:E.t) (u v:Tree.t),
       R u v ->
       R u (Tree.change_extra e v).
@@ -286,14 +286,14 @@ Module Make
       transitive r12 (f _ _ _ r23)
     end.
 
-  Theorem ignore_extra1:
+  Theorem change_extra1:
     forall (e:E.t) (u v w:Tree.t),
       R u v ->
       w = Tree.change_extra e v ->
       R u w.
   Proof
     fun e u v w rot eq =>
-      Equal.use_bwd eq _ (ignore_extra e rot).
+      Equal.use_bwd eq _ (change_extra e rot).
 
 
 
