@@ -390,24 +390,33 @@ Module Relation.
         end.
 
     Inductive Comparison2 (a b:A): Set :=
-    | less_equal:    R a b -> Comparison2 a b
-    | greater_equal: R b a -> Comparison2 a b.
+    | LE:  R a b -> Comparison2 a b
+    | GE:  R b a -> Comparison2 a b.
 
     Inductive Comparison3 (a b:A): Set :=
-    | less_than: R a b -> Comparison3 a b
-    | equivalent: R a b -> R b a  -> Comparison3 a b
-    | greater_than: R b a -> Comparison3 a b.
+    | LT:  R a b -> Comparison3 a b
+    | EQV: R a b -> R b a  -> Comparison3 a b
+    | GT:  R b a -> Comparison3 a b.
 
-    Definition Comparer2: Type := forall a b:A, Comparison2 a b.
-    Definition Comparer3: Type := forall a b:A, Comparison3 a b.
+    Inductive Comparison3_strict (a b:A): Set :=
+    | LT_strict:  R a b -> ~ R b a -> Comparison3_strict a b
+    | EQV_strict: R a b -> R b a   -> Comparison3_strict a b
+    | GT_strict:  R b a -> ~ R a b -> Comparison3_strict a b.
+
+    Definition Comparer2: Type :=
+      forall a b:A, Comparison2 a b.
+    Definition Comparer3: Type :=
+      forall a b:A, Comparison3 a b.
+    Definition Comparer3_strict: Type :=
+      forall a b:A, Comparison3_strict a b.
 
     Theorem comparable2_is_complete:
       forall (c:Comparer2), Complete.
     Proof
       fun c a b =>
         match c a b with
-        | less_equal    p => or_introl p
-        | greater_equal p => or_intror p
+        | LE p => or_introl p
+        | GE p => or_intror p
         end.
 
     Theorem comparable3_is_complete:
@@ -415,17 +424,20 @@ Module Relation.
     Proof
       fun c a b =>
         match c a b with
-        | less_than p => or_introl p
-        | equivalent p1 p2 => or_introl p1
-        | greater_than p => or_intror p
+        | LT  p => or_introl p
+        | EQV p1 p2 => or_introl p1
+        | GT  p => or_intror p
         end.
   End endorelation.
 
-  Arguments less_than    [_] [_] [_] [_] _.
-  Arguments equivalent   [_] [_] [_] [_] _ _.
-  Arguments greater_than [_] [_] [_] [_] _.
-  Arguments less_equal    [_ _ _ _]  _.
-  Arguments greater_equal [_ _ _ _]  _.
+  Arguments LT    [_] [_] [_] [_] _.
+  Arguments EQV   [_] [_] [_] [_] _ _.
+  Arguments GT    [_] [_] [_] [_] _.
+  Arguments LT_strict    [_] [_] [_] [_] _.
+  Arguments EQV_strict   [_] [_] [_] [_] _ _.
+  Arguments GT_strict    [_] [_] [_] [_] _.
+  Arguments LE    [_ _ _ _]  _.
+  Arguments GE    [_ _ _ _]  _.
 
   Section well_founded_relation.
     Variable A:Type.
@@ -507,7 +519,7 @@ End Tristate.
 (** * Any Type *)
 (*    ======== *)
 Module Type ANY.
-  Parameter t: Set.
+  Parameter t: Type.
 End ANY.
 
 
@@ -523,6 +535,7 @@ Module Type SORTABLE <: ANY.
 
   Parameter compare2: Comparer2 Less_equal.
   Parameter compare3: Comparer3 Less_equal.
+  Parameter compare3_strict: Comparer3_strict Less_equal.
 End SORTABLE.
 
 Module Sortable_plus (S:SORTABLE).
@@ -552,9 +565,9 @@ Module Sortable_plus (S:SORTABLE).
   Proof.
     exact(
         match compare2 a b with
-        | less_equal le =>
+        | LE le =>
           exist _ b (And.make3 le (reflexive b) (or_intror eq_refl))
-        | greater_equal ge =>
+        | GE ge =>
           exist _ a (And.make3 (reflexive a) ge (or_introl eq_refl))
         end
       ).
@@ -564,9 +577,9 @@ Module Sortable_plus (S:SORTABLE).
   Proof.
     exact(
         match compare2 a b with
-        | less_equal le =>
+        | LE le =>
           exist _ a (And.make3 (reflexive a) le (or_introl eq_refl))
-        | greater_equal ge =>
+        | GE ge =>
           exist _ b (And.make3 ge (reflexive b) (or_intror eq_refl))
         end
       ).

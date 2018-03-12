@@ -14,7 +14,7 @@ Module Make
 (** * List *)
 (*    ==== *)
   Module List.
-    Definition L: Set := list A.t.
+    Definition L: Type := list A.t.
 
     Inductive Permutation: L -> L -> Prop :=
     | perm_empty:
@@ -380,7 +380,7 @@ Module Make
   (** * Basic Definitions               *)
   (*====================================*)
   Section basic_definitions.
-    Inductive tree: Set :=
+    Inductive tree: Type :=
     | Empty: tree
     | Node:  E.t -> tree -> A.t ->  tree -> tree.
 

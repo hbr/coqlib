@@ -1123,7 +1123,7 @@ Module Make (S0:SORTABLE).
 
     (** An intermediate insert result is either a red red violation or a valid
     red tree or a valid black tree.*)
-    Inductive result0 (e:S.t) (t:Tree.t): Set :=
+    Inductive result0 (e:S.t) (t:Tree.t): Type :=
     | Red_red:
         forall a x b y c,
           Red_red.R e t a x b y c ->
@@ -1155,7 +1155,7 @@ Module Make (S0:SORTABLE).
 
               match S.compare3 e yn with
 
-              | Relation.less_than e_yn =>
+              | Relation.LT e_yn =>
 
                 fun rbs =>
                   (match insert0 t1 (Red_black_sorted.left_son rbs), cn with
@@ -1180,7 +1180,7 @@ Module Make (S0:SORTABLE).
                      fun rbs => Red (red_of_left_black rbs e_yn black)
                   end) rbs
 
-              | Relation.equivalent e_yn yn_e =>
+              | Relation.EQV e_yn yn_e =>
 
                 match cn with
 
@@ -1214,7 +1214,7 @@ Module Make (S0:SORTABLE).
                     Black black
                 end
 
-              | Relation.greater_than yn_e =>
+              | Relation.GT yn_e =>
 
                 fun rbs =>
                   (match insert0 t2 (Red_black_sorted.right_son rbs), cn with
