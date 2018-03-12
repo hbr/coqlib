@@ -7,4 +7,5 @@ lib/String_.v
 lib/Console_program.v
 lib/Binary_tree.v
 lib/Binary_search_tree.v
+lib/Red_black_tree.v
 lib/Avl_tree.v
