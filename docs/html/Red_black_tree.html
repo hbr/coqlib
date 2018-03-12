@@ -1,0 +1,862 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Red_black_tree</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Red_black_tree</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Core</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="var">Natural</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="var">List</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="var">Binary_search_tree</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">List.Notations</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">Equal.Notations</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Set Implicit Arguments</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="var">Make</span> (<span class="id" title="var">S0</span>:<span class="id" title="var">SORTABLE</span>).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">S</span> := <span class="id" title="var">Sortable_plus</span> <span class="id" title="var">S0</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Import</span> <span class="id" title="var">S.Notations</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab32"></a><h1 class="section">Node Colors</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Color</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">t0</span>: <span class="id" title="keyword">Set</span> := <span class="id" title="var">Red</span> | <span class="id" title="var">Black</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">t</span> := <span class="id" title="var">t0</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">is_Red</span> (<span class="id" title="var">c</span>:<span class="id" title="var">t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">c</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Red</span> ⇒ <span class="id" title="var">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Black</span> ⇒ <span class="id" title="var">False</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">is_Black</span> (<span class="id" title="var">c</span>:<span class="id" title="var">t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">c</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Red</span> ⇒ <span class="id" title="var">False</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Black</span> ⇒ <span class="id" title="var">True</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">red_equal_black</span> {<span class="id" title="var">A</span>:<span class="id" title="keyword">Type</span>} (<span class="id" title="var">eq</span>:<span class="id" title="var">Red</span>=<span class="id" title="var">Black</span>): <span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">black_equal_red</span> {<span class="id" title="var">A</span>:<span class="id" title="keyword">Type</span>} (<span class="id" title="var">eq</span>:<span class="id" title="var">Black</span>=<span class="id" title="var">Red</span>): <span class="id" title="var">A</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Color</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab33"></a><h1 class="section">Use Binary_search_tree</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">BST</span> := <span class="id" title="var">Binary_search_tree.Make</span> <span class="id" title="var">S</span> <span class="id" title="var">Color</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Import</span> <span class="id" title="var">BST</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Import</span> <span class="id" title="var">BST.BT</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">color</span> (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="var">Color.t</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Tree.Leaf</span> ⇒ <span class="id" title="var">Color.Black</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">c</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab34"></a><h1 class="section">Red Black Invariant</h1>
+
+</div>
+<div class="code">
+</div>
+
+<div class="doc">
+A valid red black tree must satisfy the following two invariants:
+
+<div class="paragraph"> </div>
+
+<ul class="doclist">
+<li> A red node has only black sons (an empty tree is considered as black).
+
+<div class="paragraph"> </div>
+
+
+</li>
+<li> The number of black nodes of any path from the root to a leaf must be
+        equal.
+
+</li>
+</ul>
+   
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Red_black</span>.<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="inductive">R</span></span> <span class="inlinecode"><span class="id" title="variable">h</span></span> <span class="inlinecode"><span class="id" title="variable">c</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> means that <span class="inlinecode"><span class="id" title="definition">t</span></span> is a valid red black tree with black height
+    <span class="inlinecode"><span class="id" title="variable">h</span></span> and color <span class="inlinecode"><span class="id" title="variable">c</span></span>. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">R</span>: <span class="id" title="var">nat</span> → <span class="id" title="var">Color.t</span> → <span class="id" title="var">Tree.t</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">leaf</span>: <span class="id" title="var">R</span> 0 <span class="id" title="var">Color.Black</span> <span class="id" title="var">Tree.Leaf</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="tactic">red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> <span class="id" title="var">t2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t2</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">black</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">c1</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> <span class="id" title="var">c2</span> <span class="id" title="var">t2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c1</span> <span class="id" title="var">t1</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c2</span> <span class="id" title="var">t2</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">Color.Black</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> <span class="id" title="var">t2</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="inductive">P</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> means that <span class="inlinecode"><span class="id" title="definition">t</span></span> is a valid red black tree. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">P</span> (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">make</span>: <span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span>, <span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span> → <span class="id" title="var">P</span> <span class="id" title="var">t</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">color_correct</span> {<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>} {<span class="id" title="var">c</span>:<span class="id" title="var">Color.t</span>} {<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>} (<span class="id" title="var">rb</span>:<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span class="id" title="var">c</span> = <span class="id" title="var">color</span> <span class="id" title="var">t</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">color_unique</span> {<span class="id" title="var">h1</span> <span class="id" title="var">h2</span>:<span class="id" title="var">nat</span>} {<span class="id" title="var">c1</span> <span class="id" title="var">c2</span>:<span class="id" title="var">Color.t</span>} {<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">rb1</span>:<span class="id" title="var">R</span> <span class="id" title="var">h1</span> <span class="id" title="var">c1</span> <span class="id" title="var">t</span>) (<span class="id" title="var">rb2</span>:<span class="id" title="var">R</span> <span class="id" title="var">h2</span> <span class="id" title="var">c2</span> <span class="id" title="var">t</span>): <span class="id" title="var">c1</span> = <span class="id" title="var">c2</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">pull_color</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">c1</span> <span class="id" title="var">c2</span>:<span class="id" title="var">Color.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c1</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c2</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">black_height</span> (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="var">nat</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Tree.Leaf</span> ⇒ 0<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> ⇒ <span class="id" title="var">S</span> (<span class="id" title="var">black_height</span> <span class="id" title="var">t1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span>  ⇒ <span class="id" title="var">black_height</span> <span class="id" title="var">t1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">black_height_correct</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">c</span>:<span class="id" title="var">Color.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">h</span> = <span class="id" title="var">black_height</span> <span class="id" title="var">t</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">black_height_unique</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h1</span> <span class="id" title="var">h2</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">c1</span> <span class="id" title="var">c2</span>:<span class="id" title="var">Color.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h1</span> <span class="id" title="var">c1</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h2</span> <span class="id" title="var">c2</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">h1</span> = <span class="id" title="var">h2</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_red_node0</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">h</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t</span> = <span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_black_node0</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">h</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t</span> = <span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">cv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">Color.Black</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_red_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">h</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_black_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">h</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">cv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">Color.Black</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_left_red0</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">h</span> <span class="id" title="var">h0</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t</span> = <span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h0</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">c</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_right_red0</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">h</span> <span class="id" title="var">h0</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t</span> = <span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h0</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">c</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_left_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">h</span> <span class="id" title="var">h0</span> <span class="id" title="var">c1</span> <span class="id" title="var">c2</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c1</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h0</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">c2</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_right_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">h</span> <span class="id" title="var">h0</span> <span class="id" title="var">c1</span> <span class="id" title="var">c2</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">c1</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h0</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">c2</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Red_black</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab35"></a><h1 class="section">Sorted Red Black Trees</h1>
+
+</div>
+<div class="code">
+
+<br/>
+</div>
+
+<div class="doc">
+A sorted red black tree is a tree which is sorted as defined in the
+  module <span class="inlinecode"><span class="id" title="library">Binary_search_tree</span></span> and satisfies the red black invariant. 
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Red_black_sorted</span>.<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="inductive">P</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> means that <span class="inlinecode"><span class="id" title="definition">t</span></span> is a sorted red black tree. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">P</span> (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">make</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> <span class="id" title="var">t</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_black_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>: <span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">cv</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">Color.Black</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">lo</span> ≤ <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">x</span> ≤ <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">x</span>  <span class="id" title="var">v</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_red_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>: <span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">lo</span> ≤ <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">x</span> ≤ <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">h0</span> <span class="id" title="var">cu</span> <span class="id" title="var">cv</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h0</span> <span class="id" title="var">cu</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h0</span> <span class="id" title="var">cv</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">lo</span> ≤ <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">x</span> ≤ <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_node1</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">c</span>:<span class="id" title="var">Color.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">P</span> <span class="id" title="var">u</span> → <span class="id" title="var">P</span> <span class="id" title="var">v</span> → <span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">left_son</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">c</span>:<span class="id" title="var">Color.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) → <span class="id" title="var">P</span> <span class="id" title="var">u</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">right_son</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">c</span>:<span class="id" title="var">Color.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) → <span class="id" title="var">P</span> <span class="id" title="var">v</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_left_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">c</span>:<span class="id" title="var">Color.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>: <span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">cv</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">c</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">lo</span> ≤ <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">x</span> ≤ <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_right_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">c</span>:<span class="id" title="var">Color.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>: <span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">cu</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">c</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">lo</span> ≤ <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">x</span> ≤ <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Red_black_sorted</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab36"></a><h1 class="section">Insertion into a Sorted Red Black Tree</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Insertion</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Red_black_inserted</span>.<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="inductive">R</span></span> <span class="inlinecode"><span class="id" title="variable">e</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> <span class="inlinecode"><span class="id" title="variable">u</span></span> means that the element <span class="inlinecode"><span class="id" title="variable">e</span></span> has been inserted into the tree
+      <span class="inlinecode"><span class="id" title="definition">t</span></span> resulting in the red black tree <span class="inlinecode"><span class="id" title="variable">u</span></span>. Note that both <span class="inlinecode"><span class="id" title="definition">t</span></span> and <span class="inlinecode"><span class="id" title="variable">u</span></span> must
+      be sorted because of the definition of the <span class="inlinecode"><span class="id" title="var">Inserted.R</span></span> relation of the
+      module <span class="inlinecode"><span class="id" title="library">Binary_search_tree</span></span>. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">R</span> (<span class="id" title="var">e</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span> <span class="id" title="var">u</span>: <span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">make</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Inserted.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Red_black_inserted</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Result type of the insertion function. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">result</span> (<span class="id" title="var">e</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Type</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id" title="var">u</span>:<span class="id" title="var">Tree.t</span> | <span class="id" title="var">Red_black_inserted.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span>}.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Insertion always starts at a leaf node. An insertion into a leaf node
+    results in a red singleton node. If the insertion happens below a red node
+    we get a red red violation because a red node must not have any red son.
+<div class="paragraph"> </div>
+
+ The red red violation can be resolved at the level of the grandparent
+    of the inserted node which must be black (otherwise the original tree
+    would not satisfy the red black invariant) by pulling its blackness one
+    level down. This might create a new red red violation which can bubble up
+    to the root. At the root a red red violation can be resolved by painting
+    the root node black. 
+<div class="paragraph"> </div>
+
+ We define several propositions which describe the intermediate states
+    of the insertion process.
+</div>
+<div class="code">
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Red_red</span>.<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="var">Red_red.R</span></span> <span class="inlinecode"><span class="id" title="variable">e</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> <span class="inlinecode"><span class="id" title="variable">a</span></span> <span class="inlinecode"><span class="id" title="variable">x</span></span> <span class="inlinecode"><span class="id" title="variable">b</span></span> <span class="inlinecode"><span class="id" title="variable">y</span></span> <span class="inlinecode"><span class="id" title="variable">c</span></span> means that <span class="inlinecode"><span class="id" title="variable">e</span></span> has been inserted into the
+      valid red black tree <span class="inlinecode"><span class="id" title="definition">t</span></span> but the result has a red red violation. The
+      trees <span class="inlinecode"><span class="id" title="variable">a</span></span>, <span class="inlinecode"><span class="id" title="variable">b</span></span> and <span class="inlinecode"><span class="id" title="variable">c</span></span> are black and have the same black height as the
+      original tree <span class="inlinecode"><span class="id" title="definition">t</span></span>. Such a violation can occur only if the original tree
+      <span class="inlinecode"><span class="id" title="definition">t</span></span> is red.<pre>
+                yR
+             xR    c
+           a    b
+</pre>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">e</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">a</span>:<span class="id" title="var">Tree.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">b</span>:<span class="id" title="var">Tree.t</span>) (<span class="id" title="var">y</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">c</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">make</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">c</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Inserted.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>) <span class="id" title="var">y</span> <span class="id" title="var">c</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Red_red</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Red</span>.<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="var">Red.R</span></span> <span class="inlinecode"><span class="id" title="variable">e</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> <span class="inlinecode"><span class="id" title="variable">a</span></span> <span class="inlinecode"><span class="id" title="variable">x</span></span> <span class="inlinecode"><span class="id" title="variable">b</span></span> means that <span class="inlinecode"><span class="id" title="variable">e</span></span> has been inserted into the valid red
+      black tree <span class="inlinecode"><span class="id" title="definition">t</span></span> and the result is a red tree. The trees <span class="inlinecode"><span class="id" title="variable">a</span></span> and <span class="inlinecode"><span class="id" title="variable">b</span></span> are
+      black and have the same black height as the original tree <span class="inlinecode"><span class="id" title="definition">t</span></span>. The
+      original tree <span class="inlinecode"><span class="id" title="definition">t</span></span> can have any color.<pre>
+             xR
+           a    b
+</pre>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">R</span> (<span class="id" title="var">e</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">Tree.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">b</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">make</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">c</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Inserted.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Red</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Black</span>.<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="var">Black.R</span></span> <span class="inlinecode"><span class="id" title="variable">e</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> <span class="inlinecode"><span class="id" title="variable">a</span></span> <span class="inlinecode"><span class="id" title="variable">x</span></span> <span class="inlinecode"><span class="id" title="variable">b</span></span> means that <span class="inlinecode"><span class="id" title="variable">e</span></span> has been inserted into the valid
+      red black tree <span class="inlinecode"><span class="id" title="definition">t</span></span> and the result is a black tree. The trees <span class="inlinecode"><span class="id" title="variable">a</span></span> and <span class="inlinecode"><span class="id" title="variable">b</span></span>
+      are black and a black height one less than the original tree <span class="inlinecode"><span class="id" title="definition">t</span></span>. The
+      original tree <span class="inlinecode"><span class="id" title="definition">t</span></span> must be black. Insertion into a red tree cannot result
+      in a black tree without breaking the black height invariant.<pre>
+             xB
+           a    b
+</pre>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">R</span> (<span class="id" title="var">e</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">Tree.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">b</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">make</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">h</span> <span class="id" title="var">ca</span> <span class="id" title="var">cb</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> (<span class="id" title="var">S</span> <span class="id" title="var">h</span>) <span class="id" title="var">Color.Black</span> <span class="id" title="var">t</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">ca</span> <span class="id" title="var">a</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black.R</span> <span class="id" title="var">h</span> <span class="id" title="var">cb</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Inserted.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Black</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+The intermediate results with a red red violation or a valid red or a
+    valid black tree can easily be turned into a final result at the root
+    level.
+<div class="paragraph"> </div>
+
+ If we have a red red violation we just repaint the root node black. <pre>
+                yR                                    yB
+            xR                                    xR
+         a     b    c                          a     b    c
+</pre>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">inserted_of_red_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_inserted.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> <span class="id" title="var">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Color.Black</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">c</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+A red node is already valid. Nothing to be done. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">inserted_of_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_inserted.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> <span class="id" title="var">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+A black node is already valid. Nothing to be done. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">inserted_of_black</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_inserted.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> <span class="id" title="var">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Intermediate results can be turned into intermediate results one level
+    higher.
+<div class="paragraph"> </div>
+
+ If the insertion into a red left subtree results in a red red
+    violation we use the blackness of the root and turn the tree into a valid
+    red tree. <pre>
+            ynB       insertion              yR
+        t1R   t2      into t1             xR     c
+                                        a    b
+    which we insert as the new left subtree
+          ynB                                 yR
+       yR     t2     rotate right         xB     ynB
+     xR   c          repaint x           a  b   c  t2
+    a  b
+</pre>
+ t2 has the same black height as <span class="inlinecode"><span class="id" title="variable">a</span>,<span class="id" title="variable">b</span>,<span class="id" title="variable">c</span></span>. The parent of t1 and t2 must
+    be black because t1 is red. Therefore the resulting tree can have one
+    black height level more than t1, a, b and c.
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">red_of_left_red_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">cn</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">cn</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> ≤ <span class="id" title="var">yn</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span> <span class="id" title="var">e</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">cn</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">y</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">c</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Same situation after insertion into the right subtree. <pre>
+            ynB        insertion             yR
+         t1   t2R      into t2            xR     c
+                                        a    b
+    which we rotate right and insert as the new right subtree
+          ynB                                 xR
+       t1     xR     rotate left          ynB     yB
+            a    yR  repaint y           t1  a   b  c
+                b  c
+</pre>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">red_of_right_red_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">cn</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">cn</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span> ≤ <span class="id" title="var">e</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span> <span class="id" title="var">e</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">cn</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">a</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">x</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+If insertion into the left subtree results in a red tree and the root
+    is already red we get a red red violation.
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">red_red_of_left_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> ≤ <span class="id" title="var">yn</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_red.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Symmetrical situation for insertion into the right subtree.
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">red_red_of_right_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span> ≤ <span class="id" title="var">e</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_red.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Insertion into the left red subtree might result in a new red
+    subtree. The left subtree can be red only if the root is black. Because
+    the root is black we can insert the new left subtree into the original
+    tree without violation. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">black_of_left_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> ≤ <span class="id" title="var">yn</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t2</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Symmetrical situtation for insertion into the right subtree. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">black_of_right_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span> ≤ <span class="id" title="var">e</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Insertion into the black left subtree might result in a new black left
+    subtree. If the original root is black we can insert the new left black
+    subtree.
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">black_of_left_black</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> ≤ <span class="id" title="var">yn</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t2</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Symmetrical situtation for insertion into the right subtree. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">black_of_right_black</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span> ≤ <span class="id" title="var">e</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Insertion into the black left subtree might result in a new black left
+    subtree. If the original root is red we can insert the new left black
+    subtree and the resulting tree stays red. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">red_of_left_black</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> ≤ <span class="id" title="var">yn</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t2</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Symmetrical situtation for insertion into the right subtree. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">red_of_right_black</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_black_sorted.P</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span> ≤ <span class="id" title="var">e</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Red</span> <span class="id" title="var">t1</span> <span class="id" title="var">yn</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t1</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">yn</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Tree.Node</span> <span class="id" title="var">Color.Black</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>).<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+An intermediate insert result is either a red red violation or a valid
+    red tree or a valid black tree.
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">result0</span> (<span class="id" title="var">e</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Set</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Red_red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red_red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">result0</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Red</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Red.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">result0</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Black</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Black.R</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">result0</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Insertion of a new element <span class="inlinecode"><span class="id" title="variable">e</span></span> into a sorted red black tree <span class="inlinecode"><span class="id" title="definition">t</span></span>.
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Fact</span> <span class="id" title="var">insert</span> (<span class="id" title="var">e</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>) (<span class="id" title="var">rbs</span>:<span class="id" title="var">Red_black_sorted.P</span> <span class="id" title="var">t</span>): <span class="id" title="var">result</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Insertion</span>.<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">Make</span>.<br/>
+</div>
+<hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

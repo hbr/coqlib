@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>List</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library List</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Core</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Set Implicit Arguments</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="var">Notations</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Notation</span> &quot;[ ]" := <span class="id" title="var">nil</span> (<span class="id" title="var">format</span> "[ ]") : <span class="id" title="var">list_scope</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Notation</span> &quot;[ x ]" := (<span class="id" title="var">cons</span> <span class="id" title="var">x</span> <span class="id" title="var">nil</span>) : <span class="id" title="var">list_scope</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Notation</span> &quot;[ x ; y ; .. ; z ]" :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">cons</span> <span class="id" title="var">x</span> (<span class="id" title="var">cons</span> <span class="id" title="var">y</span> .. (<span class="id" title="var">cons</span> <span class="id" title="var">z</span> <span class="id" title="var">nil</span>) ..)) : <span class="id" title="var">list_scope</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">list</span>.<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">Notations</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">Notations</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">Equal.Notations</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab12"></a><h1 class="section">Append and Reverse</h1>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Section</span> <span class="id" title="var">app_rev</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <span class="id" title="var">A</span>: <span class="id" title="keyword">Type</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+The standard library of Coq defines the function <span class="inlinecode"><span class="id" title="var">app</span></span> in the form <br/>
+<span class="inlinecode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">app</span> <span class="id" title="variable">a</span> <span class="id" title="variable">b</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="variable">a</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| [] ⇒ <span class="id" title="variable">b</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="variable">x</span>::<span class="id" title="variable">xs</span> ⇒ <span class="id" title="variable">x</span> :: (<span class="id" title="var">app</span> <span class="id" title="variable">xs</span> <span class="id" title="variable">b</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.
+<div class="paragraph"> </div>
+
+</span>   and introduces the notation <span class="inlinecode"><span class="id" title="variable">a</span></span> <span class="inlinecode">++</span> <span class="inlinecode"><span class="id" title="variable">b</span></span>  for <span class="inlinecode"><span class="id" title="var">app</span></span> <span class="inlinecode"><span class="id" title="variable">a</span></span> <span class="inlinecode"><span class="id" title="variable">b</span></span>.
+<div class="paragraph"> </div>
+
+ This recursive definition is not tail recursive but its time complexity
+  is linear with the size of the first list. In this section we derive some
+  properties about list appending.  
+</div>
+<div class="code">
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">app_associative</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span> <span class="id" title="var">c</span>: <span class="id" title="var">list</span> <span class="id" title="var">A</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">a</span> ++ <span class="id" title="var">b</span>) ++ <span class="id" title="var">c</span> = <span class="id" title="var">a</span> ++ <span class="id" title="var">b</span> ++ <span class="id" title="var">c</span>. 
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">app_nil_right_neutral</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span>: <span class="id" title="var">list</span> <span class="id" title="var">A</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">a</span> ++ [] = <span class="id" title="var">a</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+For list reversal we define a straightforward recursive function which
+  is neither tail recursive nor linear. 
+</div>
+<div class="code">
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">rev</span> (<span class="id" title="var">a</span>:<span class="id" title="var">list</span> <span class="id" title="var">A</span>): <span class="id" title="var">list</span> <span class="id" title="var">A</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">a</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [] ⇒ []<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">x</span> :: <span class="id" title="var">a</span> ⇒ <span class="id" title="var">rev</span> <span class="id" title="var">a</span> ++ [<span class="id" title="var">x</span>]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">rev_distributes_app</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>: <span class="id" title="var">list</span> <span class="id" title="var">A</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">rev</span> (<span class="id" title="var">a</span> ++ <span class="id" title="var">b</span>) = <span class="id" title="var">rev</span> <span class="id" title="var">b</span> ++ <span class="id" title="var">rev</span> <span class="id" title="var">a</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">rev_involutive</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">a</span>: <span class="id" title="var">list</span> <span class="id" title="var">A</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">rev</span> (<span class="id" title="var">rev</span> <span class="id" title="var">a</span>) = <span class="id" title="var">a</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">app_rev</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab13"></a><h1 class="section">Fast Append and Reverse</h1>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Section</span> <span class="id" title="var">fast_app_rev</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Variable</span> <span class="id" title="var">A</span>: <span class="id" title="keyword">Type</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+This section defines functions for efficient list reversal and list
+  append. The functions are tail recursive and perform in linear time. 
+</div>
+<div class="code">
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">reverse_append</span> (<span class="id" title="var">xs</span> <span class="id" title="var">ys</span>:<span class="id" title="var">list</span> <span class="id" title="var">A</span>): {<span class="id" title="var">b</span>:<span class="id" title="var">list</span> <span class="id" title="var">A</span> | <span class="id" title="var">b</span> = <span class="id" title="var">rev</span> <span class="id" title="var">xs</span> ++ <span class="id" title="var">ys</span>}.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">reverse</span> (<span class="id" title="var">a</span>:<span class="id" title="var">list</span> <span class="id" title="var">A</span>):  {<span class="id" title="var">b</span>:<span class="id" title="var">list</span> <span class="id" title="var">A</span> | <span class="id" title="var">b</span> = <span class="id" title="var">rev</span> <span class="id" title="var">a</span>}.<br/>
+
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">append</span> (<span class="id" title="var">a</span> <span class="id" title="var">b</span>:<span class="id" title="var">list</span> <span class="id" title="var">A</span>): {<span class="id" title="var">c</span>:<span class="id" title="var">list</span> <span class="id" title="var">A</span> | <span class="id" title="var">c</span> = <span class="id" title="var">a</span> ++ <span class="id" title="var">b</span>}.<br/>
+<span class="id" title="keyword">End</span> <span class="id" title="var">fast_app_rev</span>.<br/>
+</div>
+<hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

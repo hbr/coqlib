@@ -39,7 +39,7 @@
 </div>
 
 <div class="doc">
-<a name="lab26"></a><h1 class="section">Balance Indicator</h1>
+<a name="lab37"></a><h1 class="section">Balance Indicator</h1>
 
 </div>
 <div class="code">
@@ -90,19 +90,21 @@
 </div>
 
 <div class="doc">
-<a name="lab27"></a><h1 class="section">Use Module 'Binary_search_tree'</h1>
+<a name="lab38"></a><h1 class="section">Use Module 'Binary_search_tree'</h1>
 
 </div>
 <div class="code">
 
 <br/>
-&nbsp;&nbsp;<span class="id" title="keyword">Include</span> (<span class="id" title="var">Binary_search_tree.Make</span> <span class="id" title="var">S0</span> <span class="id" title="var">B</span>).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">BST</span> := <span class="id" title="var">Binary_search_tree.Make</span> <span class="id" title="var">S0</span> <span class="id" title="var">B</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Import</span> <span class="id" title="var">BST.BT</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Import</span> <span class="id" title="var">BST</span>.<br/>
 
 <br/>
 </div>
 
 <div class="doc">
-<a name="lab28"></a><h1 class="section">Balance Indicator Basics</h1>
+<a name="lab39"></a><h1 class="section">Balance Indicator Basics</h1>
 
 </div>
 <div class="code">
@@ -130,7 +132,7 @@
 
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">not_leaning_balanced</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">a</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;¬ <span class="id" title="var">Leaning</span> (<span class="id" title="var">Node</span> <span class="id" title="var">B.Balanced</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>).<br/>
 &nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">balance_indicator_basics</span>.<br/>
 
@@ -138,7 +140,7 @@
 </div>
 
 <div class="doc">
-<a name="lab29"></a><h1 class="section">Basic Definitions</h1>
+<a name="lab40"></a><h1 class="section">Basic Definitions</h1>
 
 </div>
 <div class="code">
@@ -188,31 +190,31 @@
 
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">left_leaning_sons_height</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> (<span class="id" title="var">Node</span> <span class="id" title="var">B.Left</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) (2+<span class="id" title="var">h</span>) →<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> <span class="id" title="var">t1</span> (1+<span class="id" title="var">h</span>) ∧ <span class="id" title="var">Avl_height</span> <span class="id" title="var">t2</span> <span class="id" title="var">h</span>.<br/>
 
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">right_leaning_sons_height</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> (<span class="id" title="var">Node</span> <span class="id" title="var">B.Right</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) (2+<span class="id" title="var">h</span>) →<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> <span class="id" title="var">t1</span> <span class="id" title="var">h</span> ∧ <span class="id" title="var">Avl_height</span> <span class="id" title="var">t2</span> (1+<span class="id" title="var">h</span>).<br/>
 
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">balanced_sons_height</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> (<span class="id" title="var">Node</span> <span class="id" title="var">B.Balanced</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) (1+<span class="id" title="var">h</span>) →<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> <span class="id" title="var">t1</span> <span class="id" title="var">h</span> ∧ <span class="id" title="var">Avl_height</span> <span class="id" title="var">t2</span> <span class="id" title="var">h</span>.<br/>
 
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">left_leaning_height</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> (<span class="id" title="var">Node</span> <span class="id" title="var">B.Left</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) (1 + <span class="id" title="var">h</span>) →<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Nat.is_Successor</span> <span class="id" title="var">h</span>.<br/>
 
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">right_leaning_height</span>:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">h</span>:<span class="id" title="var">nat</span>) (<span class="id" title="var">a</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> (<span class="id" title="var">Node</span> <span class="id" title="var">B.Right</span> <span class="id" title="var">t1</span> <span class="id" title="var">a</span> <span class="id" title="var">t2</span>) (1 + <span class="id" title="var">h</span>) →<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Nat.is_Successor</span> <span class="id" title="var">h</span>.<br/>
 &nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">basic_definitions</span>.<br/>
@@ -221,7 +223,7 @@
 </div>
 
 <div class="doc">
-<a name="lab30"></a><h1 class="section">Rebalancing</h1>
+<a name="lab41"></a><h1 class="section">Rebalancing</h1>
 
 </div>
 <div class="code">
@@ -233,7 +235,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Either.t</span> {<span class="id" title="var">u</span>:<span class="id" title="var">tree</span>| <span class="id" title="var">Avl_height</span> <span class="id" title="var">u</span> (2 + <span class="id" title="var">h</span>)} {<span class="id" title="var">u</span>:<span class="id" title="var">tree</span>| <span class="id" title="var">Avl_height</span> <span class="id" title="var">u</span> (3 + <span class="id" title="var">h</span>)}.<br/>
 
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">rebalance_left</span> (<span class="id" title="var">c</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">Rebalance_left_result</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">rebalance_left</span> (<span class="id" title="var">c</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span>:<span class="id" title="var">tree</span>): <span class="id" title="var">Rebalance_left_result</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> :=<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">let</span> <span class="id" title="var">h</span> := <span class="id" title="var">height</span> <span class="id" title="var">t2</span> <span class="id" title="tactic">in</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t1</span> <span class="id" title="keyword">with</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">Empty</span> ⇒<br/>
@@ -385,7 +387,7 @@
 </div>
 
 <div class="doc">
-<a name="lab31"></a><h1 class="section">Insertion</h1>
+<a name="lab42"></a><h1 class="section">Insertion</h1>
 
 </div>
 <div class="code">
@@ -394,7 +396,7 @@
 
 <br/>
 &nbsp;&nbsp;<span class="id" title="keyword">Section</span> <span class="id" title="var">insertion</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">Put_result</span> (<span class="id" title="var">x</span>:<span class="id" title="var">A.t</span>) (<span class="id" title="var">u</span>:<span class="id" title="var">tree</span>): <span class="id" title="keyword">Type</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Definition</span> <span class="id" title="var">Put_result</span> (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span>:<span class="id" title="var">tree</span>): <span class="id" title="keyword">Type</span> :=<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">let</span> <span class="id" title="var">h</span> := <span class="id" title="var">height</span> <span class="id" title="var">u</span> <span class="id" title="tactic">in</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Avl_height</span> <span class="id" title="var">u</span> <span class="id" title="var">h</span> →<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Either.t</span> {<span class="id" title="var">v</span>:<span class="id" title="var">tree</span> | <span class="id" title="var">Avl_height</span> <span class="id" title="var">v</span> <span class="id" title="var">h</span>} {<span class="id" title="var">v</span>:<span class="id" title="var">tree</span> | <span class="id" title="var">Avl_height</span> <span class="id" title="var">v</span> (1+<span class="id" title="var">h</span>)}.<br/>
@@ -406,7 +408,7 @@
 </div>
 
 <div class="doc">
-<a name="lab32"></a><h1 class="section">Deletion</h1>
+<a name="lab43"></a><h1 class="section">Deletion</h1>
 
 </div>
 <div class="code">

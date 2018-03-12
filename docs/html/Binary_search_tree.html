@@ -21,27 +21,191 @@
 <div class="code">
 <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Core</span>.<br/>
 <span class="id" title="keyword">Require</span> <span class="id" title="var">Binary_tree</span>.<br/>
-<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">List</span>.<br/>
+
+<br/>
 <span class="id" title="keyword">Set Implicit Arguments</span>.<br/>
 
 <br/>
-<span class="id" title="keyword">Module</span> <span class="id" title="var">Make</span> (<span class="id" title="var">S0</span>:<span class="id" title="var">SORTABLE</span>) (<span class="id" title="var">Extra</span>:<span class="id" title="var">ANY</span>).<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="var">Make</span> (<span class="id" title="var">S0</span>:<span class="id" title="var">SORTABLE</span>) (<span class="id" title="var">E</span>:<span class="id" title="var">ANY</span>).<br/>
 &nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">S</span> := <span class="id" title="var">Sortable_plus</span> <span class="id" title="var">S0</span>.<br/>
 &nbsp;&nbsp;<span class="id" title="keyword">Import</span> <span class="id" title="var">S.Notations</span>.<br/>
 
 <br/>
-&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">BT</span> := <span class="id" title="var">Binary_tree.Make</span> <span class="id" title="var">S</span> <span class="id" title="var">Extra</span>.<br/>
-&nbsp;&nbsp;<span class="id" title="keyword">Include</span> <span class="id" title="var">BT</span>.<br/>
-&nbsp;&nbsp;<span class="id" title="keyword">Export</span>  <span class="id" title="var">BT</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">BT</span> := <span class="id" title="var">Binary_tree.Make</span> <span class="id" title="var">S</span> <span class="id" title="var">E</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">Import</span> <span class="id" title="var">BT</span>.<br/>
 
 <br/>
 </div>
 
 <div class="doc">
-<a name="lab25"></a><h1 class="section">Basic Definitions</h1>
+<a name="lab30"></a><h1 class="section">Sorted Binary Tree</h1>
 
 </div>
 <div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Sorted</span>.<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="inductive">R</span></span> <span class="inlinecode"><span class="id" title="variable">lo</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> <span class="inlinecode"><span class="id" title="variable">hi</span></span> means <span class="inlinecode"><span class="id" title="definition">t</span></span> is sorted and all elements are between <span class="inlinecode"><span class="id" title="variable">lo</span></span> and
+    <span class="inlinecode"><span class="id" title="variable">hi</span></span>.
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">R</span>: <span class="id" title="var">S.t</span> → <span class="id" title="var">Tree.t</span> → <span class="id" title="var">S.t</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">leaf</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">lo</span> ≤ <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">Tree.Leaf</span> <span class="id" title="var">hi</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">lo</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> <span class="id" title="var">t2</span> <span class="id" title="var">hi</span> <span class="id" title="var">c</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t2</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> <span class="id" title="var">t2</span>) <span class="id" title="var">hi</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="inductive">P</span></span> <span class="inlinecode"><span class="id" title="definition">t</span></span> means <span class="inlinecode"><span class="id" title="definition">t</span></span> is a sorted tree. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">P</span> (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>): <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">make</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">P</span> <span class="id" title="var">t</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">less_equal_lo_hi</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">lo</span> <span class="id" title="var">hi</span> <span class="id" title="var">t</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">lo</span> ≤ <span class="id" title="var">hi</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_leaf0</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">lo</span> <span class="id" title="var">hi</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t</span> = <span class="id" title="var">Tree.Leaf</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">lo</span> ≤ <span class="id" title="var">hi</span> → <span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_leaf</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">lo</span> <span class="id" title="var">hi</span>:<span class="id" title="var">S.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">Tree.Leaf</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">lo</span> ≤ <span class="id" title="var">hi</span> → <span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_node0</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">e</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">lo</span> <span class="id" title="var">x</span> <span class="id" title="var">hi</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span> <span class="id" title="var">u</span> <span class="id" title="var">v</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">t</span> = <span class="id" title="var">Tree.Node</span> <span class="id" title="var">e</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">lo</span> ≤ <span class="id" title="var">x</span> → <span class="id" title="var">x</span> ≤ <span class="id" title="var">hi</span> → <span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> → <span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> <span class="id" title="var">hi</span> → <span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">use_node</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">A</span>:<span class="id" title="keyword">Prop</span>) (<span class="id" title="var">e</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">lo</span> <span class="id" title="var">x</span> <span class="id" title="var">hi</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">u</span> <span class="id" title="var">v</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span>) <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">lo</span> ≤ <span class="id" title="var">x</span> → <span class="id" title="var">x</span> ≤ <span class="id" title="var">hi</span> → <span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">u</span> <span class="id" title="var">x</span> → <span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">v</span> <span class="id" title="var">hi</span> → <span class="id" title="var">A</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">A</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">ignore_rotation</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">t</span> <span class="id" title="var">u</span>: <span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Rotation.R</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">lo</span> <span class="id" title="var">hi</span>:<span class="id" title="var">S.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">u</span> <span class="id" title="var">hi</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">change_extra</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">e</span> <span class="id" title="var">lo</span> <span class="id" title="var">t</span> <span class="id" title="var">hi</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">lo</span> (<span class="id" title="var">Tree.change_extra</span> <span class="id" title="var">e</span> <span class="id" title="var">t</span>) <span class="id" title="var">hi</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Sorted</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a name="lab31"></a><h1 class="section">Insertion into a Sorted Tree</h1>
+
+</div>
+<div class="code">
+&nbsp;&nbsp;<span class="id" title="keyword">Module</span> <span class="id" title="var">Inserted</span>.<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="inductive">R</span></span> <span class="inlinecode"><span class="id" title="variable">x</span></span> <span class="inlinecode"><span class="id" title="variable">u</span></span> <span class="inlinecode"><span class="id" title="variable">v</span></span> means <span class="inlinecode"><span class="id" title="variable">x</span></span> inserted into the sorted tree <span class="inlinecode"><span class="id" title="variable">u</span></span> results in the
+    sorted tree <span class="inlinecode"><span class="id" title="variable">v</span></span>. 
+</div>
+<div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Inductive</span> <span class="id" title="var">R</span>: <span class="id" title="var">S.t</span> → <span class="id" title="var">Tree.t</span> → <span class="id" title="var">Tree.t</span> → <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">leaf</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">c</span> <span class="id" title="var">x</span>, <span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">Tree.Leaf</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c</span> <span class="id" title="var">Tree.Leaf</span> <span class="id" title="var">x</span> <span class="id" title="var">Tree.Leaf</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="tactic">left</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">lo</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">hi</span> <span class="id" title="var">c1</span> <span class="id" title="var">c2</span> <span class="id" title="var">t1</span> <span class="id" title="var">t1new</span> <span class="id" title="var">t2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">x</span> ≤ <span class="id" title="var">y</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t1</span> <span class="id" title="var">y</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">y</span> <span class="id" title="var">t2</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t1</span> <span class="id" title="var">t1new</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c1</span> <span class="id" title="var">t1</span> <span class="id" title="var">y</span> <span class="id" title="var">t2</span>) (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">t1new</span> <span class="id" title="var">y</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="tactic">right</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">lo</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">hi</span> <span class="id" title="var">c1</span> <span class="id" title="var">c2</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> <span class="id" title="var">t2new</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">y</span> ≤ <span class="id" title="var">x</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t1</span> <span class="id" title="var">y</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">y</span> <span class="id" title="var">t2</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t2</span> <span class="id" title="var">t2new</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c1</span> <span class="id" title="var">t1</span> <span class="id" title="var">y</span> <span class="id" title="var">t2</span>) (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">t1</span> <span class="id" title="var">y</span> <span class="id" title="var">t2new</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="tactic">replace</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">lo</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">hi</span> <span class="id" title="var">c1</span> <span class="id" title="var">c2</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">S.Equivalent</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">lo</span> <span class="id" title="var">t1</span> <span class="id" title="var">y</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Sorted.R</span> <span class="id" title="var">y</span> <span class="id" title="var">t2</span> <span class="id" title="var">hi</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c1</span> <span class="id" title="var">t1</span> <span class="id" title="var">y</span> <span class="id" title="var">t2</span>) (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">c2</span> <span class="id" title="var">t1</span> <span class="id" title="var">x</span> <span class="id" title="var">t2</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">rotation</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> <span class="id" title="var">x</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> <span class="id" title="var">t3</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Rotation.R</span> <span class="id" title="var">t2</span> <span class="id" title="var">t3</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t1</span> <span class="id" title="var">t3</span>.<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">rotate_left</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">e1</span> <span class="id" title="var">e2</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">xi</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span> <span class="id" title="var">c</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">xi</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span>)) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">xi</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e2</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>) <span class="id" title="var">y</span> <span class="id" title="var">c</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">rotate_right</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">e1</span> <span class="id" title="var">e2</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">xi</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span> <span class="id" title="var">c</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">xi</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> <span class="id" title="var">b</span>) <span class="id" title="var">y</span> <span class="id" title="var">c</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">xi</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">a</span> <span class="id" title="var">x</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">b</span> <span class="id" title="var">y</span> <span class="id" title="var">c</span>)).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">change_extra0</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">e</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">x</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span> <span class="id" title="var">u</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t</span> <span class="id" title="var">u</span> →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.change_extra</span> <span class="id" title="var">e</span> <span class="id" title="var">u</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">change_extra</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">e1</span> <span class="id" title="var">e2</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">x</span> <span class="id" title="var">y</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span> <span class="id" title="var">u</span> <span class="id" title="var">v</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">u</span> <span class="id" title="var">y</span> <span class="id" title="var">v</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">u</span> <span class="id" title="var">y</span> <span class="id" title="var">v</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">change_left_extra</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">e</span> <span class="id" title="var">e1</span> <span class="id" title="var">e2</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span> <span class="id" title="var">u</span> <span class="id" title="var">v</span> <span class="id" title="var">w</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">u</span> <span class="id" title="var">y</span> <span class="id" title="var">v</span>) <span class="id" title="var">z</span> <span class="id" title="var">w</span>) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e</span>  <span class="id" title="var">u</span> <span class="id" title="var">y</span> <span class="id" title="var">v</span>) <span class="id" title="var">z</span> <span class="id" title="var">w</span>).<br/>
+
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">Theorem</span> <span class="id" title="var">change_right_extra</span>:<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">∀</span> (<span class="id" title="var">e1</span> <span class="id" title="var">e2</span> <span class="id" title="var">e3</span>:<span class="id" title="var">E.t</span>) (<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>:<span class="id" title="var">S.t</span>) (<span class="id" title="var">t</span> <span class="id" title="var">u</span> <span class="id" title="var">v</span> <span class="id" title="var">w</span>:<span class="id" title="var">Tree.t</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">u</span> <span class="id" title="var">y</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e2</span> <span class="id" title="var">v</span> <span class="id" title="var">z</span> <span class="id" title="var">w</span>)) →<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">R</span> <span class="id" title="var">x</span> <span class="id" title="var">t</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e1</span> <span class="id" title="var">u</span> <span class="id" title="var">y</span> (<span class="id" title="var">Tree.Node</span> <span class="id" title="var">e3</span> <span class="id" title="var">v</span> <span class="id" title="var">z</span> <span class="id" title="var">w</span>)).<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">End</span> <span class="id" title="var">Inserted</span>.<br/>
 <span class="id" title="keyword">End</span> <span class="id" title="var">Make</span>.<br/>
 </div>
 <hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
