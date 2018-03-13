@@ -109,6 +109,84 @@ Module Make
 
 
   (*====================================*)
+  (** * Elements of the Tree            *)
+  (*====================================*)
+  Module Domain.
+    (** [Domain.R t x] means that the tree [t] has at least one node with
+    the element [x].*)
+    Inductive R: Tree.t -> A.t -> Prop :=
+    | left:
+        forall e u x y v,
+            R u x ->
+            R (Tree.Node e u y v) x
+    | root:
+        forall e u x v,
+            R (Tree.Node e u x v) x
+    | right:
+        forall e u x y v,
+            R v x ->
+            R (Tree.Node e u y v) x.
+
+    (** A leaf does not have any elements.*)
+    Theorem leaf_empty:
+      forall x, ~ R Tree.Leaf x.
+    Proof
+      let lemma:
+            forall x t, R t x -> t <> Tree.Leaf :=
+          fix f x t r :=
+            match r with
+            | left e y v ru =>
+              fun eq => Tree.node_equal_leaf eq
+            | root eqv e u v =>
+              fun eq => Tree.node_equal_leaf eq
+            | right e u y rv =>
+              fun eq => Tree.node_equal_leaf eq
+            end in
+      fun x rt => lemma x Tree.Leaf rt eq_refl.
+
+    Theorem use_node:
+      forall (A:Prop) x e u y v,
+        R (Tree.Node e u y v) x ->
+        (x = y -> A) ->
+        (R u x -> A) ->
+        (R v x -> A) ->
+        A.
+    Proof
+      fun A x e u y v dom feq f1 f2 =>
+        let lemma:
+              forall e x t u y v,
+                R t x ->
+                t = Tree.Node e u y v ->
+              _ -> _ -> _ -> A :=
+            fun e x t u y v dom =>
+              match dom with
+              | left e y v domu =>
+                fun eq =>
+                  Tree.use_node_equal
+                    eq
+                    (fun eeq xeq ueq veq feq fu fv =>
+                       fu (Equal.use ueq (fun u => R u _) domu))
+              | root e u x v =>
+                fun eq =>
+                  Tree.use_node_equal
+                    eq
+                    (fun eeq xeq ueq veq feq fu fv =>
+                       feq xeq)
+              | right e u y domv =>
+                fun eq =>
+                  Tree.use_node_equal
+                    eq
+                    (fun eeq xeq ueq veq feq fu fv =>
+                       fv (Equal.use veq (fun v => R v _) domv))
+              end
+        in
+        lemma e x (Tree.Node e u y v) u y v dom eq_refl feq f1 f2.
+  End Domain.
+
+
+
+
+  (*====================================*)
   (** * Inorder Sequence                *)
   (*====================================*)
   Module Inorder.
