@@ -257,9 +257,9 @@ Module Make (S0:SORTABLE) (E:ANY).
         fun s  =>
           inright ( fun e dom => ex_falso (Domain.leaf_empty dom) )
       | Tree.Node _ u y v =>
-        match S.compare3_strict x y with
+        match S.compare3 x y with
 
-        | Relation.LT_strict xy not_yx=>
+        | Relation.LT xy not_yx=>
 
           fun s =>
             match f x u (Sorted.use_node_P s (fun s1 _ => s1)) with
@@ -294,12 +294,12 @@ Module Make (S0:SORTABLE) (E:ANY).
                 )
             end
 
-        | Relation.EQV_strict xy yx =>
+        | Relation.EQV xy yx =>
 
           fun s =>
             inleft (exist _ y (conj (Domain.root _ u y v) (conj yx xy)))
 
-        | Relation.GT_strict yx not_xy =>
+        | Relation.GT yx not_xy =>
 
           fun s =>
             match f x v (Sorted.use_node_P s (fun _ s2 => s2)) with
@@ -341,94 +341,98 @@ Module Make (S0:SORTABLE) (E:ANY).
   (** * Insertion into a Sorted Tree    *)
   (*====================================*)
   Module Inserted.
-    (** [R x u v] means [x] inserted into the sorted tree [u] results in the
-    sorted tree [v]. *)
-    Inductive R: S.t -> Tree.t -> Tree.t -> Prop :=
+    (** [R x r u v] means [x] inserted into the sorted tree [u] or replaced an
+     equivalent element depending on the replace flag [r] results in the
+     sorted tree [v]. *)
+    Inductive R: S.t -> bool -> Tree.t -> Tree.t -> Prop :=
     | leaf:
-        forall c x, R x Tree.Leaf (Tree.Node c Tree.Leaf x Tree.Leaf)
+        forall c x r, R x r Tree.Leaf (Tree.Node c Tree.Leaf x Tree.Leaf)
     | left:
-        forall lo x y hi c1 c2 t1 t1new t2,
+        forall lo x r y hi c1 c2 t1 t1new t2,
           x <= y ->
+          (y <= x -> r = false) ->
           Sorted.R lo t1 y ->
           Sorted.R y t2 hi ->
-          R x t1 t1new ->
-          R x (Tree.Node c1 t1 y t2) (Tree.Node c2 t1new y t2)
+          R x r t1 t1new ->
+          R x r (Tree.Node c1 t1 y t2) (Tree.Node c2 t1new y t2)
     | right:
-        forall lo x y hi c1 c2 t1 t2 t2new,
+        forall lo x r y hi c1 c2 t1 t2 t2new,
           y <= x ->
+          (x <= y -> r = false) ->
           Sorted.R lo t1 y ->
           Sorted.R y t2 hi ->
-          R x t2 t2new ->
-          R x (Tree.Node c1 t1 y t2) (Tree.Node c2 t1 y t2new)
+          R x r t2 t2new ->
+          R x r (Tree.Node c1 t1 y t2) (Tree.Node c2 t1 y t2new)
     | replace:
-        forall lo x y hi c1 c2 t1 t2,
+        forall lo x r y hi c1 c2 t1 t2,
           S.Equivalent x y ->
+          r = true ->
           Sorted.R lo t1 y ->
           Sorted.R y t2 hi ->
-          R x (Tree.Node c1 t1 y t2) (Tree.Node c2 t1 x t2)
+          R x r (Tree.Node c1 t1 y t2) (Tree.Node c2 t1 x t2)
     | rotation:
-        forall x t1 t2 t3,
-          R x t1 t2 ->
+        forall x r t1 t2 t3,
+          R x r t1 t2 ->
           Rotation.R t2 t3 ->
-          R x t1 t3.
+          R x r t1 t3.
 
     Theorem rotate_left:
-      forall (e1 e2:E.t) (xi x y:S.t) (t a b c:Tree.t),
-        R xi t (Tree.Node e1 a x (Tree.Node e2 b y c)) ->
-        R xi t (Tree.Node e2 (Tree.Node e1 a x b) y c).
+      forall (e1 e2:E.t) (r:bool) (xi x y:S.t) (t a b c:Tree.t),
+        R xi r t (Tree.Node e1 a x (Tree.Node e2 b y c)) ->
+        R xi r t (Tree.Node e2 (Tree.Node e1 a x b) y c).
     Proof
-      fun e1 e2 xi x y t a b c ins =>
+      fun e1 e2 r xi x y t a b c ins =>
         rotation ins (Rotation.left e1 e2 e2 e1 a x b y c).
 
     Theorem rotate_right:
-      forall (e1 e2:E.t) (xi x y:S.t) (t a b c:Tree.t),
-        R xi t (Tree.Node e1 (Tree.Node e2 a x b) y c) ->
-        R xi t (Tree.Node e2 a x (Tree.Node e1 b y c)).
+      forall (e1 e2:E.t) (r:bool) (xi x y:S.t) (t a b c:Tree.t),
+        R xi r t (Tree.Node e1 (Tree.Node e2 a x b) y c) ->
+        R xi r t (Tree.Node e2 a x (Tree.Node e1 b y c)).
     Proof
-      fun e1 e2 xi x y t a b c ins =>
+      fun e1 e2 r xi x y t a b c ins =>
         rotation ins (Rotation.right e1 e2 e2 e1 a x b y c).
 
     Theorem change_extra0:
-      forall (e:E.t) (x:S.t) (t u:Tree.t),
-        R x t u ->
-        R x t (Tree.change_extra e u).
+      forall (e:E.t) (r:bool) (x:S.t) (t u:Tree.t),
+        R x r t u ->
+        R x r t (Tree.change_extra e u).
     Proof
-      fix f e x t u ins :=
+      fix f e r x t u ins :=
       match ins with
-      | leaf e0 x =>
-        leaf e x
-      | left e1 e2 xy s1 s2 ins =>
-        left e1 e xy s1 s2 ins
-      | right e1 e2 yx s1 s2 ins =>
-        right e1 e  yx s1 s2 ins
-      | replace e1 e2 eqv s1 s2 =>
-        replace e1 e  eqv s1 s2
+      | leaf e0 x r =>
+        leaf e x r
+      | left e1 e2 r xy s1 s2 ins =>
+        left e1 e r xy s1 s2 ins
+      | right e1 e2 r yx s1 s2 ins =>
+        right e1 e r yx s1 s2 ins
+      | replace e1 e2 r eqv s1 s2 =>
+        replace e1 e  r eqv s1 s2
       | rotation ins12 rot23 =>
         rotation ins12 (Rotation.change_extra e rot23)
       end.
 
     Theorem change_extra:
-      forall (e1 e2:E.t) (x y:S.t) (t u v:Tree.t),
-        R x t (Tree.Node e1 u y v) ->
-        R x t (Tree.Node e2 u y v).
+      forall (e1 e2:E.t) (r:bool) (x y:S.t) (t u v:Tree.t),
+        R x r t (Tree.Node e1 u y v) ->
+        R x r t (Tree.Node e2 u y v).
     Proof
-      fun e1 e2 x y t u v ins =>
+      fun e1 e2 r x y t u v ins =>
         change_extra0 e2 ins.
 
     Theorem change_left_extra:
-      forall (e e1 e2:E.t) (x y z:S.t) (t u v w:Tree.t),
-        R x t (Tree.Node e1 (Tree.Node e2 u y v) z w) ->
-        R x t (Tree.Node e1 (Tree.Node e  u y v) z w).
+      forall (e e1 e2:E.t) (r:bool) (x y z:S.t) (t u v w:Tree.t),
+        R x r t (Tree.Node e1 (Tree.Node e2 u y v) z w) ->
+        R x r t (Tree.Node e1 (Tree.Node e  u y v) z w).
     Proof
-      fun e e1 e2 x y z t u v w ins =>
+      fun e e1 e2 r x y z t u v w ins =>
         rotate_left (change_extra e (rotate_right ins)).
 
     Theorem change_right_extra:
-      forall (e1 e2 e3:E.t) (x y z:S.t) (t u v w:Tree.t),
-        R x t (Tree.Node e1 u y (Tree.Node e2 v z w)) ->
-        R x t (Tree.Node e1 u y (Tree.Node e3 v z w)).
+      forall (e1 e2 e3:E.t) (r:bool) (x y z:S.t) (t u v w:Tree.t),
+        R x r t (Tree.Node e1 u y (Tree.Node e2 v z w)) ->
+        R x r t (Tree.Node e1 u y (Tree.Node e3 v z w)).
     Proof
-      fun e1 e2 e3 x y z t u v w ins =>
+      fun e1 e2 e3 r x y z t u v w ins =>
         rotate_right (change_extra e3 (rotate_left ins)).
   End Inserted.
 End Make.

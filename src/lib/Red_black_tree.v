@@ -579,22 +579,23 @@ Module Make (S0:SORTABLE).
   (*  ---------------------------------------- *)
   Module Insertion.
     Module Red_black_inserted.
-      (** [R e t u] means that the element [e] has been inserted into the tree
-      [t] resulting in the red black tree [u]. Note that both [t] and [u] must
-      be sorted because of the definition of the [Inserted.R] relation of the
-      module [Binary_search_tree]. *)
-      Inductive R (e:S.t) (t u: Tree.t): Prop :=
+      (** [R e r t u] means that the element [e] has been inserted into the
+      tree [t] or has replaced an equivalent (depending on the replace flag
+      [r]) resulting in the red black tree [u]. Note that both [t] and [u]
+      must be sorted because of the definition of the [Inserted.R] relation of
+      the module [Binary_search_tree]. *)
+      Inductive R (e:S.t) (r:bool) (t u: Tree.t): Prop :=
         make:
           forall h c,
             Red_black.R h c u ->
-            Inserted.R e t u ->
-            R e t u.
+            Inserted.R e r t u ->
+            R e r t u.
     End Red_black_inserted.
 
 
     (** Result type of the insertion function. *)
-    Definition result (e:S.t) (t:Tree.t): Type :=
-      {u:Tree.t | Red_black_inserted.R e t u}.
+    Definition result (e:S.t) (r:bool) (t:Tree.t): Type :=
+      {u:Tree.t | Red_black_inserted.R e r t u}.
 
 
     (** Insertion always starts at a leaf node. An insertion into a leaf node
@@ -612,17 +613,17 @@ Module Make (S0:SORTABLE).
     of the insertion process.*)
 
     Module Red_red.
-    (** [Red_red.R e t a x b y c] means that [e] has been inserted into the
-      valid red black tree [t] but the result has a red red violation. The
-      trees [a], [b] and [c] are black and have the same black height as the
-      original tree [t]. Such a violation can occur only if the original tree
-      [t] is red.*)(**<<
+    (** [Red_red.R e r t a x b y c] means that [e] has been inserted into the
+      valid red black tree [t] (or has replaced an equivalent) but the result
+      has a red red violation. The trees [a], [b] and [c] are black and have
+      the same black height as the original tree [t]. Such a violation can
+      occur only if the original tree [t] is red.*)(**<<
                 yR
              xR    c
            a    b
 >>*)
       Inductive R
-                (e:S.t) (t:Tree.t)
+                (e:S.t) (r:bool) (t:Tree.t)
                 (a:Tree.t) (x:S.t) (b:Tree.t) (y:S.t) (c:Tree.t): Prop :=
         make:
         forall h,
@@ -630,47 +631,51 @@ Module Make (S0:SORTABLE).
           Red_black.R h Color.Black a ->
           Red_black.R h Color.Black b ->
           Red_black.R h Color.Black c ->
-          Inserted.R e t (Tree.Node Color.Red (Tree.Node Color.Red a x b) y c) ->
-          R e t a x b y c.
+          Inserted.R e r t (Tree.Node Color.Red (Tree.Node Color.Red a x b) y c) ->
+          R e r t a x b y c.
     End Red_red.
 
     Module Red.
-    (** [Red.R e t a x b] means that [e] has been inserted into the valid red
-      black tree [t] and the result is a red tree. The trees [a] and [b] are
-      black and have the same black height as the original tree [t]. The
-      original tree [t] can have any color.*)
+    (** [Red.R e r t a x b] means that [e] has been inserted into the valid
+      red black tree [t] (or has replaced an equivalent element) and the
+      result is a red tree. The trees [a] and [b] are black and have the same
+      black height as the original tree [t]. The original tree [t] can have
+      any color.*)
 (**<<
              xR
            a    b
 >>*)
-      Inductive R (e:S.t) (t:Tree.t) (a:Tree.t) (x:S.t) (b:Tree.t): Prop :=
+      Inductive R (e:S.t) (r:bool) (t:Tree.t)
+                (a:Tree.t) (x:S.t) (b:Tree.t): Prop :=
         make:
           forall h c,
             Red_black.R h c t ->
             Red_black.R h Color.Black a ->
             Red_black.R h Color.Black b ->
-            Inserted.R e t (Tree.Node Color.Red a x b) ->
-            R e t a x b.
+            Inserted.R e r t (Tree.Node Color.Red a x b) ->
+            R e r t a x b.
     End Red.
 
     Module Black.
-    (** [Black.R e t a x b] means that [e] has been inserted into the valid
-      red black tree [t] and the result is a black tree. The trees [a] and [b]
-      are black and a black height one less than the original tree [t]. The
-      original tree [t] must be black. Insertion into a red tree cannot result
-      in a black tree without breaking the black height invariant.*)
+    (** [Black.R e r t a x b] means that [e] has been inserted into the valid
+      red black tree [t] (or has replaced an equivalent element) and the
+      result is a black tree. The trees [a] and [b] are black and a black
+      height one less than the original tree [t]. The original tree [t] must
+      be black. Insertion into a red tree cannot result in a black tree
+      without breaking the black height invariant.*)
 (**<<
              xB
            a    b
 >>*)
-      Inductive R (e:S.t) (t:Tree.t) (a:Tree.t) (x:S.t) (b:Tree.t): Prop :=
+      Inductive R (e:S.t) (r:bool) (t:Tree.t)
+                (a:Tree.t) (x:S.t) (b:Tree.t): Prop :=
         make:
           forall h ca cb,
             Red_black.R (S h) Color.Black t ->
             Red_black.R h ca a ->
             Red_black.R h cb b ->
-            Inserted.R e t (Tree.Node Color.Black a x b) ->
-            R e t a x b.
+            Inserted.R e r t (Tree.Node Color.Black a x b) ->
+            R e r t a x b.
     End Black.
 
     (** The intermediate results with a red red violation or a valid red or a
@@ -684,17 +689,17 @@ Module Make (S0:SORTABLE).
          a     b    c                          a     b    c
 >>*)
     Theorem inserted_of_red_red:
-      forall e t a x b y c,
-        Red_red.R e t a x b y c ->
+      forall e r t  a x b y c,
+        Red_red.R e r t a x b y c ->
         Red_black_inserted.R
-          e t
+          e r t
           (Tree.Node
              Color.Black
              (Tree.Node Color.Red a x b)
              y
              c).
     Proof
-      fun e t a x b y c rr =>
+      fun e r t a x b y c rr =>
         match rr with
           Red_red.make rbt rba rbb rbc ins =>
           Red_black_inserted.make
@@ -704,13 +709,13 @@ Module Make (S0:SORTABLE).
 
     (** A red node is already valid. Nothing to be done. *)
     Theorem inserted_of_red:
-      forall e t a x b,
-        Red.R e t a x b ->
+      forall e r t a x b,
+        Red.R e r t a x b ->
         Red_black_inserted.R
-          e t
+          e r t
           (Tree.Node Color.Red a x b).
     Proof
-      fun e t a x b r =>
+      fun e r t a x b r =>
         match r with
           Red.make _ rba rbb ins =>
           Red_black_inserted.make (Red_black.red _ rba rbb) ins
@@ -718,13 +723,13 @@ Module Make (S0:SORTABLE).
 
     (** A black node is already valid. Nothing to be done. *)
     Theorem inserted_of_black:
-      forall e t a x b,
-        Black.R e t a x b ->
+      forall e r t a x b,
+        Black.R e r t a x b ->
         Red_black_inserted.R
-          e t
+          e r t
           (Tree.Node Color.Black a x b).
     Proof
-      fun e t a x b black =>
+      fun e r t a x b black =>
         match black with
           Black.make _ rba rbb ins =>
           Red_black_inserted.make (Red_black.black _ rba rbb) ins
@@ -751,17 +756,18 @@ Module Make (S0:SORTABLE).
     be black because t1 is red. Therefore the resulting tree can have one
     black height level more than t1, a, b and c.*)
     Theorem red_of_left_red_red:
-      forall e cn t1 yn t2 a x b y c,
+      forall e r cn t1 yn t2 a x b y c,
         Red_black_sorted.P (Tree.Node cn t1 yn t2) ->
         e <= yn ->
-        Red_red.R e t1 a x b y c ->
-        Red.R e
+        (yn <= e -> r = false) ->
+        Red_red.R e r t1 a x b y c ->
+        Red.R e r
               (Tree.Node cn t1 yn t2)
               (Tree.Node Color.Black a x b)
               y
               (Tree.Node Color.Black c yn t2).
     Proof
-      fun e cn t1 yn t2 a x b y c rbs eyn rr =>
+      fun e r cn t1 yn t2 a x b y c rbs eyn yner rr =>
         match rr with
           Red_red.make rbt1_0 rba rbb rbc ins1 =>
           Red_black_sorted.use_left_red
@@ -773,7 +779,7 @@ Module Make (S0:SORTABLE).
                      Color.Black
                      (Inserted.rotate_right
                         (Inserted.left
-                           cn Color.Black eyn st1 st2 ins1))
+                           cn Color.Black eyn yner st1 st2 ins1))
                in
                let heq: _ = h := Red_black.black_height_unique rbt1_0 rbt1 in
                let P t h := Red_black.R h _ t in
@@ -802,17 +808,18 @@ Module Make (S0:SORTABLE).
                 b  c
 >>*)
     Theorem red_of_right_red_red:
-      forall e cn t1 yn t2 a x b y c,
+      forall e r cn t1 yn t2 a x b y c,
         Red_black_sorted.P (Tree.Node cn t1 yn t2) ->
         yn <= e ->
-        Red_red.R e t2 a x b y c ->
-        Red.R e
+        (e <= yn -> r = false) ->
+        Red_red.R e r t2 a x b y c ->
+        Red.R e r
               (Tree.Node cn t1 yn t2)
               (Tree.Node Color.Black t1 yn a)
               x
               (Tree.Node Color.Black b y c).
     Proof
-      fun e cn t1 yn t2 a x b y c rbs yne rr =>
+      fun e r cn t1 yn t2 a x b y c rbs yne eynr rr =>
         match rr with
           Red_red.make rbt2_0 rba rbb rbc ins2 =>
           Red_black_sorted.use_right_red
@@ -824,7 +831,7 @@ Module Make (S0:SORTABLE).
                      Color.Black
                      (Inserted.rotate_left
                         (Inserted.right
-                           cn Color.Black yne st1 st2
+                           cn Color.Black yne eynr st1 st2
                            (Inserted.rotate_right ins2))) in
                let heq: _ = h := Red_black.black_height_unique rbt2_0 rbt2 in
                let P t h := Red_black.R h _ t in
@@ -852,15 +859,16 @@ Module Make (S0:SORTABLE).
        a  b
 >>*)
     Theorem red_red_of_left_red:
-      forall e t1 yn t2 a x b,
+      forall e r t1 yn t2 a x b,
         Red_black_sorted.P (Tree.Node Color.Red t1 yn t2) ->
         e <= yn ->
-        Red.R e t1 a x b ->
+        (yn <= e -> r = false) ->
+        Red.R e r t1 a x b ->
         Red_red.R
-          e (Tree.Node Color.Red t1 yn t2)
+          e r (Tree.Node Color.Red t1 yn t2)
           a x b yn t2.
     Proof
-      fun e t1 yn t2 a x b rbst e_yn r =>
+      fun e r t1 yn t2 a x b rbst e_yn yn_e_r r =>
         match r with
           Red.make rbt1_0 rba rbb ins1 =>
           Red_black_sorted.use_red_node
@@ -868,7 +876,7 @@ Module Make (S0:SORTABLE).
             (fun h lo hi rbt1 rbt2 rbt lo_yn yn_hi st1 st2 st =>
                let insu :=
                    Inserted.left
-                     Color.Red Color.Red e_yn st1 st2 ins1 in
+                     Color.Red Color.Red e_yn yn_e_r st1 st2 ins1 in
                let heq: _ = h := Red_black.black_height_unique rbt1_0 rbt1 in
                let P t h := Red_black.R h Color.Black t in
                Red_red.make
@@ -889,15 +897,16 @@ Module Make (S0:SORTABLE).
               a  b                   t1   a
 >>*)
     Theorem red_red_of_right_red:
-      forall e t1 yn t2 a x b,
+      forall e r t1 yn t2 a x b,
         Red_black_sorted.P (Tree.Node Color.Red t1 yn t2) ->
         yn <= e ->
-        Red.R e t2 a x b ->
+        (e <= yn -> r = false) ->
+        Red.R e r t2 a x b ->
         Red_red.R
-          e (Tree.Node Color.Red t1 yn t2)
+          e r (Tree.Node Color.Red t1 yn t2)
           t1 yn a x b.
     Proof
-      fun e t1 yn t2 a x b rbst yn_e r =>
+      fun e r t1 yn t2 a x b rbst yn_e e_yn_r r =>
         match r with
           Red.make rbt2_0 rba rbb ins2 =>
           Red_black_sorted.use_red_node
@@ -906,7 +915,7 @@ Module Make (S0:SORTABLE).
                let insv :=
                    Inserted.rotate_left
                      (Inserted.right
-                        Color.Red Color.Red yn_e st1 st2 ins2) in
+                        Color.Red Color.Red yn_e e_yn_r st1 st2 ins2) in
                let heq: _ = h := Red_black.black_height_unique rbt2_0 rbt2 in
                let P t h := Red_black.R h Color.Black t in
                Red_red.make
@@ -932,17 +941,18 @@ Module Make (S0:SORTABLE).
        a  b
 >>*)
     Theorem black_of_left_red:
-      forall e t1 yn t2 a x b,
+      forall e r t1 yn t2 a x b,
         Red_black_sorted.P (Tree.Node Color.Black t1 yn t2) ->
         e <= yn ->
-        Red.R e t1 a x b ->
+        (yn <= e -> r = false) ->
+        Red.R e r t1 a x b ->
         Black.R
-          e (Tree.Node Color.Black t1 yn t2)
+          e r (Tree.Node Color.Black t1 yn t2)
           (Tree.Node Color.Red a x b)
           yn
           t2.
     Proof
-      fun e t1 yn t2 a x b rbst e_yn red =>
+      fun e r t1 yn t2 a x b rbst e_yn yn_e_r red =>
         match red with
           Red.make rbt1_0 rba rbb ins1 =>
           Red_black_sorted.use_black_node
@@ -958,23 +968,24 @@ Module Make (S0:SORTABLE).
                     (Equal.use heq (P b) rbb))
                  rbt2
                  (Inserted.left
-                    Color.Black Color.Black e_yn st1 st2 ins1)
+                    Color.Black Color.Black e_yn yn_e_r st1 st2 ins1)
             )
         end.
 
     (** Symmetrical situtation for insertion into the right subtree. *)
     Theorem black_of_right_red:
-      forall e t1 yn t2 a x b,
+      forall e r t1 yn t2 a x b,
         Red_black_sorted.P (Tree.Node Color.Black t1 yn t2) ->
         yn <= e ->
-        Red.R e t2 a x b ->
+        (e <= yn -> r = false) ->
+        Red.R e r t2 a x b ->
         Black.R
-          e (Tree.Node Color.Black t1 yn t2)
+          e r (Tree.Node Color.Black t1 yn t2)
           t1
           yn
           (Tree.Node Color.Red a x b).
     Proof
-      fun e t1 yn t2 a x b rbst yn_e red =>
+      fun e r t1 yn t2 a x b rbst yn_e e_yn_r red =>
         match red with
           Red.make rbt2_0 rba rbb ins2 =>
           Red_black_sorted.use_black_node
@@ -990,7 +1001,7 @@ Module Make (S0:SORTABLE).
                     (Equal.use heq (P a) rba)
                     (Equal.use heq (P b) rbb))
                  (Inserted.right
-                    Color.Black Color.Black yn_e st1 st2 ins2)
+                    Color.Black Color.Black yn_e e_yn_r st1 st2 ins2)
             )
         end.
 
@@ -998,17 +1009,18 @@ Module Make (S0:SORTABLE).
     subtree. If the original root is black we can insert the new left black
     subtree.*)
     Theorem black_of_left_black:
-      forall e t1 yn t2 a x b,
+      forall e r t1 yn t2 a x b,
         Red_black_sorted.P (Tree.Node Color.Black t1 yn t2) ->
         e <= yn ->
-        Black.R e t1 a x b ->
+        (yn <= e -> r = false) ->
+        Black.R e r t1 a x b ->
         Black.R
-          e (Tree.Node Color.Black t1 yn t2)
+          e r (Tree.Node Color.Black t1 yn t2)
           (Tree.Node Color.Black a x b)
           yn
           t2.
     Proof
-      fun e t1 yn t2 a x b rbst e_yn black =>
+      fun e r t1 yn t2 a x b rbst e_yn yn_e_r black =>
         match black with
           Black.make rbt1_0 rba rbb ins1 =>
           Red_black_sorted.use_black_node
@@ -1021,7 +1033,7 @@ Module Make (S0:SORTABLE).
                     heq (fun h => Red_black.R h _ _)
                     (Red_black.black x rba rbb))
                  rbt2
-                 (Inserted.left Color.Black Color.Black e_yn st1 st2 ins1)
+                 (Inserted.left Color.Black Color.Black e_yn yn_e_r st1 st2 ins1)
             )
         end.
 
@@ -1029,17 +1041,18 @@ Module Make (S0:SORTABLE).
 
     (** Symmetrical situtation for insertion into the right subtree. *)
     Theorem black_of_right_black:
-      forall e t1 yn t2 a x b,
+      forall e r t1 yn t2 a x b,
         Red_black_sorted.P (Tree.Node Color.Black t1 yn t2) ->
         yn <= e ->
-        Black.R e t2 a x b ->
+        (e <= yn -> r = false) ->
+        Black.R e r t2 a x b ->
         Black.R
-          e (Tree.Node Color.Black t1 yn t2)
+          e r (Tree.Node Color.Black t1 yn t2)
           t1
           yn
           (Tree.Node Color.Black a x b).
     Proof
-      fun e t1 yn t2 a x b rbst yn_e black =>
+      fun e r t1 yn t2 a x b rbst yn_e e_yn_r black =>
         match black with
           Black.make rbt2_0 rba rbb ins2 =>
           Red_black_sorted.use_black_node
@@ -1052,7 +1065,7 @@ Module Make (S0:SORTABLE).
                  (Equal.use
                     heq (fun h => Red_black.R h _ _)
                     (Red_black.black x rba rbb))
-                 (Inserted.right Color.Black Color.Black yn_e st1 st2 ins2)
+                 (Inserted.right Color.Black Color.Black yn_e e_yn_r st1 st2 ins2)
             )
         end.
 
@@ -1062,17 +1075,18 @@ Module Make (S0:SORTABLE).
     subtree. If the original root is red we can insert the new left black
     subtree and the resulting tree stays red. *)
     Theorem red_of_left_black:
-      forall e t1 yn t2 a x b,
+      forall e r t1 yn t2 a x b,
         Red_black_sorted.P (Tree.Node Color.Red t1 yn t2) ->
         e <= yn ->
-        Black.R e t1 a x b ->
+        (yn <= e -> r = false) ->
+        Black.R e r t1 a x b ->
         Red.R
-          e (Tree.Node Color.Red t1 yn t2)
+          e r (Tree.Node Color.Red t1 yn t2)
           (Tree.Node Color.Black a x b)
           yn
           t2.
     Proof
-      fun e t1 yn t2 a x b rbst e_yn black =>
+      fun e r t1 yn t2 a x b rbst e_yn yn_e_r black =>
         match black with
           Black.make rbt1_0 rba rbb ins1 =>
           Red_black_sorted.use_red_node
@@ -1085,24 +1099,25 @@ Module Make (S0:SORTABLE).
                     heq (fun h => Red_black.R h _ _)
                     (Red_black.black x rba rbb))
                  rbt2
-                 (Inserted.left Color.Red Color.Red e_yn st1 st2 ins1)
+                 (Inserted.left Color.Red Color.Red e_yn yn_e_r st1 st2 ins1)
             )
         end.
 
 
     (** Symmetrical situtation for insertion into the right subtree. *)
     Theorem red_of_right_black:
-      forall e t1 yn t2 a x b,
+      forall e r t1 yn t2 a x b,
         Red_black_sorted.P (Tree.Node Color.Red t1 yn t2) ->
         yn <= e ->
-        Black.R e t2 a x b ->
+        (e <= yn -> r = false) ->
+        Black.R e r t2 a x b ->
         Red.R
-          e (Tree.Node Color.Red t1 yn t2)
+          e r (Tree.Node Color.Red t1 yn t2)
           t1
           yn
           (Tree.Node Color.Black a x b).
     Proof
-      fun e t1 yn t2 a x b rbst yn_e black =>
+      fun e r t1 yn t2 a x b rbst yn_e e_yn_r black =>
         match black with
         | Black.make rbt2_0 rba rbb ins2 =>
           Red_black_sorted.use_red_node
@@ -1115,7 +1130,7 @@ Module Make (S0:SORTABLE).
                  (Equal.use
                     heq (fun h => Red_black.R h _ _)
                     (Red_black.black x rba rbb))
-                 (Inserted.right Color.Red Color.Red yn_e st1 st2 ins2)
+                 (Inserted.right Color.Red Color.Red yn_e e_yn_r st1 st2 ins2)
             )
         end.
 
@@ -1123,126 +1138,144 @@ Module Make (S0:SORTABLE).
 
     (** An intermediate insert result is either a red red violation or a valid
     red tree or a valid black tree.*)
-    Inductive result0 (e:S.t) (t:Tree.t): Type :=
+    Inductive result0 (e:S.t) (r:bool) (t:Tree.t): Type :=
     | Red_red:
         forall a x b y c,
-          Red_red.R e t a x b y c ->
-          result0 e t
+          Red_red.R e r t a x b y c ->
+          result0 e r t
     | Red:
         forall a x b,
-          Red.R e t a x b ->
-          result0 e t
+          Red.R e r t a x b ->
+          result0 e r t
     | Black:
         forall a x b,
-          Black.R e t a x b ->
-          result0 e t.
+          Black.R e r t a x b ->
+          result0 e r t.
 
     (** Insertion of a new element [e] into a sorted red black tree [t].*)
-    Fact insert (e:S.t) (t:Tree.t) (rbs:Red_black_sorted.P t): result e t.
+    Fact insert (e:S.t) (r:bool) (t:Tree.t)
+         (rbs:Red_black_sorted.P t): result e r t.
     Proof
       let insert0:
-            forall t,
-              Red_black_sorted.P t -> result0 e t :=
-          fix insert0 t :=
+            forall r t,
+              Red_black_sorted.P t -> result0 e r t :=
+          fix insert0 r t :=
             match t with
 
             | Tree.Leaf =>
               fun _ =>
                 let rbl := Red_black.leaf in
-                Red (Red.make rbl rbl rbl (Inserted.leaf Color.Red e))
+                Red (Red.make rbl rbl rbl (Inserted.leaf Color.Red e r))
 
             | Tree.Node cn t1 yn t2 =>
 
-              match S.compare3 e yn with
-
-              | Relation.LT e_yn =>
-
-                fun rbs =>
-                  (match insert0 t1 (Red_black_sorted.left_son rbs), cn with
+              let insert_left r e_yn (yn_e_r: yn <= e -> r = false) rbs :=
+                  (match insert0 r t1 (Red_black_sorted.left_son rbs), cn with
                    | Red_red red_red, _ =>
 
-                     fun _ => Red (red_of_left_red_red rbs e_yn red_red)
+                     fun _ => Red (red_of_left_red_red rbs e_yn yn_e_r red_red)
 
                    | Red red, Color.Red =>
 
-                     fun rbs => Red_red (red_red_of_left_red rbs e_yn red)
+                     fun rbs => Red_red (red_red_of_left_red rbs e_yn yn_e_r red)
 
                    | Red red, Color.Black =>
 
-                     fun rbs => Black (black_of_left_red rbs e_yn red)
+                     fun rbs => Black (black_of_left_red rbs e_yn yn_e_r red)
 
                    | Black black, Color.Black =>
 
-                     fun rbs => Black (black_of_left_black rbs e_yn black)
+                     fun rbs => Black (black_of_left_black rbs e_yn yn_e_r black)
 
                    | Black black, Color.Red =>
 
-                     fun rbs => Red (red_of_left_black rbs e_yn black)
+                     fun rbs => Red (red_of_left_black rbs e_yn yn_e_r black)
                   end) rbs
-
-              | Relation.EQV e_yn yn_e =>
-
-                match cn with
-
-                | Color.Red =>
-                  fun rbst =>
-                    let red :=
-                        Red_black_sorted.use_red_node
-                          rbst
-                          (fun h lo hi rbt1 rbt2 rbt lo_yn yn_hi st1 st2 st =>
-                             Red.make
-                               rbt rbt1 rbt2
-                               (Inserted.replace
-                                  Color.Red Color.Red
-                                  (conj e_yn yn_e) st1 st2))
-                    in
-                    Red red
-                | Color.Black =>
-
-                  fun rbst =>
-                    let black :=
-                        Red_black_sorted.use_black_node
-                          rbst
-                          (fun h ct1 ct2 lo hi rbt1 rbt2 rbt
-                               lo_yn yn_hi st1 st2 st =>
-                             Black.make
-                               rbt rbt1 rbt2
-                               (Inserted.replace
-                                  Color.Black Color.Black
-                                  (conj e_yn yn_e) st1 st2))
-                    in
-                    Black black
-                end
-
-              | Relation.GT yn_e =>
-
-                fun rbs =>
-                  (match insert0 t2 (Red_black_sorted.right_son rbs), cn with
+              in
+              let insert_right r yn_e (e_yn_r:e <= yn -> r = false) rbs :=
+                  (match insert0 r t2 (Red_black_sorted.right_son rbs), cn with
                    | Red_red red_red, _ =>
 
                      fun _ =>
-                       Red (red_of_right_red_red rbs yn_e red_red)
+                       Red (red_of_right_red_red rbs yn_e e_yn_r red_red)
 
                    | Red red, Color.Red =>
 
-                     fun rbs => Red_red (red_red_of_right_red rbs yn_e red)
+                     fun rbs => Red_red (red_red_of_right_red rbs yn_e e_yn_r red)
 
                    | Red red, Color.Black =>
 
-                     fun rbs => Black (black_of_right_red rbs yn_e red)
+                     fun rbs => Black (black_of_right_red rbs yn_e e_yn_r red)
 
                    | Black black, Color.Red =>
 
-                     fun rbs =>  Red (red_of_right_black rbs yn_e black)
+                     fun rbs =>  Red (red_of_right_black rbs yn_e e_yn_r black)
 
                    | Black black, Color.Black =>
 
-                     fun rbs => Black (black_of_right_black rbs yn_e black)
+                     fun rbs => Black (black_of_right_black rbs yn_e e_yn_r black)
                   end) rbs
+              in
+              let replace r (rtrue:r = true) e_yn yn_e rbst :=
+                  match cn with
+
+                  | Color.Red =>
+                    fun rbst =>
+                      let red :=
+                          Red_black_sorted.use_red_node
+                            rbst
+                            (fun h lo hi rbt1 rbt2 rbt lo_yn yn_hi st1 st2 st =>
+                               Red.make
+                                 rbt rbt1 rbt2
+                                 (Inserted.replace
+                                    Color.Red Color.Red
+                                    (conj e_yn yn_e) rtrue st1 st2))
+                      in
+                      Red red
+                  | Color.Black =>
+
+                    fun rbst =>
+                      let black :=
+                          Red_black_sorted.use_black_node
+                            rbst
+                            (fun h ct1 ct2 lo hi rbt1 rbt2 rbt
+                                 lo_yn yn_hi st1 st2 st =>
+                               Black.make
+                                 rbt rbt1 rbt2
+                                 (Inserted.replace
+                                    Color.Black Color.Black
+                                    (conj e_yn yn_e) rtrue st1 st2))
+                      in
+                      Black black
+                  end
+              in
+
+              match S.compare3 e yn with
+
+              | Relation.LT e_yn not_yn_e =>
+
+                let yn_e_r: yn <= e -> r = false :=
+                    fun yn_e => ex_falso (not_yn_e yn_e) in
+                insert_left r e_yn yn_e_r
+
+              | Relation.EQV e_yn yn_e =>
+
+                match r with
+                | true =>
+                  replace true eq_refl e_yn yn_e rbs
+                | false =>
+                  insert_right false yn_e (fun _ => eq_refl)
+                end
+
+              | Relation.GT yn_e not_e_yn =>
+
+                let e_yn_r: e <= yn -> r = false :=
+                    fun e_yn => ex_falso (not_e_yn e_yn) in
+                insert_right r yn_e e_yn_r
               end
             end
       in
-      match insert0 t rbs with
+      match insert0 r t rbs with
       | Red_red rr =>
         exist _ _ (inserted_of_red_red rr)
       | Red r =>
