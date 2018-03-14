@@ -242,9 +242,9 @@ Module Make (S0:SORTABLE) (E:ANY).
   (*====================================*)
   Module Search.
     (** [search x t s] searches for an element equivalent to [x] in the sorted
-    tree [t] where [s] is a proof that [t] is sorted and returns either an
-    element satisfying the requirement or a proof that no element in the tree
-    satisfies the requirement.*)
+    tree [t] where [s] is a proof that [t] is sorted. It returns either an
+    element of the tree [t] equivalent to [x] or a proof that no element in
+    the tree [t] is equivalent to [x].*)
     Fact search:
       forall (x:S.t) (t:Tree.t),
         Sorted.P t ->
