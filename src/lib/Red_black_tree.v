@@ -1284,4 +1284,25 @@ Module Make (S0:SORTABLE).
         exist _ _ (inserted_of_black b)
       end.
   End Insertion.
+
+
+  (** * Deletion from a Sorted Red Black Tree *)
+  (*  --------------------------------------- *)
+  Module Deletion.
+    Module Red_black_deleted.
+      Inductive R e1 t u: Prop :=
+        make:
+          forall h c e2,
+            Red_black.R h c u ->
+            e1 <= e2 ->
+            e2 <= e1 ->
+            Deleted.R e2 t u ->
+            R e1 t u.
+    End Red_black_deleted.
+
+    Definition result (e:S.t) (t:Tree.t): Type :=
+      {u: Tree.t | Red_black_deleted.R e t u}
+      +
+      {forall x, Domain.R t x -> e <= x -> x <= e -> False}.
+  End Deletion.
 End Make.

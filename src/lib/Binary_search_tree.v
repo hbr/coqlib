@@ -435,4 +435,37 @@ Module Make (S0:SORTABLE) (E:ANY).
       fun e1 e2 e3 r x y z t u v w ins =>
         rotate_right (change_extra e3 (rotate_left ins)).
   End Inserted.
+
+
+  (*====================================*)
+  (** * Deletion from a Sorted Tree     *)
+  (*====================================*)
+  Module Deleted.
+    (** [R x u v] means [x] deleted from the sorted tree [u] results in the
+    sorted tree [v]. *)
+    Inductive R: S.t -> Tree.t -> Tree.t -> Prop :=
+    | singleton:
+        forall e x,
+          R x (Tree.Node e Tree.Leaf x Tree.Leaf) Tree.Leaf
+    | left:
+        forall lo x y hi e1 e2 t1 t1del t2,
+          x <= y ->
+          Sorted.R lo t1 y ->
+          Sorted.R y t2 hi ->
+          R x t1 t1del ->
+          R x (Tree.Node e1 t1 y t2) (Tree.Node e2 t1del y t2)
+    | right:
+        forall lo x y hi e1 e2 t1 t2 t2del,
+          y <= x ->
+          Sorted.R lo t1 y ->
+          Sorted.R y t2 hi ->
+          R x t2 t2del ->
+          R x (Tree.Node e1 t1 y t2) (Tree.Node e2 t1 y t2del)
+    | rotation:
+        forall x t1 t1del t2,
+          R x t1 t1del ->
+          Rotation.R t1del t2 ->
+          R x t1 t2.
+  End Deleted.
+
 End Make.
