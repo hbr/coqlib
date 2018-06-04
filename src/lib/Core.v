@@ -357,6 +357,11 @@ Module Relation.
     Definition Sub (S:A->B->Prop): Prop :=
       forall x y, R x y -> S x y.
 
+    Definition is_Partial_function: Prop :=
+      forall x y z,
+        R x y ->
+        R x z ->
+        y = z.
   End binary_relation.
 
 
@@ -428,6 +433,7 @@ Module Relation.
   Arguments GT    [_] [_] [_] [_] _.
   Arguments LE    [_ _ _ _]  _.
   Arguments GE    [_ _ _ _]  _.
+
 
   Section well_founded_relation.
     Variable A:Type.
