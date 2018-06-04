@@ -261,7 +261,7 @@ Section nat_order.
   Theorem predecessor_monotonic_le:
     forall n m:nat, n <= m -> pred n <= pred m.
   Proof
-    fix f n m p: pred n <= pred m :=
+    fix f n m p {struct p}: pred n <= pred m :=
     match p with
     | le_n _ =>
       (* goal: pred n <= pred n *)
