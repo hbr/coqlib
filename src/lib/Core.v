@@ -285,8 +285,8 @@ Module Predicate.
     Definition Decider (P:A->Prop): Type :=
       forall a:A, {P a} + {~ P a}.
 
-    Definition Empty     (P:A->Prop): Prop := False.
-    Definition Universal (P:A->Prop): Prop := True.
+    Definition Empty     (P:A->Prop): Prop := forall x, ~ P x.
+    Definition Universal (P:A->Prop): Prop := forall x, P x.
 
     Definition Add (a:A) (P:A->Prop): A->Prop :=
       fun x => x = a \/ P x.
@@ -589,7 +589,7 @@ Module Type FINITE_SET.
     forall (a:A) (s:T A), {Domain s a} + {~ Domain s a}.
 
   Parameter empty:
-    {s:T A | forall a, ~ Domain s a}.
+    {s:T A | Empty (Domain s)}.
 
   Parameter add:
     forall (a:A) (s:T A), {t:T A| Domain t = Add a (Domain s)}.
