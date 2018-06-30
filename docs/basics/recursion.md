@@ -67,7 +67,7 @@ previous chapter). We use a recursive function to construct the general proof.
         forall n:nat, S n <> n.
     Proof
         fix f n: S n <> n :=
-            match n return S n = n -> False with
+            match n with
             | O =>
               fun p:S 0 = 0 => (@successor_not_zero 0) p
             | S k =>
@@ -98,13 +98,6 @@ this into a proof of `False` and we are ready.
                   f k (successor_injective p)
             end.
 
-Note that it is essential to provide a return type in the pattern match
-construct because it allows the compiler to infer the correct type for each of
-the branches of the match construct. For the `O` case the required type is `S
-0 = 0 -> False` and for the `S k` case the required type is `S (S k) = S k ->
-False`. Without this piece of information the compiler would require you to
-provide a term which proves `S n = n -> False` in each branch which is
-impossible to prove.
 
 A proof of the flipped version is nearly trivial.
 

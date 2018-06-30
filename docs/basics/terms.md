@@ -30,7 +30,7 @@ index of the right type).
 
 
 A term represents a type if its type is a sort and a term represents an object
-if its type is a type.
+if its type is not a sort.
 
 Therefore there can be terms of type `Prop`, `Set` and `Type` (index
 hidden!). I.e. the typing judgements
@@ -40,7 +40,7 @@ hidden!). I.e. the typing judgements
     X: Type
 
 say that the terms `A`, `nat` and `X` are types. The terms whose types are
-types are objects. The following judgements
+not sorts are objects. The following judgements
 
     a:A
     i:nat
