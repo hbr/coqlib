@@ -610,4 +610,17 @@ End FINITE_SET.
 (** * Finite Map *)
 (*    ========== *)
 Module Type FINITE_MAP.
+  Parameter Key: Set.
+  Parameter Value: Type.
+  Parameter T: Type.
+  Parameter empty: T.
+  Parameter find: forall (e:Key) (m:T), option Value.
+  Parameter add:  forall (e:Key) (v:Value) (m:T), T.
+  Axiom empty_is_empty: forall k, find k empty = None.
+  Axiom add_is_in:
+    forall k v m, find k (add k v m) = Some v.
+  Axiom add_others_unchanged:
+    forall k1 k2 v m,
+      k1 <> k2 ->
+      find k2 (add k1 v m) = find k2 m.
 End FINITE_MAP.
