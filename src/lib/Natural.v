@@ -258,35 +258,38 @@ Section nat_order.
     end.
 
 
+  Theorem predecessor_decreasing_le:
+    forall n m:nat, n <= m -> pred n <= m.
+  Proof
+    fix f n m p {struct p} :=
+    match p with
+    | le_n _ =>
+      (* goal: pred n <= n *)
+      match n with
+      | 0 => le_n 0
+      | S k =>
+        (* goal: pred (S k) <= S k *)
+        le_S _ k (le_n k)
+      end
+    | le_S _ k pk =>
+      (* goal: pred n <= S k *)
+      le_S _ k (f n k pk: pred n <= k)
+    end.
+
+
+
   Theorem predecessor_monotonic_le:
     forall n m:nat, n <= m -> pred n <= pred m.
   Proof
-    fix f n m p {struct p}: pred n <= pred m :=
-    match p with
-    | le_n _ =>
-      (* goal: pred n <= pred n *)
-      le_n (pred n)
-    | le_S _ k pk =>
-      (* goal: pred n <= pred (S k),
-           proof: Construct a function with type n <= k -> pred n <= pred (S k)
-                  and apply it to pk which has type n <= k. The function does a
-                  pattern match on k. For k=0, n has to be zero as well. For
-                  k = S l use f to generate an induction hypothesis.
-       *)
-      (match k with
-       | O =>
-         fun q0:n<=0 =>
-           Equal.rewrite0
-             (Equal.flip (below_zero_is_zero q0: n = 0))
-             (fun x => pred x <= pred (S 0))
-             (le_n (pred 0))
-       | S l =>
-         fun ql: n <= S l =>
-           let hypo := f n (S l) ql: pred n <= pred (S l) (* ind hypo *)
-           in
-           le_S (pred n) (pred (S l)) hypo
-       end) pk
-    end.
+    fun n m p =>
+      match p with
+      | le_n _ =>
+        (* goal: pred n <= pred n *)
+        le_n (pred n)
+      | le_S _ k pk =>
+        (* goal: pred n <= pred (S k), i.e. pred n <= k *)
+        predecessor_decreasing_le pk
+      end.
 
 
   Theorem cancel_successor_le:
