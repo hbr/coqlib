@@ -407,35 +407,7 @@ Section nat_order.
     fun n m k (lt_nm: S n <= m) lt_mk =>
       lt_to_le (le_lt_transitive lt_nm lt_mk) : S n <= k.
 
-  Definition is_less_equal_bool: forall a b:nat, bool :=
-    fix r a b: bool :=
-      match a with
-      | 0 => true
-      | S k =>
-        match b with
-        | 0 => false
-        | S n => r k n
-        end
-      end.
 
-
-  Definition is_less_equal: forall a b:nat, {a <= b} + {~ a <= b} :=
-    fix r a b: {a <= b} + {~ a <= b} :=
-      match a with
-      | O => left (zero_is_least b)
-      | S k =>
-        match b with
-        | O => right(@successor_not_below_zero k)
-        | S n => (* goal: {S k <= S n} + {~ S k <= S n} *)
-          match r k n: {k <= n} + {~ k <= n} with
-          | left  p => left(@successor_monotonic_le k n p)
-          | right p => (* p:~ k <= n *)
-            right( fun q: S k <= S n =>
-                     p (cancel_successor_le q: k <= n)
-                 )
-          end
-        end
-      end.
 
 
   Theorem plus_increases1:
@@ -469,6 +441,47 @@ Section nat_order.
     fun n m k eq =>
       le_eq_transitive (plus_increases2 n m) eq.
 End nat_order.
+
+
+
+(** * Decidable Order of Natural Numbers *)
+(*    ================================== *)
+Section decidable_order.
+(** It is easy to write a recursive boolean function which compares two
+    natural numbers. *)
+
+  Definition is_less_equal_bool: forall a b:nat, bool :=
+    fix r a b: bool :=
+      match a with
+      | 0 => true
+      | S k =>
+        match b with
+        | 0 => false
+        | S n => r k n
+        end
+      end.
+
+(* However it is much more effective to write a decision procedure which not
+   only returns a boolean value but a proof as well. *)
+
+  Definition is_less_equal: forall a b:nat, {a <= b} + {~ a <= b} :=
+    fix r a b: {a <= b} + {~ a <= b} :=
+      match a with
+      | O => left (zero_is_least b)
+      | S k =>
+        match b with
+        | O => right(@successor_not_below_zero k)
+        | S n => (* goal: {S k <= S n} + {~ S k <= S n} *)
+          match r k n: {k <= n} + {~ k <= n} with
+          | left  p => left(@successor_monotonic_le k n p)
+          | right p => (* p:~ k <= n *)
+            right( fun q: S k <= S n =>
+                     p (cancel_successor_le q: k <= n)
+                 )
+          end
+        end
+      end.
+End decidable_order.
 
 
 
@@ -551,8 +564,10 @@ Section nat_order_predicates.
         fun m mP =>
           let n_ne_m: n <> m :=
               fun n_eq_m =>
-                match pnot (Equal.rewrite0 (Equal.flip n_eq_m)  _ mP)
-                with end
+                match
+                  pnot (Equal.rewrite_bwd _ n_eq_m mP)
+                with
+                end
           in
           le_neq_to_lt (lb m mP)  n_ne_m
       end.
@@ -730,13 +745,13 @@ Section wellfounded.
                 let eq: bnd = x := Equal.flip inv in
                 above_bound_accessible
                   x
-                  (Equal.rewrite0 eq (fun z => bnd <= z) (le_n bnd))
+                  (Equal.rewrite (fun z => bnd <= z) eq (le_n bnd))
             | S k =>
               fun x inv =>
                 let inv2: k + S x = bnd :=
-                    Equal.rewrite0
-                      (push_successor_plus k x)
+                    Equal.rewrite
                       (fun z => z = bnd)
+                      (push_successor_plus k x)
                       inv
                 in
                 let accSx: Acc R (S x) := f k (S x) inv2
@@ -748,7 +763,7 @@ Section wellfounded.
                     (fun y (Ryx: x < y /\ y <= bnd) =>
                        match is_equal (S x) y with
                        | left eq_Sxy =>
-                         Equal.rewrite0 eq_Sxy (fun z => Acc R z) accSx
+                         Equal.rewrite (fun z => Acc R z) eq_Sxy accSx
                        | right neq_Sxy =>
                          match Ryx with
                            conj lt_xy le_ybnd =>
@@ -817,9 +832,9 @@ Section bounded_search.
                let slbk : SLB k := conj lbk notpk in
                let lbSk: LB (S k) := successor_lower_bound slbk in
                let eqjSkn: j + S k = n :=
-                   Equal.rewrite0
-                     (push_successor_plus j k)
+                   Equal.rewrite
                      (fun x => x = n)
+                     (push_successor_plus j k)
                      eqSjkn
                in
                f j (S k) eqjSkn lbSk
@@ -878,9 +893,9 @@ Section unbounded_search.
                 let _: S x = y := Equal.flip y_eq_Sx in
                 let q: y <= bnd := lby bnd p_bnd in
                 let r: x < y :=
-                    Equal.rewrite0
-                      (Equal.flip y_eq_Sx: S x = y)
+                    Equal.rewrite
                       (fun z => S x <= z)
+                      (Equal.flip y_eq_Sx: S x = y)
                       (le_n (S x))
                 in
                 conj r q
