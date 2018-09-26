@@ -43,7 +43,7 @@ Section nat_basics.
          and rewrite 'S n' into '0' by using 'p' and generate a proof for
          'False'. With that we get 'S n = 0 -> False' which is the required
          result. *)
-      Equal.rewrite0 p is_Successor I.
+      Equal.rewrite is_Successor p I.
 
   Theorem successor_equal_zero {A:Prop}:
     forall (n:nat), S n = 0 -> A.
@@ -314,7 +314,7 @@ Section nat_order.
     forall (n m:nat), n = m -> n <= m.
   Proof
     fun n m eq =>
-      Equal.rewrite0 eq _ (le_n n).
+      Equal.rewrite _ eq (le_n n).
 
 
   Theorem lt_to_le:
@@ -331,7 +331,7 @@ Section nat_order.
     forall (n m:nat), n < m -> n <> m.
   Proof
     fun n m lt eq =>
-      let n_lt_n: n < n := Equal.rewrite0 (Equal.flip eq) _ lt in
+      let n_lt_n: n < n := Equal.rewrite_bwd _  eq lt in
       successor_not_le n_lt_n.
 
 
@@ -393,13 +393,13 @@ Section nat_order.
     forall (n m k:nat), n <= m -> m = k -> n <= k.
   Proof
     fun n m k le eq =>
-      Equal.rewrite0 eq (fun x => n <= x) le.
+      Equal.rewrite (fun x => n <= x) eq le.
 
   Theorem lt_eq_transitive:
     forall (n m k:nat), n < m -> m = k -> n < k.
   Proof
     fun n m k lt eq =>
-      Equal.rewrite0 eq (fun x => n < x) lt.
+      Equal.rewrite (fun x => n < x) eq lt.
 
   Theorem lt_transitive:
     forall (n m k:nat), n < m -> m < k -> n < k.
@@ -427,7 +427,7 @@ Section nat_order.
   Proof
     fun n m =>
       let p: m + n = n + m := plus_commutative m n in
-      Equal.rewrite0 p (fun x => m <= x) (plus_increases1 m n).
+      Equal.rewrite (fun x => m <= x) p (plus_increases1 m n).
 
   Theorem left_summand_to_le:
     forall (n m k:nat), n + m = k -> n <= k.
@@ -647,9 +647,9 @@ Section more_arithmetic.
        | S 0 =>
          fun k inv =>
            let p: S (k + k) = n :=
-               Equal.rewrite0
-                 (plus_commutative (k + k) 1: k + k + 1 = 1 + (k + k))
+               Equal.rewrite
                  (fun x => x = n)
+                 (plus_commutative (k + k) 1: k + k + 1 = 1 + (k + k))
                  inv
            in
            Either.Right (exist _ k p)
@@ -706,7 +706,7 @@ Section wellfounded.
           (fun j (pj_lt_Sk:S j <= S k) =>
              match is_equal j k with
              | left p_eq_jk =>
-               Equal.rewrite0 (Equal.flip p_eq_jk) _ hypo_k
+               Equal.rewrite_bwd _ p_eq_jk  hypo_k
              | right p_ne_jk =>
                let pj_le_k: j <= k := cancel_successor_le pj_lt_Sk in
                let pj_lt_k: j < k  := le_neq_to_lt pj_le_k p_ne_jk in
@@ -796,7 +796,7 @@ Section wellfounded.
           match v with
             exist _ d pd =>
             let p: S bnd <= S bnd + d := plus_increases1 (S bnd) d in
-            let q: S bnd <= x := Equal.rewrite0 pd (fun z => _ <= z) p in
+            let q: S bnd <= x := Equal.rewrite (fun z => _ <= z) pd p in
             above_bound_accessible x (lt_to_le q)
           end
         end.
@@ -821,7 +821,7 @@ Section bounded_search.
       (fix f i: forall k (p:i+k=n) (lbk:LB k), OK + {Fail} :=
          match i with
          | 0 => fun k (eqkn:0+k=n) lbk =>
-                  inright (Equal.rewrite0 eqkn LB lbk)
+                  inright (Equal.rewrite LB eqkn lbk)
          | S j =>
            fun k (eqSjkn:S j + k = n) lbk =>
              match d k with
@@ -872,7 +872,7 @@ Section unbounded_search.
   Variable P: nat -> Prop.
   Variable n: nat.
   Variable d: Predicate.Decider P.
-  Variable e: ex P.
+  Variable e: exists x, P x.
 
   Let LB := Lower_bound P.
 
