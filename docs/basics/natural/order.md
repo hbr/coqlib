@@ -111,46 +111,66 @@ that case.
 
 
 The monotonicity holds in the other direction as well. Form `S n <= S m` we
-can infer `n <= m`. In order to prove this fact we prove the lemma `n <= m ->
-pred n <= pred m`.
+can infer `n <= m`. In order to prove this fact we first prove the lemmas:
+
+- the predecessor function is decreasing i.e. `n <= m -> pred n <= m`
+- the predecessor function is monotonic i.e. `n <= m -> pred n <= pred m`
+
+and then prove the cancellation property of the successor function `S`.
+
+    Theorem predecessor_decreasing_le:
+      forall n m:nat, n <= m -> pred n <= m.
+    Proof
+      fix f n m p {struct p} :=
+      match p with
+      | le_n _ =>
+        (* goal: pred n <= n *)
+        match n with
+        | 0 =>
+          (* goal pred 0 <= 0 *)
+          le_n 0
+        | S k =>
+          (* goal pred (S k) <= S k *)
+          le_S _ k (le_n k)
+        end
+      | le_S _ k pk =>
+        le_S _ k (f n k pk)
+      end.
+
+The proof does an induction on `n <= m`.
+
+The first case is `n <= n` i.e. `n <= m` has been constructed by
+`le_n`. We do an inner case split on `n` i.e. we distinguish the case `n = 0`
+and `n` has been constructed as the successor of another natural number
+`k`. Both subcases are proved simply by applying the corresponding
+constructors.
+
+The second case is `n <= S k` which is valid because of the premise `pk:n <=
+k`. The recursive call `f n k pk` has type `pred n <= k` which can be used by
+the constructor `le_S` to prove the required goal `pred n <= S k`.
+
+
+Now we can use this lemma to prove that the predecessor function is monotonic
+in `<=`.
 
     Theorem predecessor_monotonic_le:
       forall n m:nat, n <= m -> pred n <= pred m.
     Proof
-      fix f n m p: pred n <= pred m :=
-      match p with
-      | le_n _ =>
-        (* goal: pred n <= pred n *)
-        le_n (pred n)
-      | le_S _ k pk =>
-        (* goal: pred n <= pred (S k),
-           proof: Construct a function with type n <= k -> pred n <= pred (S k)
-                  and apply it to pk which has type n <= k. The function does a
-                  pattern match on k. For k=0, n has to be zero as well. For
-                  k = S l use f to generate an induction hypothesis.
-         *)
-        (match k with
-         | O =>
-           fun q0:n<=0 =>
-             Equal.rewrite
-               (Equal.flip (below_zero_is_zero q0: n = 0))
-               (fun x => pred x <= pred (S 0))
-               (le_n (pred 0))
-         | S l =>
-           fun ql: n <= S l =>
-             let hypo := f n (S l) ql: pred n <= pred (S l) (* ind hypo *)
-             in
-             le_S (pred n) (pred (S l)) hypo
-         end) pk
-      end.
+      fun n m p =>
+        match p with
+        | le_n _ =>
+          (* goal: pred n <= pred n *)
+          le_n (pred n)
+        | le_S _ k pk =>
+          (* goal: pred n <= pred (S k), i.e. pred n <= k *)
+          predecessor_decreasing_le pk
+        end.
 
-> Note: In this proof we pattern match on a proof of `n <= m`. However we need
-  a nested pattern match on `k` in order generate a useful induction
-  hypothesis. The outer pattern match constructs a proof which is structurally
-  smaller than the proof of `n <= m`. The second pattern match gives the
-  environment for the recursive call of the proof generating function `f`.
+The proof just requires a case split of the two different cases to construct
+the validity of `n <= m`.
 
-With the lemma the desired proof of `S n <= S m` is trivial.
+
+With this lemma the desired proof of `S n <= S m` is trivial.
 
     Theorem cancel_successor_le:
       forall n m:nat, S n <= S m -> n <= m.
@@ -159,6 +179,8 @@ With the lemma the desired proof of `S n <= S m` is trivial.
         predecessor_monotonic_le p.
 
 This proof works because `pred (S n)` evaluates to `n` for all `n`.
+
+
 
 ## Strict Order
 
@@ -169,7 +191,7 @@ less equal `m`. In Coq the function `lt` is defined exactly in this manner.
 
 A notation is provided to be able to write `n < m` instead of `lt n m`.
 
-We proof some easy theorems which relation `<=`, `<` and `=`.
+We proof some easy theorems concerning the  relations `<=`, `<` and `=`.
 
     Theorem lt_implies_le:
       forall (n m:nat), n < m -> n <= m.
