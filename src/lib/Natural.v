@@ -909,15 +909,15 @@ Section unbounded_search.
        match d k with
        | left pk => exist _ k (conj pk lb_k)
        | right not_pk =>
-         let h: forall y, R y k -> Acc R y :=
-             match acc_k with Acc_intro _ h => h end
-         in
-         let lb_Sk: LB (S k) :=
-             successor_lower_bound (conj lb_k not_pk) in
-         let RSkk: (S k = S k /\ LB (S k) /\ LB k) :=
-             conj eq_refl (conj lb_Sk lb_k)
-         in
-         f (S k) lb_Sk (h (S k) RSkk)
+         match acc_k with
+         | Acc_intro _ h =>
+           let lb_Sk: LB (S k) :=
+               successor_lower_bound (conj lb_k not_pk) in
+           let RSkk: R (S k) k :=
+               conj eq_refl (conj lb_Sk lb_k): S k = S k /\ LB (S k) /\ LB k
+           in
+           f (S k) lb_Sk (h (S k) RSkk)
+         end
        end
     ) 0 (fun x _ => zero_is_least x) (R_wf 0).
 End unbounded_search.
