@@ -890,12 +890,11 @@ Section unbounded_search.
               conj y_eq_Sx p =>
               match p with
                 conj lby lbx =>
-                let _: S x = y := Equal.flip y_eq_Sx in
                 let q: y <= bnd := lby bnd p_bnd in
                 let r: x < y :=
-                    Equal.rewrite
-                      (fun z => S x <= z)
-                      (Equal.flip y_eq_Sx: S x = y)
+                    Equal.rewrite_bwd
+                      (fun y => S x <= y)
+                      y_eq_Sx
                       (le_n (S x))
                 in
                 conj r q
