@@ -438,6 +438,24 @@ Module Relation.
   Section well_founded_relation.
     Variable A:Type.
     Variable R: A -> A -> Prop.
+
+    Variable P: A -> Prop.
+
+    Theorem accessible_induction:
+      (forall x, Acc R x -> (forall y, R y x ->  P y) -> P x)
+      ->
+      forall x, Acc R x -> P x.
+    Proof
+      fun hypo =>
+        (fix f x acc_x :=
+           match acc_x with
+             Acc_intro _ h =>
+             hypo x acc_x (fun y Ryx => f y (h y Ryx))
+           end
+        )
+    .
+
+
     Theorem wf_subrelation:
       forall (S:A->A->Prop),
         Sub S R -> well_founded R -> well_founded S.
