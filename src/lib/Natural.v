@@ -533,18 +533,15 @@ Section nat_order_predicates.
         fun lbSl pSl k pk =>
           (* goal: Lower_bound P (pred n) *)
           lt_to_le (lbSl k pk: l < k): l <= k
-      end
-  .
+      end.
+
 
   Theorem successor_not_lower_bound:
-    forall (P:nat->Prop) (n:nat),
-      Lower_bound P n -> P n ->
-      ~ Lower_bound P (S n).
+    forall (P:nat->Prop) (n:nat), P n -> ~ Lower_bound P (S n).
   Proof
-    fun P n lb pn lbsn =>
-      match
-        successor_not_le (lbsn n pn: S n <= n)
-      with end.
+    fun P n pn lbsn =>
+      ex_falso
+        (successor_not_le (lbsn n pn: S n <= n)).
 
   Theorem successor_lower_bound:
     forall (n:nat) (P:nat->Prop) (slb:Strict_lower_bound P n),
