@@ -346,6 +346,7 @@ Section nat_order.
       end.
 
 
+
   Theorem le_transitive:
     forall (n m k:nat), n <= m -> m <= k -> n <= k.
   Proof
@@ -409,6 +410,12 @@ Section nat_order.
 
 
 
+  Theorem le_contradicts_lt:
+    forall (n m:nat), n <= m -> m < n -> False.
+  Proof
+    fun n m le lt =>
+      lt_irreflexive (le_lt_transitive le lt:n < n).
+
 
   Theorem plus_increases1:
     forall (n m:nat), n <= n + m.
@@ -441,6 +448,9 @@ Section nat_order.
     fun n m k eq =>
       le_eq_transitive (plus_increases2 n m) eq.
 End nat_order.
+
+
+
 
 
 
@@ -522,18 +532,14 @@ Section nat_order_predicates.
       le_transitive le_nm le_mk.
 
 
+
   Theorem predecessor_lower_bound:
     forall (P:nat->Prop) (n:nat),
-      Lower_bound P n -> P n -> Lower_bound P (pred n).
+      Lower_bound P (S n) -> Lower_bound P n.
   Proof
-    fun P n =>
-      match n with
-      | 0 => fun lb p k pk => zero_is_least k
-      | S l =>
-        fun lbSl pSl k pk =>
-          (* goal: Lower_bound P (pred n) *)
-          lt_to_le (lbSl k pk: l < k): l <= k
-      end.
+    fun P n lbSn =>
+      lower_bound_transitive (le_S n n (le_n n)) lbSn.
+
 
 
   Theorem successor_not_lower_bound:
@@ -542,6 +548,7 @@ Section nat_order_predicates.
     fun P n pn lbsn =>
       ex_falso
         (successor_not_le (lbsn n pn: S n <= n)).
+
 
   Theorem successor_lower_bound:
     forall (n:nat) (P:nat->Prop) (slb:Strict_lower_bound P n),
@@ -604,7 +611,7 @@ Section comparison.
          end
        end) n m.
 
-  Definition compare_le (n m:nat): Either.t {d|n + d = m} {d|S m + d = n} :=
+  Definition difference2 (n m:nat): Either.t {d|n + d = m} {d|S m + d = n} :=
     match compare3 n m with
     | Tristate.Left x =>
       match x with
@@ -669,6 +676,60 @@ Section more_arithmetic.
        end)
       n 0 eq_refl.
 End more_arithmetic.
+
+
+
+Section downward_induction.
+  Theorem downward_induction:
+    forall (m:nat) (P: nat -> Prop),
+      P m ->
+      (forall n, P (S n) -> P n) ->
+      forall n, n <= m -> P n.
+  Proof
+    fun m P pm hypo n n_le_m =>
+      match difference2 n m with
+      | Either.Left p =>
+        match p with
+          exist _ d n_plus_d_eq_m =>
+          let d_plus_n_eq_m: d + n = m :=
+              Equal.rewrite
+                (fun x => x = m)
+                (plus_commutative n d)
+                n_plus_d_eq_m in
+          let q: forall d n, d + n = m -> P n :=
+              fix f d :=
+                match d with
+                | O =>
+                  fun n n_eq_m =>
+                    Equal.rewrite_bwd P (n_eq_m: 0 + n = m) pm
+                | S d =>
+                  fun n Sd_n_eq_m =>
+                    let pSn: P (S n) :=
+                        f d (S n)
+                          (Equal.rewrite_bwd
+                             (fun x => x = m)
+                             (pull_successor_plus d n)
+                             Sd_n_eq_m
+                          ) in
+                    hypo n pSn
+                end
+          in
+          q d n d_plus_n_eq_m
+        end
+      | Either.Right q (* {d| S m + d = n} *) =>
+        (* q implies m < n which contradicts n <= m *)
+        let m_lt_n: m < n :=
+            match q with
+              exist _ d Sm_plus_d_eq_n =>
+              @left_summand_to_le _ _ _ Sm_plus_d_eq_n
+            end
+        in
+        ex_falso
+          (le_contradicts_lt n_le_m m_lt_n)
+      end.
+End downward_induction.
+
+
 
 
 
