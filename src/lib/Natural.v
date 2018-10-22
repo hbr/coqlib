@@ -790,35 +790,38 @@ End wellfounded.
 Section bounded_search.
   Definition
     find_below (P:nat->Prop) (n:nat) (d:Predicate.Decider P)
-  : sig (Least P) + {Lower_bound P n}
-    :=
-      let LB := Lower_bound P in
-      let Fail := LB n in
-      let OK := sig (Least P) in
-      (fix f i: forall k (p:i+k=n) (lbk:LB k), OK + {Fail} :=
-         match i with
-         | 0 => fun k (eqkn:0+k=n) lbk =>
-                  inright (Equal.rewrite LB eqkn lbk)
-         | S j =>
-           fun k (eqSjkn:S j + k = n) lbk =>
-             match d k with
-             | left pk => (* found least element k satisfying P *)
-               inleft (exist _ k (conj pk lbk))
-             | right notpk =>
-               let SLB := Strict_lower_bound P in
-               let slbk : SLB k := conj lbk notpk in
-               let lbSk: LB (S k) := successor_lower_bound slbk in
-               let eqjSkn: j + S k = n :=
-                   Equal.rewrite
-                     (fun x => x = n)
+  : sig (Least P) + {Lower_bound P n}.
+  Proof.
+    exact(
+        let LB := Lower_bound P in
+        let Fail := LB n in
+        let OK := sig (Least P) in
+        (fix f i: forall k (p:i+k=n) (lbk:LB k), OK + {Fail} :=
+           match i with
+           | 0 => fun k (eqkn:0+k=n) lbk =>
+                    inright (Equal.rewrite LB eqkn lbk)
+           | S j =>
+             fun k (eqSjkn:S j + k = n) lbk =>
+               match d k with
+               | left pk => (* found least element k satisfying P *)
+                 inleft (exist _ k (conj pk lbk))
+               | right notpk =>
+                 let SLB := Strict_lower_bound P in
+                 let slbk : SLB k := conj lbk notpk in
+                 let lbSk: LB (S k) := successor_lower_bound slbk in
+                 let eqjSkn: j + S k = n :=
+                     Equal.rewrite
+                       (fun x => x = n)
                      (push_successor_plus j k)
                      eqSjkn
-               in
-               f j (S k) eqjSkn lbSk
-             end
-         end
-      )
-        n 0 (cancel_plus_zero n) (fun x _ => zero_is_least x).
+                 in
+                 f j (S k) eqjSkn lbSk
+               end
+           end
+        )
+          n 0 (cancel_plus_zero n) (fun x _ => zero_is_least x)).
+  Defined.
+
 
 
   Definition
@@ -827,21 +830,26 @@ Section bounded_search.
     (n:nat)
     (d:Predicate.Decider P)
     (e: exists x, x < n /\ P x)
-    : sig (Least P) :=
-    match find_below n d with
-    | inleft least => least
-    | inright lbn =>
-      let contra: False :=
-          match e with
-            ex_intro _ x q =>
-            match q with
-              conj lt_xn px => (* S x <= n, P x *)
-              let le_nx: n <= x := lbn x px in
-              successor_not_le (le_transitive lt_xn le_nx: S x <= x)
-            end
-          end in
-      match contra with end
-    end.
+    : sig (Least P).
+  Proof.
+    exact(
+        match find_below n d with
+        | inleft least => least
+        | inright lbn =>
+          let contra: False :=
+              match e with
+                ex_intro _ x q =>
+                match q with
+                  conj lt_xn px => (* S x <= n, P x *)
+                  let le_nx: n <= x := lbn x px in
+                  successor_not_le (le_transitive lt_xn le_nx: S x <= x)
+                end
+              end in
+          match contra with end
+        end).
+  Defined.
+
+
 
   Theorem exist_least:
     forall (P:nat->Prop),
@@ -877,21 +885,27 @@ Section unbounded_search.
   Let R (y x:nat): Prop :=
     y = S x /\ LB y /\ LB x.
 
-  Let predecessor_accessible (x:nat) (acc_Sx: Acc R (S x)): Acc R x :=
-    Acc_intro
-      _
-      (fun y Ryx =>
-         match Ryx with
-           conj yeqSx (conj _ _) =>
-           Equal.rewrite_bwd (fun x => Acc R x) yeqSx acc_Sx
-         end).
-
-  Let least_accessible (x:nat) (least:Least P x): Acc R x :=
-    match least with
-      conj px lb =>
+  Lemma predecessor_accessible:
+    forall (x:nat) (acc_Sx: Acc R (S x)), Acc R x.
+  Proof
+    fun x acc_Sx =>
       Acc_intro
         _
         (fun y Ryx =>
+           match Ryx with
+             conj yeqSx (conj _ _) =>
+             Equal.rewrite_bwd (fun x => Acc R x) yeqSx acc_Sx
+           end).
+
+  Lemma least_accessible:
+    forall (x:nat) (least:Least P x), Acc R x.
+  Proof
+    fun x least =>
+      match least with
+        conj px lb =>
+        Acc_intro
+          _
+          (fun y Ryx =>
            match Ryx with
              conj y_eq_Sx (conj lby lbx) =>
              ex_falso
@@ -899,26 +913,31 @@ Section unbounded_search.
                   px
                   (Equal.rewrite LB y_eq_Sx lby: LB (S x)))
            end
-        )
-    end.
+          )
+      end.
 
-  Let lb_accessible (x:nat) (lbx:LB x): Acc R x :=
-    match exist_least d e with
-      ex_intro _ y least_y =>
-      match least_y with
-        conj py lby =>
-        @downward_induction
-          y
-          (Acc R)
-          (least_accessible least_y)
-          predecessor_accessible
-          x
-          (lbx y py )
-      end
-    end.
+  Lemma lower_bound_accessible:
+    forall (x:nat) (lbx:LB x), Acc R x.
+  Proof
+    fun x lbx =>
+      match exist_least d e with
+        ex_intro _ y least_y =>
+        match least_y with
+          conj py lby =>
+          @downward_induction
+            y
+            (Acc R)
+            (least_accessible least_y)
+            predecessor_accessible
+            x
+            (lbx y py )
+        end
+      end.
 
 
-  Definition least: sig (Least P) :=
+  Definition least: sig (Least P).
+  Proof.
+    exact (
     let least_above:
           forall k, LB k -> Acc R k -> sig (Least P) :=
         fix f k lb_k acc_k :=
@@ -940,9 +959,9 @@ Section unbounded_search.
        end
     in
     let lb0: LB 0 := zero_lower_bound P in
-    least_above 0 lb0 (lb_accessible lb0).
+    least_above 0 lb0 (lower_bound_accessible lb0)).
+  Defined.
 End unbounded_search.
-
 
 
 
