@@ -532,6 +532,11 @@ Section nat_order_predicates.
       le_transitive le_nm le_mk.
 
 
+  Theorem zero_lower_bound:
+    forall (P:nat->Prop), Lower_bound P 0.
+  Proof
+    fun P n _ => zero_is_least n.
+
 
   Theorem predecessor_lower_bound:
     forall (P:nat->Prop) (n:nat),
@@ -773,92 +778,6 @@ Section wellfounded.
       end
     end.
 
-  Definition gt_bounded (bnd y x:nat): Prop :=
-    x < y /\ y <= bnd.
-
-  Theorem gt_bounded_wellfounded:
-    forall bnd:nat, well_founded (gt_bounded bnd).
-  Proof
-    fun bnd =>
-      let R := gt_bounded bnd in
-      let above_bound_accessible x (ge: bnd <= x): Acc R x :=
-          Acc_intro
-            _
-            (fun y Ryx =>
-               match Ryx with
-               | conj lt_xy le_ybnd =>
-                 let lt_xbnd := lt_le_transitive lt_xy le_ybnd : x < bnd in
-                 let lt_xx := lt_le_transitive lt_xbnd ge : x < x in
-                 match lt_irreflexive lt_xx  with
-                 end
-               end
-            )
-      in
-      let below_bound_accessible:
-            forall n x, n + x = bnd -> Acc R x :=
-          fix f n: forall x (inv:n + x = bnd), Acc R x :=
-            match n with
-            | 0 =>
-              fun x (inv: 0 + x = bnd) =>
-                let eq: bnd = x := Equal.flip inv in
-                above_bound_accessible
-                  x
-                  (Equal.rewrite (fun z => bnd <= z) eq (le_n bnd))
-            | S k =>
-              fun x inv =>
-                let inv2: k + S x = bnd :=
-                    Equal.rewrite
-                      (fun z => z = bnd)
-                      (push_successor_plus k x)
-                      inv
-                in
-                let accSx: Acc R (S x) := f k (S x) inv2
-                in
-                match accSx with
-                  Acc_intro _ h =>
-                  Acc_intro
-                    _
-                    (fun y (Ryx: x < y /\ y <= bnd) =>
-                       match is_equal (S x) y with
-                       | left eq_Sxy =>
-                         Equal.rewrite (fun z => Acc R z) eq_Sxy accSx
-                       | right neq_Sxy =>
-                         match Ryx with
-                           conj lt_xy le_ybnd =>
-                           let lt_Sxy: S x < y :=
-                               le_neq_to_lt lt_xy neq_Sxy in
-                           h y (conj lt_Sxy le_ybnd)
-                         end
-                       end)
-                end
-            end
-      in
-      fun x =>
-        match compare3 x bnd with
-        | Tristate.Left v =>
-          (* v: {d:| S x + d = nbd} *)
-          match v with
-            exist _ k pk =>
-            (* pk: S x + k = bnd *)
-            let q: S k + x = bnd :=
-                (equality_chain:
-                   (plus_commutative (S k) x: S k + x = x + S k),
-                   (pull_successor_plus x k: _ = S x + k),
-                   pk)
-            in
-            below_bound_accessible (S k) x q
-          end
-        | Tristate.Middle p =>
-          below_bound_accessible 0 x p
-        | Tristate.Right v =>
-          match v with
-            exist _ d pd =>
-            let p: S bnd <= S bnd + d := plus_increases1 (S bnd) d in
-            let q: S bnd <= x := Equal.rewrite (fun z => _ <= z) pd p in
-            above_bound_accessible x (lt_to_le q)
-          end
-        end.
-
 End wellfounded.
 
 
@@ -923,7 +842,28 @@ Section bounded_search.
           end in
       match contra with end
     end.
+
+  Theorem exist_least:
+    forall (P:nat->Prop),
+      Predicate.Decider P ->
+      (exists x, P x) ->
+      exists x, Least P x.
+  Proof
+    fun P d e =>
+      match e with
+      | ex_intro _ x p =>
+        let e: exists y, y < S x /\ P y :=
+            ex_intro _ x (conj (le_n (S x)) p)
+        in
+        let least := @find_existing_below P (S x) d e in
+        match least with
+        | exist _ x p =>
+          ex_intro _ x p
+        end
+      end.
 End bounded_search.
+
+
 
 
 Section unbounded_search.
@@ -937,48 +877,75 @@ Section unbounded_search.
   Let R (y x:nat): Prop :=
     y = S x /\ LB y /\ LB x.
 
-  Let R_wf: well_founded R.
-  Proof
-    match e with
-      ex_intro _ bnd p_bnd =>
-      let RBnd := gt_bounded bnd in
-      let RsubRbnd: Relation.Sub R RBnd :=
-          fun y x Ryx =>
-            match Ryx with
-              conj y_eq_Sx p =>
-              match p with
-                conj lby lbx =>
-                let q: y <= bnd := lby bnd p_bnd in
-                let r: x < y :=
-                    Equal.rewrite_bwd
-                      (fun y => S x <= y)
-                      y_eq_Sx
-                      (le_n (S x))
-                in
-                conj r q
-              end
-            end
-      in
-      Relation.wf_subrelation RsubRbnd (gt_bounded_wellfounded bnd)
+  Let predecessor_accessible (x:nat) (acc_Sx: Acc R (S x)): Acc R x :=
+    Acc_intro
+      _
+      (fun y Ryx =>
+         match Ryx with
+           conj yeqSx (conj _ _) =>
+           Equal.rewrite_bwd (fun x => Acc R x) yeqSx acc_Sx
+         end).
+
+  Let least_accessible (x:nat) (least:Least P x): Acc R x :=
+    match least with
+      conj px lb =>
+      Acc_intro
+        _
+        (fun y Ryx =>
+           match Ryx with
+             conj y_eq_Sx (conj lby lbx) =>
+             ex_falso
+               (successor_not_lower_bound
+                  px
+                  (Equal.rewrite LB y_eq_Sx lby: LB (S x)))
+           end
+        )
     end.
 
+  Let lb_accessible (x:nat) (lbx:LB x): Acc R x :=
+    match exist_least d e with
+      ex_intro _ y least_y =>
+      match least_y with
+        conj py lby =>
+        @downward_induction
+          y
+          (Acc R)
+          (least_accessible least_y)
+          predecessor_accessible
+          x
+          (lbx y py )
+      end
+    end.
+
+
   Definition least: sig (Least P) :=
-    (fix f k (lb_k: LB k) (acc_k: Acc R k): sig (Least P) :=
-       match d k with
-       | left pk => exist _ k (conj pk lb_k)
-       | right not_pk =>
-         match acc_k with
-         | Acc_intro _ h =>
-           let lb_Sk: LB (S k) :=
-               successor_lower_bound (conj lb_k not_pk) in
-           let RSkk: R (S k) k :=
-               conj eq_refl (conj lb_Sk lb_k): S k = S k /\ LB (S k) /\ LB k
-           in
-           f (S k) lb_Sk (h (S k) RSkk)
+    let least_above:
+          forall k, LB k -> Acc R k -> sig (Least P) :=
+        fix f k lb_k acc_k :=
+          match d k with
+          | left pk =>
+            exist _ k (conj pk lb_k)
+          | right not_pk =>
+            match acc_k with
+            | Acc_intro _ h =>
+              (* use h to extract a proof of Acc R (S k) which is structurally
+                 smaller than acc_k *)
+              let lb_Sk: LB (S k) :=
+                  successor_lower_bound (conj lb_k not_pk) in
+              let RSkk: R (S k) k :=
+                  conj eq_refl (conj lb_Sk lb_k): S k = S k /\ LB (S k) /\ LB k
+              in
+              f (S k) lb_Sk (h (S k) RSkk)
          end
        end
-    ) 0 (fun x _ => zero_is_least x) (R_wf 0).
+    in
+    let lb0: LB 0 := zero_lower_bound P in
+    least_above 0 lb0 (lb_accessible lb0).
 End unbounded_search.
+
+
+
+
 
 
 
