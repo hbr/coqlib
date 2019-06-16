@@ -919,18 +919,16 @@ Section unbounded_search.
   Lemma lower_bound_accessible:
     forall (x:nat) (lbx:LB x), Acc R x.
   Proof
-    fun x lbx =>
+    fun x (lbx: forall y, P y -> x <= y) =>
       match exist_least d e with
         ex_intro _ y least_y =>
-        match least_y with
-          conj py lby =>
-          @downward_induction
-            y
+        match least_y: Least P y with
+          conj py _ =>
+          downward_induction
             (Acc R)
-            (least_accessible least_y)
-            predecessor_accessible
-            x
-            (lbx y py )
+            (least_accessible least_y: Acc R y)
+            (predecessor_accessible: forall x, Acc R (S x) -> Acc R x)
+            (lbx y (py: P y): x <= y )
         end
       end.
 
@@ -955,8 +953,8 @@ Section unbounded_search.
                   conj eq_refl (conj lb_Sk lb_k): S k = S k /\ LB (S k) /\ LB k
               in
               f (S k) lb_Sk (h (S k) RSkk)
-         end
-       end
+            end
+          end
     in
     let lb0: LB 0 := zero_lower_bound P in
     least_above 0 lb0 (lower_bound_accessible lb0)).
