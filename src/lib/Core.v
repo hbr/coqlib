@@ -592,6 +592,8 @@ Module Relation.
   Arguments LE    [_ _ _ _]  _.
   Arguments GE    [_ _ _ _]  _.
 
+  Arguments star_start   [_ _] _.
+  Arguments star_next    [_ _ _ _ _] _ _.
 
   Section well_founded_relation.
     Variable A:Type.
@@ -657,7 +659,104 @@ Module Relation.
     Definition Equivalence: Prop :=
       Reflexive R /\ Transitive R /\ Symmetric R.
   End order_relation.
+
+  Section diamond.
+    Variable A:Type.
+
+    Definition Diamond (R:Endo A): Prop :=
+      forall a b c, R a b -> R a c -> exists d, R b d /\ R c d.
+
+    Definition Confluent (R:Endo A): Prop :=
+      Diamond (Star R).
+
+    Theorem confluent_equivalent_meet:
+      forall {R:Endo A} {a b:A},
+        Confluent R ->
+        Equi_close R a b ->
+        exists c, Star R a c /\ Star R b c.
+    Proof
+      fun R a b confl e_ab =>
+        let P a b := exists c, Star R a c /\ Star R b c in
+        use_equi_close
+          e_ab
+          P
+          (fun x =>
+             let star_xx: Star R x x := star_start x in
+             ex_intro _ x (conj star_xx star_xx))
+          (fun a b c e_ab rbc ih_ab =>
+             (* a  ->eq   b     ->     c
+                  \       |            |
+                   \*     v*           v*
+                    >  some d  ->*   some e
+
+                 d exists by induction hypothesis
+                 e exists by confluence
+              *)
+             Exist.use
+               (ih_ab: exists d, Star R a d /\ Star R b d)
+               (fun d star_ad_bd =>
+                  And.use
+                    star_ad_bd
+                    (fun star_ad star_bd =>
+                       Exist.use
+                         (confl b c d (star_next (star_start b) rbc) star_bd)
+                         (fun
+                             e
+                             (star_ce_de: Star R c e /\ Star R d e) =>
+                             match star_ce_de with
+                             | conj star_ce star_de =>
+                               ex_intro
+                                 _
+                                 e
+                                 (conj
+                                    (star_transitive star_ad  star_de)
+                                    star_ce)
+                             end
+                             : exists e, Star R a e /\ Star R c e)
+                       )))
+          (fun a b c e_ab rcb ih_ab =>
+             (* a  ->eq   b     <-     c
+                  \       |            |
+                   \*     v*           v*
+                    >  some d  ->*   some e
+
+                 d exists by induction hypothesis
+                 e exists by confluence
+              *)
+             Exist.use
+               (ih_ab: exists d, Star R a d /\ Star R b d)
+               (fun d star_ad_bd =>
+                  And.use
+                    star_ad_bd
+                    (fun star_ad star_bd =>
+                       Exist.use
+                         (confl
+                            c c d
+                            (star_start c)
+                            (star_transitive
+                               (star_next (star_start c) rcb)
+                               star_bd))
+                         (fun
+                             e
+                             (star_ce_de: Star R c e /\ Star R d e) =>
+                             match star_ce_de with
+                             | conj star_ce star_de =>
+                               ex_intro
+                                 _
+                                 e
+                                 (conj
+                                    (star_transitive star_ad  star_de)
+                                    star_ce)
+                             end
+                             : exists e, Star R a e /\ Star R c e)
+                    ))).
+  End diamond.
 End Relation.
+
+
+
+
+
 
 
 (** * Either: Two Possible Results *)
