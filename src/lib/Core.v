@@ -525,8 +525,8 @@ Module Relation.
       Theorem use_equi_close:
         forall {R:Endo A} {x y} (p:Equi_close R x y) (P:Endo A),
           (forall x, P x x)
-          -> (forall x y z, Equi_close R x y -> R y z -> P x y -> P x z)
-          -> (forall x y z, Equi_close R x y -> R z y -> P x y -> P x z)
+          -> (forall x y z, R y z -> P x y -> P x z)
+          -> (forall x y z, R z y -> P x y -> P x z)
           -> P x y.
       Proof
         fix f R x y xy P :=
@@ -534,10 +534,10 @@ Module Relation.
         | equi_start a => fun f1 f2 f3 => f1 a
         | equi_fwd pab rbc =>
           fun f1 f2 f3 =>
-            f2 _ _ _ pab rbc (f R _ _ pab P f1 f2 f3)
+            f2 _ _ _ rbc (f R _ _ pab P f1 f2 f3)
         | equi_bwd pab rcb =>
           fun f1 f2 f3 =>
-            f3 _ _ _ pab rcb (f R _ _ pab P f1 f2 f3)
+            f3 _ _ _ rcb (f R _ _ pab P f1 f2 f3)
         end.
 
       Theorem equi_close_transitive:
@@ -550,9 +550,9 @@ Module Relation.
              ebc
              P
              (fun x c p => p)
-             (fun b c d ebc rcd pbc a eab =>
+             (fun b c d rcd pbc a eab =>
                 equi_fwd (pbc a eab: Equi_close R a c) (rcd: R c d))
-             (fun b c d ebc rdc pbc a eab =>
+             (fun b c d rdc pbc a eab =>
                 equi_bwd (pbc a eab: Equi_close R a c) (rdc: R d c))
           ) a eab.
 
@@ -572,12 +572,12 @@ Module Relation.
               equi_ab
               (fun a b => Equi_close R b a)
               (fun x => equi_start x)
-              (fun x y z exy ryz (ihxy: Equi_close R y x) =>
+              (fun x y z ryz (ihxy: Equi_close R y x) =>
                  equi_close_transitive
                    (lemma2 y z ryz:Equi_close R z y)
                    (ihxy:Equi_close R y x)
                  :Equi_close R z x)
-              (fun x y z exy rzy (ihxy: Equi_close R y x) =>
+              (fun x y z rzy (ihxy: Equi_close R y x) =>
                  equi_close_transitive
                    (lemma1 z y rzy:Equi_close R z y)
                    (ihxy:Equi_close R y x)
@@ -710,7 +710,7 @@ Module Relation.
           (fun x =>
              let star_xx: Star R x x := star_start x in
              ex_intro _ x (conj star_xx star_xx))
-          (fun a b c e_ab rbc ih_ab =>
+          (fun a b c rbc ih_ab =>
              (* a  ->eq   b     ->     c
                   \       |            |
                    \*     v*           v*
@@ -730,7 +730,7 @@ Module Relation.
                             _ e
                             (conj (star_transitive star_ad  star_de) star_ce))
                   ))
-          (fun a b c e_ab rcb ih_ab =>
+          (fun a b c rcb ih_ab =>
              (* a  ->eq   b     <-     c
                   \       |            |
                    \*     v*           v*
