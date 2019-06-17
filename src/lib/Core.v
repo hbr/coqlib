@@ -440,7 +440,7 @@ Module Relation.
     Section closures.
       Inductive Plus (R:Endo A): Endo A :=
       | plus_start: forall x y, R x y -> Plus R x y
-      | plus_next:  forall x y z, R x y -> Plus R y z -> Plus R x z.
+      | plus_next:  forall x y z, Plus R x y -> R y z -> Plus R x z.
       Arguments plus_start   [_ _ _] _.
       Arguments plus_next    [_ _ _ _] _ _.
 
@@ -448,65 +448,70 @@ Module Relation.
       Theorem use_plus:
         forall {R:Endo A} {x y:A} (p:Plus R x y) (P: Endo A),
           (forall x y, R x y -> P x y)
-          -> (forall x y z, R x y -> Plus R y z -> P y z -> P x z)
+          -> (forall x y z, Plus R x y -> R y z -> P x y -> P x z)
           -> P x y.
       Proof
         fix f R x y pxy P :=
         match pxy with
         | plus_start rab => fun f1 f2 => f1 _ _ rab
-        | plus_next  rab pbc =>
+        | plus_next  pab rbc =>
           fun f1 f2 =>
-            f2 _ _ _ rab pbc
-               (f R _ _ pbc P f1 f2)
+            f2 _ _ _ pab rbc
+               (f _ _ _ pab P f1 f2)
         end.
-
 
       Theorem plus_transitive:
         forall (R:Endo A), Transitive (Plus R).
       Proof
-        fun R a b c plus_ab =>
-          let P a b := forall c, Plus R b c -> Plus R a c in
+        fun R a b c plus_ab plus_bc =>
+          let P b c := forall a, Plus R a b -> Plus R a c in
           (use_plus
-             plus_ab
+             plus_bc
              P
-             (fun _ _ rab c plus_bc => plus_next rab plus_bc)
-             (fun _ _ _ rab plus_bc ih_bc _ plus_cd =>
-                plus_next rab (ih_bc _ plus_cd))
-           :P a b) c.
+             (fun b c rbc a plus_ab => plus_next plus_ab rbc)
+             (fun b c d plus_bc (rcd: R c d)
+                  (ihbc:forall a, Plus R a b -> Plus R a c)
+                  a
+                  (plus_ab: Plus R a b) =>
+                plus_next (ihbc a plus_ab) rcd)
+           :P b c) a plus_ab.
+
+
 
       Inductive Star (R:Endo A): Endo A :=
       | star_start: forall x, Star R x x
-      | star_next:  forall x y z, R x y -> Star R y z -> Star R x z.
+      | star_next:  forall x y z, Star R x y -> R y z -> Star R x z.
       Arguments star_start   [_] _.
       Arguments star_next    [_ _ _ _] _ _.
 
       Theorem use_star:
         forall {R:Endo A} {x y:A} (p:Star R x y) (P: Endo A),
           (forall x, P x x)
-          -> (forall x y z, R x y -> Star R y z -> P y z -> P x z)
+          -> (forall x y z, Star R x y -> R y z -> P x y -> P x z)
           -> P x y.
       Proof
         fix f R x y xy P :=
         match xy with
         | star_start a => fun f1 f2 => f1 a
-        | star_next  rab pbc =>
+        | star_next  pab rbc =>
           fun f1 f2 =>
-            f2 _ _ _ rab pbc
-               (f R _ _ pbc P f1 f2)
+            f2 _ _ _ pab rbc
+               (f R _ _ pab P f1 f2)
         end.
 
       Theorem star_transitive:
         forall (R:Endo A), Transitive (Star R).
       Proof
-        fun R a b c star_ab =>
-          let P a b := forall c, Star R b c -> Star R a c in
+        fun R a b c star_ab star_bc =>
+          let P b c := forall a, Star R a b -> Star R a c in
           (use_star
-             star_ab
+             star_bc
              P
              (fun x _ p => p)
-             (fun _ _ _ rab star_bc ih_bc _ star_cd =>
-                star_next rab (ih_bc _ star_cd))
-           :P a b) c.
+             (fun b c d star_bc rcd ih_bc a star_ab =>
+                star_next (ih_bc a star_ab) rcd)
+           :P b c) a star_ab.
+
 
 
       Inductive Equi_close (R:A -> A -> Prop): A -> A -> Prop :=
