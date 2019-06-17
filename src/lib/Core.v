@@ -666,8 +666,28 @@ Module Relation.
     Definition Diamond (R:Endo A): Prop :=
       forall a b c, R a b -> R a c -> exists d, R b d /\ R c d.
 
+    Theorem use_diamond
+            {R:Endo A}
+            (dia:Diamond R) (a b c:A) (rab:R a b) (rac:R a c)
+            (P:Prop)
+            (f:forall d, R b d -> R c d -> P): P.
+    Proof
+      match dia a b c rab rac with
+      | ex_intro _ d (conj rbd rcd) =>
+        f d rbd rcd
+      end.
+
     Definition Confluent (R:Endo A): Prop :=
       Diamond (Star R).
+
+
+    Theorem use_confluent
+            {R:Endo A}
+            (confl:Confluent R) (a b c:A) (sab: Star R a b) (sac: Star R a c)
+            (P: Prop)
+            (f: forall d, Star R b d -> Star R c d -> P): P.
+    Proof
+      use_diamond confl a b c sab sac f.
 
     Theorem confluent_equivalent_meet:
       forall {R:Endo A} {a b:A},
@@ -677,6 +697,13 @@ Module Relation.
     Proof
       fun R a b confl e_ab =>
         let P a b := exists c, Star R a c /\ Star R b c in
+        let useP a b (pab:P a b)
+                 (B:Prop) (f:forall c, Star R a c -> Star R b c -> B): B :=
+            match pab with
+            | ex_intro _ c (conj sac sbc) =>
+              f c sac sbc
+            end
+        in
         use_equi_close
           e_ab
           P
@@ -692,28 +719,17 @@ Module Relation.
                  d exists by induction hypothesis
                  e exists by confluence
               *)
-             Exist.use
-               (ih_ab: exists d, Star R a d /\ Star R b d)
-               (fun d star_ad_bd =>
-                  And.use
-                    star_ad_bd
-                    (fun star_ad star_bd =>
-                       Exist.use
-                         (confl b c d (star_next (star_start b) rbc) star_bd)
-                         (fun
-                             e
-                             (star_ce_de: Star R c e /\ Star R d e) =>
-                             match star_ce_de with
-                             | conj star_ce star_de =>
-                               ex_intro
-                                 _
-                                 e
-                                 (conj
-                                    (star_transitive star_ad  star_de)
-                                    star_ce)
-                             end
-                             : exists e, Star R a e /\ Star R c e)
-                       )))
+             useP _ _ ih_ab _
+                  (fun d star_ad star_bd =>
+                     use_confluent
+                       confl
+                       (star_next (star_start b) rbc)
+                       star_bd
+                       (fun e star_ce star_de =>
+                          ex_intro
+                            _ e
+                            (conj (star_transitive star_ad  star_de) star_ce))
+                  ))
           (fun a b c e_ab rcb ih_ab =>
              (* a  ->eq   b     <-     c
                   \       |            |
@@ -723,33 +739,19 @@ Module Relation.
                  d exists by induction hypothesis
                  e exists by confluence
               *)
-             Exist.use
-               (ih_ab: exists d, Star R a d /\ Star R b d)
-               (fun d star_ad_bd =>
-                  And.use
-                    star_ad_bd
-                    (fun star_ad star_bd =>
-                       Exist.use
-                         (confl
-                            c c d
-                            (star_start c)
-                            (star_transitive
-                               (star_next (star_start c) rcb)
-                               star_bd))
-                         (fun
-                             e
-                             (star_ce_de: Star R c e /\ Star R d e) =>
-                             match star_ce_de with
-                             | conj star_ce star_de =>
-                               ex_intro
-                                 _
-                                 e
-                                 (conj
-                                    (star_transitive star_ad  star_de)
-                                    star_ce)
-                             end
-                             : exists e, Star R a e /\ Star R c e)
-                    ))).
+             useP _ _ ih_ab _
+                  (fun d star_ad star_bd =>
+                     use_confluent
+                       confl
+                       (star_start c)
+                       (star_transitive
+                          (star_next (star_start c) rcb)
+                          star_bd)
+                       (fun e star_ce star_de =>
+                          ex_intro
+                            _ e
+                            (conj (star_transitive star_ad  star_de) star_ce)))
+          ).
   End diamond.
 End Relation.
 
