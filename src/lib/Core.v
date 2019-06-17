@@ -126,6 +126,9 @@ Module Sigma.
     end.
 End Sigma.
 
+
+
+
 Module Exist.
   Definition
     make2
@@ -147,6 +150,9 @@ Module Exist.
       end
     end.
 End Exist.
+
+
+
 
 (** * Equality *)
 (*    ======== *)
@@ -310,11 +316,15 @@ End Predicate.
 
 
 
-
 (** * Relations *)
 (*    ========= *)
 
 Module Relation.
+  Section basics.
+    Definition Binary (A:Type) (B:Type):Type := A -> B -> Prop.
+    Definition Endo   (A:Type) :Type := A -> A -> Prop.
+  End basics.
+
   Section binary_relation.
     Variable A B: Type.
     Variable R: A -> B -> Prop.
@@ -368,64 +378,207 @@ Module Relation.
 
   Section endorelation.
     Variable A:Type.
-    Variable R: A -> A -> Prop.
 
-    Definition Reflexive: Prop :=
+    Definition Reflexive (R:Endo A): Prop :=
       forall a:A, R a a.
 
-    Definition Transitive: Prop :=
+    Definition Transitive (R:Endo A): Prop :=
       forall a b c:A, R a b -> R b c -> R a c.
 
-    Definition Symmetric: Prop :=
+    Definition Symmetric (R:Endo A): Prop :=
       forall a b:A, R a b -> R b a.
 
-    Definition Antisymmetric: Prop :=
+    Definition Antisymmetric (R:Endo A): Prop :=
       forall a b:A, R a b -> R b a -> a = b.
 
-    Definition Complete: Prop :=
+    Definition Complete (R:Endo A): Prop :=
       forall a b:A, R a b \/ R b a.
 
     Theorem complete_is_reflexive:
-      Complete -> Reflexive.
+      forall (R:Endo A), Complete R -> Reflexive R.
     Proof
-      fun d a =>
+      fun R d a =>
         match d a a with
           or_introl p => p
         | or_intror p => p
         end.
 
-    Inductive Comparison2 (a b:A): Set :=
-    | LE:  R a b -> Comparison2 a b
-    | GE:  R b a -> Comparison2 a b.
+    Inductive Comparison2 (R:Endo A) (a b:A): Set :=
+    | LE:  R a b -> Comparison2 R a b
+    | GE:  R b a -> Comparison2 R a b.
 
-    Inductive Comparison3 (a b:A): Set :=
-    | LT:  R a b -> ~ R b a -> Comparison3 a b
-    | EQV: R a b -> R b a   -> Comparison3 a b
-    | GT:  R b a -> ~ R a b -> Comparison3 a b.
+    Inductive Comparison3 (R:Endo A) (a b:A): Set :=
+    | LT:  R a b -> ~ R b a -> Comparison3 R a b
+    | EQV: R a b -> R b a   -> Comparison3 R a b
+    | GT:  R b a -> ~ R a b -> Comparison3 R a b.
 
-    Definition Comparer2: Type :=
-      forall a b:A, Comparison2 a b.
-    Definition Comparer3: Type :=
-      forall a b:A, Comparison3 a b.
+    Definition Comparer2 (R:Endo A): Type :=
+      forall a b:A, Comparison2 R a b.
+
+    Definition Comparer3 (R:Endo A): Type :=
+      forall a b:A, Comparison3 R a b.
 
     Theorem comparable2_is_complete:
-      forall (c:Comparer2), Complete.
+      forall (R:Endo A) (c:Comparer2 R), Complete R.
     Proof
-      fun c a b =>
+      fun R c a b =>
         match c a b with
-        | LE p => or_introl p
-        | GE p => or_intror p
+        | LE _ _ _ p => or_introl p
+        | GE _ _ _ p => or_intror p
         end.
 
     Theorem comparable3_is_complete:
-      forall (c:Comparer3), Complete.
+      forall (R:Endo A) (c:Comparer3 R), Complete R.
     Proof
-      fun c a b =>
+      fun R c a b =>
         match c a b with
-        | LT  p _   => or_introl p
-        | EQV p1 p2 => or_introl p1
-        | GT  p _   => or_intror p
+        | LT  _ _ _ p _   => or_introl p
+        | EQV _ _ _ p1 p2 => or_introl p1
+        | GT  _ _ _ p _   => or_intror p
         end.
+
+    Section closures.
+      Inductive Plus (R:Endo A): Endo A :=
+      | plus_start: forall x y, R x y -> Plus R x y
+      | plus_next:  forall x y z, R x y -> Plus R y z -> Plus R x z.
+      Arguments plus_start   [_ _ _] _.
+      Arguments plus_next    [_ _ _ _] _ _.
+
+
+      Theorem use_plus:
+        forall {R:Endo A} {x y:A} (p:Plus R x y) (P: Endo A),
+          (forall x y, R x y -> P x y)
+          -> (forall x y z, R x y -> Plus R y z -> P y z -> P x z)
+          -> P x y.
+      Proof
+        fix f R x y pxy P :=
+        match pxy with
+        | plus_start rab => fun f1 f2 => f1 _ _ rab
+        | plus_next  rab pbc =>
+          fun f1 f2 =>
+            f2 _ _ _ rab pbc
+               (f R _ _ pbc P f1 f2)
+        end.
+
+
+      Theorem plus_transitive:
+        forall (R:Endo A), Transitive (Plus R).
+      Proof
+        fun R a b c plus_ab =>
+          let P a b := forall c, Plus R b c -> Plus R a c in
+          (use_plus
+             plus_ab
+             P
+             (fun _ _ rab c plus_bc => plus_next rab plus_bc)
+             (fun _ _ _ rab plus_bc ih_bc _ plus_cd =>
+                plus_next rab (ih_bc _ plus_cd))
+           :P a b) c.
+
+      Inductive Star (R:Endo A): Endo A :=
+      | star_start: forall x, Star R x x
+      | star_next:  forall x y z, R x y -> Star R y z -> Star R x z.
+      Arguments star_start   [_] _.
+      Arguments star_next    [_ _ _ _] _ _.
+
+      Theorem use_star:
+        forall {R:Endo A} {x y:A} (p:Star R x y) (P: Endo A),
+          (forall x, P x x)
+          -> (forall x y z, R x y -> Star R y z -> P y z -> P x z)
+          -> P x y.
+      Proof
+        fix f R x y xy P :=
+        match xy with
+        | star_start a => fun f1 f2 => f1 a
+        | star_next  rab pbc =>
+          fun f1 f2 =>
+            f2 _ _ _ rab pbc
+               (f R _ _ pbc P f1 f2)
+        end.
+
+      Theorem star_transitive:
+        forall (R:Endo A), Transitive (Star R).
+      Proof
+        fun R a b c star_ab =>
+          let P a b := forall c, Star R b c -> Star R a c in
+          (use_star
+             star_ab
+             P
+             (fun x _ p => p)
+             (fun _ _ _ rab star_bc ih_bc _ star_cd =>
+                star_next rab (ih_bc _ star_cd))
+           :P a b) c.
+
+
+      Inductive Equi_close (R:A -> A -> Prop): A -> A -> Prop :=
+      | equi_start: forall x, Equi_close R x x
+      | equi_fwd:   forall x y z, Equi_close R x y -> R y z -> Equi_close R x z
+      | equi_bwd:   forall x y z, Equi_close R x y -> R z y -> Equi_close R x z.
+      Arguments equi_start   [_] _.
+      Arguments equi_fwd    [_ _ _ _] _ _.
+      Arguments equi_bwd    [_ _ _ _] _ _.
+
+      Theorem use_equi_close:
+        forall {R:Endo A} {x y} (p:Equi_close R x y) (P:Endo A),
+          (forall x, P x x)
+          -> (forall x y z, Equi_close R x y -> R y z -> P x y -> P x z)
+          -> (forall x y z, Equi_close R x y -> R z y -> P x y -> P x z)
+          -> P x y.
+      Proof
+        fix f R x y xy P :=
+        match xy with
+        | equi_start a => fun f1 f2 f3 => f1 a
+        | equi_fwd pab rbc =>
+          fun f1 f2 f3 =>
+            f2 _ _ _ pab rbc (f R _ _ pab P f1 f2 f3)
+        | equi_bwd pab rcb =>
+          fun f1 f2 f3 =>
+            f3 _ _ _ pab rcb (f R _ _ pab P f1 f2 f3)
+        end.
+
+      Theorem equi_close_transitive:
+        forall (R:Endo A), Transitive (Equi_close R).
+      Proof
+        fun R a b c eab ebc =>
+          let P b c := forall a, Equi_close R a b -> Equi_close R a c
+          in
+          (use_equi_close
+             ebc
+             P
+             (fun x c p => p)
+             (fun b c d ebc rcd pbc a eab =>
+                equi_fwd (pbc a eab: Equi_close R a c) (rcd: R c d))
+             (fun b c d ebc rdc pbc a eab =>
+                equi_bwd (pbc a eab: Equi_close R a c) (rdc: R d c))
+          ) a eab.
+
+      Theorem equi_close_symmetric:
+        forall (R:Endo A), Symmetric (Equi_close R).
+      Proof
+        fun R =>
+          let lemma1 a b (rab:R a b): Equi_close R a b :=
+              equi_fwd (equi_start a) rab
+          in
+          let lemma2 a b (rab:R a b): Equi_close R b a :=
+              equi_bwd (equi_start b) rab
+          in
+          fun a b equi_ab =>
+            let P a b := Equi_close R b a in
+            use_equi_close
+              equi_ab
+              (fun a b => Equi_close R b a)
+              (fun x => equi_start x)
+              (fun x y z exy ryz (ihxy: Equi_close R y x) =>
+                 equi_close_transitive
+                   (lemma2 y z ryz:Equi_close R z y)
+                   (ihxy:Equi_close R y x)
+                 :Equi_close R z x)
+              (fun x y z exy rzy (ihxy: Equi_close R y x) =>
+                 equi_close_transitive
+                   (lemma1 z y rzy:Equi_close R z y)
+                   (ihxy:Equi_close R y x)
+                 :Equi_close R z x)
+              .
+    End closures.
   End endorelation.
 
   Arguments LT    [_] [_] [_] [_] _.
